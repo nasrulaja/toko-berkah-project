@@ -128,7 +128,6 @@ function route(){if(!me){auth(false);return}shell();window.scrollTo(0,0)}
 function sb(v){document.documentElement.classList.toggle('sbmin',v);try{localStorage.setItem('berkah_sb',v?'1':'0')}catch(e){}}
 try{sb(innerWidth<992||localStorage.getItem('berkah_sb')!=='0')}catch(e){sb(true)}
 function theme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('berkah_theme',t)}catch(e){}}
-let t0=null;try{t0=localStorage.getItem('berkah_theme')}catch(e){}
-theme(t0||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+try{theme(localStorage.getItem('berkah_theme')||'light')}catch(e){theme('light')}
 db=load();try{const s=localStorage.getItem(KS);me=db.users.find(u=>u.id==s)||null}catch(e){}
 addEventListener('hashchange',()=>{S={};if(innerWidth<992)sb(true);route()});route();
