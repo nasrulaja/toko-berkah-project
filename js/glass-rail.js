@@ -1,17 +1,16 @@
 /* ============================================================
-   GX RAIL v2 — floating glass rail untuk Toko Berkah
+   GX RAIL v3 — floating glass rail untuk Toko Berkah
    - Baca menu dari .side .nav (TIDAK mengubah app.js)
-   - Sync menu aktif via polling: kebal re-render #app (app.js me-render
-     ulang seluruh #app tiap ganti menu, observer biasa mati karenanya)
+   - Sync menu aktif via polling: kebal re-render #app
    - Klik item rail = klik menu aslinya (di-query fresh tiap kali)
-   - Indikator drag vertikal (spring), rubber band, easter egg tetesan
-   - Tombol ≫ di atas rail untuk expand/collapse mode berlabel
+   - Indikator drag vertikal (spring), rubber band
+   - Tombol "Sembunyikan"/"Menu" di atas rail
    - Desktop only; mobile sidebar drawer asli tetap jalan
    ============================================================ */
 (function () {
   'use strict';
 
-  var SLOT = 52, IND_TOP = 38, DETACH = 32, MAX_WIDTH = 992;
+  var SLOT = 52, DETACH = 32, MAX_WIDTH = 992;
 
   function navsNow() {
     return Array.prototype.slice.call(document.querySelectorAll('.side .nav'));
@@ -33,8 +32,8 @@
     var toggle = document.createElement('button');
     toggle.className = 'gx-rail-toggle';
     toggle.type = 'button';
-    toggle.textContent = '\u00bb';              /* ≫ */
-    toggle.title = 'Perbesar rail';
+    toggle.innerHTML = '<span class="chev">\u00ab</span><span class="tgl-label">Sembunyikan</span>';
+    toggle.title = 'Sembunyikan tulisan menu';
     rail.appendChild(toggle);
 
     var ind = document.createElement('div');
@@ -53,9 +52,9 @@
       lbl.textContent = nav.textContent.trim();
       b.appendChild(lbl);
       b.addEventListener('click', function () {
-        if (moved >= 6) return;                  /* abaikan klik sisa drag */
-        var n = navsNow()[i];                    /* fresh: elemen bisa ke-render ulang */
-        if (n) n.click();                        /* serahkan ke handler asli */
+        if (moved >= 6) return;
+        var n = navsNow()[i];
+        if (n) n.click();
       });
       rail.appendChild(b);
       return b;
@@ -64,10 +63,17 @@
     document.body.appendChild(rail);
     rail.classList.add('built');
 
+    document.documentElement.classList.add('gx-rail-expanded');
+    function applyExpanded(exp) {
+      rail.classList.toggle('collapsed', !exp);
+      document.documentElement.classList.toggle('gx-rail-expanded', exp);
+      toggle.querySelector('.chev').textContent = exp ? '\u00ab' : '\u00bb';
+      toggle.querySelector('.tgl-label').textContent = exp ? 'Sembunyikan' : 'Menu';
+      toggle.title = exp ? 'Sembunyikan tulisan menu' : 'Tampilkan tulisan menu';
+    }
+    applyExpanded(true);
     toggle.addEventListener('click', function () {
-      var exp = rail.classList.toggle('expanded');
-      toggle.textContent = exp ? '\u00ab' : '\u00bb';
-      toggle.title = exp ? 'Perkecil rail' : 'Perbesar rail';
+      applyExpanded(rail.classList.contains('collapsed'));
     });
 
     /* ---- fisika spring ---- */
