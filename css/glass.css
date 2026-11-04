@@ -1,19 +1,10 @@
 /* LIQUID GLASS v2 — full-app clear glassmorphism Toko Berkah */
-html[data-theme=light] body{
+body{
   background:
     radial-gradient(45% 55% at 12% 6%,  rgba(61,181,255,.16), transparent 62%),
     radial-gradient(38% 48% at 90% 14%, rgba(139,92,246,.12), transparent 62%),
     radial-gradient(42% 55% at 80% 92%, rgba(62,183,128,.11), transparent 62%),
     radial-gradient(30% 42% at 15% 95%, rgba(255,133,51,.08), transparent 62%),
-    var(--bg);
-  background-attachment: fixed;
-}
-html[data-theme=dark] body{
-  background:
-    radial-gradient(45% 55% at 12% 6%,  rgba(61,181,255,.20), transparent 62%),
-    radial-gradient(38% 48% at 90% 14%, rgba(139,92,246,.18), transparent 62%),
-    radial-gradient(42% 55% at 80% 92%, rgba(62,183,128,.13), transparent 62%),
-    radial-gradient(30% 42% at 15% 95%, rgba(255,133,51,.10), transparent 62%),
     var(--bg);
   background-attachment: fixed;
 }
@@ -40,6 +31,22 @@ html[data-theme=dark] body{
   -webkit-backdrop-filter: blur(14px) saturate(165%) brightness(1.04);
   backdrop-filter: blur(14px) saturate(165%) brightness(1.04);
   box-shadow: 0 2px 0 0 rgba(255,255,255,.5) inset, 0 16px 32px rgba(9,44,76,.10);
+}
+@media (max-width:991px){
+  .top{
+    background: var(--gx-fill) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(145%);
+    backdrop-filter: blur(10px) saturate(145%);
+    border-bottom: 1px solid var(--gx-stroke) !important;
+    box-shadow: 0 1px 0 0 rgba(255,255,255,.4) inset, 0 8px 20px rgba(9,44,76,.05);
+  }
+  .side{
+    background: var(--gx-fill) !important;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--gx-stroke) !important;
+    box-shadow: 0 1px 0 0 rgba(255,255,255,.4) inset, 0 10px 24px rgba(9,44,76,.08);
+  }
 }
 .card{
   background: var(--gx-fill) !important;
@@ -119,5 +126,14 @@ input:focus, select:focus, textarea:focus{
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
   .top,.card,.md,.ban,.btn,input,select,textarea,.lg-card{ background: var(--card) !important; }
   .toast{ background: var(--hd) !important; }
+}
+@media (max-width:991px){
+  .md{
+    background: var(--gx-fill) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    backdrop-filter: blur(18px) saturate(160%);
+    border: 1px solid var(--gx-stroke) !important;
+    box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset, 0 20px 50px rgba(9,44,76,.22);
+  }
 }
 @media (prefers-reduced-motion: reduce){ .card,.btn{ transition: none; } }
