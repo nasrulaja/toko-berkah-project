@@ -1,69 +1,131 @@
 /* ============================================================
-   GX RAIL — floating vertical glass rail (kiri) untuk Toko Berkah
-   Desktop only (>=992px). Di mobile sidebar drawer asli tetap dipakai.
+   GX RAIL v2 — floating vertical glass rail (kiri) Toko Berkah
+   - Theme-aware (terang/gelap, ngikut [data-theme] & prefers-color-scheme)
+   - Bisa di-expand jadi mode berlabel (tombol ≫ di atas rail)
+   - Desktop only (>=992px); mobile sidebar drawer asli tetap dipakai
    ============================================================ */
 
 @media (min-width: 992px) {
-  /* Sidebar asli disembunyikan, konten penuh */
   .side { display: none !important; }
   .main { margin-left: 0 !important; }
 }
 
 .gx-rail {
+  --spring: cubic-bezier(.22, 1, .36, 1);
   display: none;
   position: fixed; left: 14px; top: 50%; z-index: 30;
   transform: translateY(-50%);
-  flex-direction: column; padding: 5px; border-radius: 999px;
-  background: rgba(255, 255, 255, .05);
-  -webkit-backdrop-filter: blur(20px) saturate(170%) brightness(1.05);
-  backdrop-filter: blur(20px) saturate(170%) brightness(1.05);
-  border: 1px solid rgba(255, 255, 255, .24);
+  flex-direction: column; align-items: stretch; padding: 5px;
+  width: 64px;
+  border-radius: 999px;
+  font-family: inherit;
+  cursor: grab; touch-action: none;
+  will-change: transform;
+  transition: width .4s var(--spring), border-radius .4s var(--spring);
+
+  /* TEMA TERANG (default) */
+  background: color-mix(in srgb, var(--card, #ffffff) 62%, transparent);
+  -webkit-backdrop-filter: blur(20px) saturate(170%) brightness(1.02);
+  backdrop-filter: blur(20px) saturate(170%) brightness(1.02);
+  border: 1px solid color-mix(in srgb, var(--hd, #092C4C) 14%, transparent);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,.85) inset,
+    0 -10px 26px rgba(9,44,76,.10) inset,
+    0 18px 50px rgba(9,44,76,.18);
+}
+
+/* TEMA GELAP */
+:root[data-theme=dark] .gx-rail {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.24);
   box-shadow:
     0 1px 0 0 rgba(255,255,255,.55) inset,
     -10px 0 26px rgba(0,0,0,.28) inset,
     0 18px 50px rgba(0,0,0,.55);
-  will-change: transform;
-  cursor: grab;
-  touch-action: none;
-  font-family: inherit;
 }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) .gx-rail {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.24);
+    box-shadow:
+      0 1px 0 0 rgba(255,255,255,.55) inset,
+      -10px 0 26px rgba(0,0,0,.28) inset,
+      0 18px 50px rgba(0,0,0,.55);
+  }
+}
+
+/* Mode expand: melebar jadi panel berlabel kayak sidebar lama */
+.gx-rail.expanded { width: 196px; border-radius: 26px; }
+
 .gx-rail.grabbing { cursor: grabbing; }
+
+/* Tombol expand/collapse */
+.gx-rail-toggle {
+  position: relative; z-index: 1; width: 100%; height: 30px;
+  display: grid; place-items: center;
+  background: none; border: none; padding: 0; margin-bottom: 3px;
+  color: var(--tx, #646B72); opacity: .65; cursor: pointer; border-radius: 999px;
+  font: 700 13px/1 inherit; transition: opacity .2s, color .2s;
+}
+.gx-rail-toggle:hover { opacity: 1; color: var(--hd, #092C4C); }
+
 .gx-rail-ind {
-  position: absolute; left: 4px; right: 4px; top: 4px; height: 52px;
+  position: absolute; left: 5px; right: 5px; top: 38px; height: 52px;
   border-radius: 999px; z-index: 0;
+  will-change: transform; pointer-events: none;
+
+  /* TEMA TERANG */
+  background: color-mix(in srgb, var(--card, #ffffff) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hd, #092C4C) 10%, transparent);
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.9) inset, 0 6px 18px rgba(9,44,76,.14);
+}
+:root[data-theme=dark] .gx-rail-ind {
   background: rgba(255,255,255,.09);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
-  backdrop-filter: blur(28px) saturate(190%) brightness(1.08);
+  border: none;
   box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset, 6px 0 18px rgba(0,0,0,.30);
-  will-change: transform;
-  pointer-events: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) .gx-rail-ind {
+    background: rgba(255,255,255,.09);
+    border: none;
+    box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset, 6px 0 18px rgba(0,0,0,.30);
+  }
 }
 .gx-rail-ind::after {
   content: ''; position: absolute; inset: 0; border-radius: 999px;
   background: linear-gradient(90deg, rgba(255,255,255,.35), transparent 30%, transparent 70%, rgba(255,255,255,.12));
   pointer-events: none;
 }
-.gx-rail-item {
-  position: relative; z-index: 1; width: 52px; height: 52px;
-  display: grid; place-items: center;
-  background: none; border: none; padding: 0;
-  color: rgba(255,255,255,.55); cursor: pointer; border-radius: 999px;
-  transition: color .25s;
-  font: inherit;
-}
-.gx-rail-item svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.gx-rail-item.active { color: #fff; }
 
-/* Tampil hanya di desktop, dan hanya kalau JS berhasil membangun rail */
-@media (min-width: 992px) {
-  .gx-rail.built { display: flex; }
+.gx-rail-item {
+  position: relative; z-index: 1; width: 100%; height: 52px;
+  display: flex; align-items: center; justify-content: center; gap: 11px;
+  background: none; border: none; padding: 0;
+  color: var(--tx, #646B72); cursor: pointer; border-radius: 999px;
+  font: 600 12.5px/1 inherit; white-space: nowrap;
+  transition: color .25s, border-radius .4s var(--spring);
 }
+.gx-rail-item svg { width: 22px; height: 22px; flex: none;
+  stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.gx-rail-item.active { color: var(--hd, #092C4C); }
+:root[data-theme=dark] .gx-rail-item.active { color: #fff; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) .gx-rail-item.active { color: #fff; }
+}
+
+/* Label hanya tampil pas expand */
+.gx-lbl { display: none; }
+.gx-rail.expanded .gx-rail-item { justify-content: flex-start; padding: 0 16px; border-radius: 14px; }
+.gx-rail.expanded .gx-lbl { display: inline; }
+
+/* Tampil hanya di desktop dan kalau JS berhasil bangun */
+@media (min-width: 992px) { .gx-rail.built { display: flex; } }
 
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .gx-rail { background: var(--card, #152536); }
-  .gx-rail-ind { background: rgba(255,255,255,.18); }
+  .gx-rail { background: var(--card, #ffffff); }
+  .gx-rail-ind { background: var(--soft, #E6F6FF); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .gx-rail-item { transition: none; }
+  .gx-rail, .gx-rail-item { transition: none; }
 }

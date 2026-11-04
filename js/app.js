@@ -131,38 +131,3 @@ function theme(t){document.documentElement.dataset.theme=t;try{localStorage.setI
 try{theme(localStorage.getItem('berkah_theme')||'light')}catch(e){theme('light')}
 db=load();try{const s=localStorage.getItem(KS);me=db.users.find(u=>u.id==s)||null}catch(e){}
 addEventListener('hashchange',()=>{S={};if(innerWidth<992)sb(true);route()});route();
-
-// Bottom Tab Bar Navigation (Liquid Glass)
-const tabBar=$('.glass-tabbar'),tabs=$$('.tab',tabBar),indicator=$('.indicator',tabBar);
-let currentTab='dashboard';
-
-function updateTabHighlight(tab){
-  const w=tab.offsetWidth;
-  const l=tab.offsetLeft-tabBar.offsetLeft+4;
-  indicator.style.width=`${w-8}px`;
-  indicator.style.transform=`translateX(${l}px)`;
-}
-
-tabs.forEach(tab=>{
-  tab.addEventListener('click',e=>{
-    const page=tab.dataset.page;
-    if(page&&page!==currentTab){
-      tabs.forEach(t=>t.classList.remove('active'));
-      tab.classList.add('active');
-      currentTab=page;
-      location.hash=`#${page}`;
-      updateTabHighlight(tab);
-    }
-  });
-  tab.addEventListener('mouseenter',()=>updateTabHighlight(tab));
-  tab.addEventListener('touchstart',()=>updateTabHighlight(tab));
-});
-
-window.addEventListener('resize',()=>updateTabHighlight(tabs.find(t=>t.classList.contains('active'))));
-
-function initTabHighlight(){
-  const activeTab=tabs.find(t=>t.classList.contains('active'))||tabs[0];
-  updateTabHighlight(activeTab);
-}
-
-initTabHighlight();
