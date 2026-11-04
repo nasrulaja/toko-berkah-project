@@ -14,7 +14,6 @@ Buka `index.html` di browser. Tidak perlu instalasi atau server.
 - index.html          halaman utama
 - css/style.css       semua gaya (tema terang dan gelap)
 - js/app.js           logika aplikasi, data contoh, penyimpanan
-- assets/mascot.webp  gambar maskot halaman login
 
 ## Catatan
 - Data disimpan di localStorage browser (belum ada backend/database).
