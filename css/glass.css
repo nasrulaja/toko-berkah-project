@@ -1,0 +1,117 @@
+/* LIQUID GLASS v2 — full-app clear glassmorphism Toko Berkah */
+html[data-theme=light] body{
+  background:
+    radial-gradient(45% 55% at 12% 6%,  rgba(61,181,255,.16), transparent 62%),
+    radial-gradient(38% 48% at 90% 14%, rgba(139,92,246,.12), transparent 62%),
+    radial-gradient(42% 55% at 80% 92%, rgba(62,183,128,.11), transparent 62%),
+    radial-gradient(30% 42% at 15% 95%, rgba(255,133,51,.08), transparent 62%),
+    var(--bg);
+  background-attachment: fixed;
+}
+html[data-theme=dark] body{
+  background:
+    radial-gradient(45% 55% at 12% 6%,  rgba(61,181,255,.20), transparent 62%),
+    radial-gradient(38% 48% at 90% 14%, rgba(139,92,246,.18), transparent 62%),
+    radial-gradient(42% 55% at 80% 92%, rgba(62,183,128,.13), transparent 62%),
+    radial-gradient(30% 42% at 15% 95%, rgba(255,133,51,.10), transparent 62%),
+    var(--bg);
+  background-attachment: fixed;
+}
+:root{
+  --gx-spring: cubic-bezier(.22,1,.36,1);
+  --gx-fill:      color-mix(in srgb, var(--card) 50%, transparent);
+  --gx-fill-soft: color-mix(in srgb, var(--card) 38%, transparent);
+  --gx-stroke:    color-mix(in srgb, var(--hd) 12%, transparent);
+}
+:root[data-theme=dark]{
+  --gx-fill:      rgba(255,255,255,.055);
+  --gx-fill-soft: rgba(255,255,255,.04);
+  --gx-stroke:    rgba(255,255,255,.18);
+}
+.top{
+  background: var(--gx-fill) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(165%) brightness(1.04);
+  backdrop-filter: blur(16px) saturate(165%) brightness(1.04);
+  border-bottom: 1px solid var(--gx-stroke) !important;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset;
+}
+.card{
+  background: var(--gx-fill) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid var(--gx-stroke) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.55) inset, 0 8px 28px rgba(9,44,76,.12);
+  transition: transform .25s var(--gx-spring), box-shadow .25s var(--gx-spring);
+}
+.card:hover{
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.6) inset, 0 14px 40px rgba(9,44,76,.18);
+}
+.ov{ background: rgba(9,44,76,.32) !important; -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+.md{
+  background: var(--gx-fill) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(175%) brightness(1.04);
+  backdrop-filter: blur(22px) saturate(175%) brightness(1.04);
+  border: 1px solid var(--gx-stroke) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.55) inset, 0 28px 70px rgba(9,44,76,.28);
+}
+.toast{
+  background: color-mix(in srgb, var(--hd) 85%, transparent) !important;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid var(--gx-stroke);
+  border-radius: 999px !important;
+  box-shadow: 0 10px 30px rgba(9,44,76,.25);
+}
+.ban{
+  background: color-mix(in srgb, var(--p) 12%, transparent) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid color-mix(in srgb, var(--p) 30%, transparent) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset;
+}
+.st{
+  position: relative; overflow: hidden;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255,255,255,.30) !important;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.45) inset, 0 10px 26px rgba(9,44,76,.16);
+}
+.st::after{
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background: linear-gradient(115deg, rgba(255,255,255,.28) 0%, transparent 40%);
+}
+.btn{
+  background: var(--gx-fill-soft) !important;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-radius: 999px !important;
+  transition: all .2s var(--gx-spring);
+}
+.btn:hover{ transform: translateY(-1px); border-color: var(--p) !important; }
+.btn:active{ transform: scale(.96); }
+.bp{
+  background: linear-gradient(135deg, var(--p), var(--pd)) !important;
+  border: none !important; color: #06283f;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--p) 40%, transparent);
+}
+.bp:hover{ background: linear-gradient(135deg, #6BC8FF, var(--p)) !important; }
+input, select, textarea{
+  background: var(--gx-fill-soft) !important;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border-radius: 10px !important;
+}
+input:focus, select:focus, textarea:focus{
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--p) 28%, transparent);
+}
+.lg-card{
+  background: var(--gx-fill) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(170%) brightness(1.05);
+  backdrop-filter: blur(24px) saturate(170%) brightness(1.05);
+  border: 1px solid var(--gx-stroke) !important;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.55) inset, 0 32px 80px rgba(9,44,76,.25);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  .top,.card,.md,.ban,.btn,input,select,textarea,.lg-card{ background: var(--card) !important; }
+  .toast{ background: var(--hd) !important; }
+}
+@media (prefers-reduced-motion: reduce){ .card,.btn{ transition: none; } }
