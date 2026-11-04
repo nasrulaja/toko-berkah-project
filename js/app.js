@@ -3,7 +3,7 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const rp=n=>'Rp'+Math.round(n||0).toLocaleString('id-ID');
 const dk=iso=>new Date(iso).toLocaleDateString('en-CA');
 const dt=iso=>new Date(iso).toLocaleString('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-const MASCOT='assets/mascot.webp';
+const MASCOT='';
 const K='berkah_db_v1',KS='berkah_session';
 const IC={home:'M3 11l9-8 9 8M5 10v10h14V10',box:'M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',tag:'M3 12V3h9l9 9-9 9zM7.5 7.5h.01',alert:'M12 3l10 18H2zM12 10v5M12 18h.01',in:'M12 3v12m0 0l-4-4m4 4l4-4M4 17v4h16v-4',edit:'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',recv:'M6 2h12v20l-3-2-3 2-3-2-3 2zM9 7h6M9 11h6',out:'M9 21H5V3h4M16 17l5-5-5-5M21 12H9',menu:'M3 6h18M3 12h18M3 18h18',moon:'M21 13A9 9 0 1111 3a7 7 0 0010 10z'};
 const ico=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`;
@@ -113,7 +113,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
 
 Object.assign(IC,{mail:'M3 5h18v14H3zM3 7l9 6 9-6',lock:'M5 11h14v10H5zM8 11V7a4 4 0 018 0v4',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 100 6 3 3 0 000-6',sun:'M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M6.343 6.343L4.929 4.929m12.728 0l-1.414 1.414M6.343 17.657l-1.414 1.414M12 7a5 5 0 100 10 5 5 0 000-10z'});
 function themeIcon(){return document.documentElement.dataset.theme==='dark'?ico('sun'):ico('moon')}
-function auth(){$('#app').innerHTML=`<div class="lg"><button type="button" class="ic lg-th" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="lg-bg"><img src="${MASCOT}" alt=""></div><div class="lg-c"><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Toko Berkah · kelola stok dan penjualan</p><div class="lg-al" id="al" role="alert" hidden></div>
+function auth(){$('#app').innerHTML=`<div class="lg"><button type="button" class="ic lg-th" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="lg-c"><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Toko Berkah · kelola stok dan penjualan</p><div class="lg-al" id="al" role="alert" hidden></div>
 <div class="lg-f"><label class="lg-l" for="em">${ico('mail')}Surel</label><div class="lg-w" id="w1"><span class="lg-i">${ico('mail')}</span><input id="em" name="email" type="email" autocomplete="username" placeholder="surel@contoh.com" value="berkah@gmail.com"></div></div>
 <div class="lg-f"><label class="lg-l" for="pw">${ico('lock')}Kata sandi</label><div class="lg-w" id="w2"><span class="lg-i">${ico('lock')}</span><input id="pw" name="pw" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" value="berkah123"><button type="button" class="lg-eye" id="eye" aria-label="Tampilkan kata sandi">${ico('eye')}</button></div></div>
 <button class="lg-b">Masuk</button></form></div></div>`;
