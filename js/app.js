@@ -131,3 +131,27 @@ function theme(t){document.documentElement.dataset.theme=t;try{localStorage.setI
 try{theme(localStorage.getItem('berkah_theme')||'light')}catch(e){theme('light')}
 db=load();try{const s=localStorage.getItem(KS);me=db.users.find(u=>u.id==s)||null}catch(e){}
 addEventListener('hashchange',()=>{S={};if(innerWidth<992)sb(true);route()});route();
+
+// --- Liquid Glass Particles Animation ---
+(function initParticles(){
+  const container=$('#particles');
+  if(!container)return;
+  
+  // Create 5 floating particles
+  for(let i=0;i<5;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.animationDelay=i*3+'s';
+    container.appendChild(p);
+  }
+  
+  // Add random movement with mouse interaction
+  document.addEventListener('mousemove',e=>{
+    const particles=$$('.particle',container);
+    particles.forEach((p,idx)=>{
+      const x=(e.clientX/window.innerWidth-0.5)*20*(idx+1);
+      const y=(e.clientY/window.innerHeight-0.5)*20*(idx+1);
+      p.style.transform=`translate(${x}px,${y}px)`;
+    });
+  });
+})();
