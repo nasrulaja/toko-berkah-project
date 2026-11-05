@@ -11,6 +11,7 @@ const jb = { jual: ['r', 'Terjual'], masuk: ['g', 'Barang masuk'], penyesuaian: 
 let shellRef = () => {};
 export function setShellRef(fn) { shellRef = fn; }
 
+/** Render ulang target halaman ini. | param: - | return: string HTML */
 export function dashboard() {
   const td = today(), tr = db.transaksi.filter(t => dk(t.waktu) === td), L = low();
   const days = [...Array(7)].map((_, i) => { const d = new Date(Date.now() - (6 - i) * 864e5), k = dk(d.toISOString()); return { l: d.toLocaleDateString('id-ID', { weekday: 'short' }), v: db.transaksi.filter(t => dk(t.waktu) === k).reduce((a, t) => a + t.total, 0) } }), mx = Math.max(...days.map(d => d.v), 1);
@@ -23,6 +24,7 @@ export function dashboard() {
   <div class="card"><div class="ch"><h4>Transaksi terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Total</th></tr>${rec.map(t => `<tr><td>${t.kode}</td><td>${dt(t.waktu)}</td><td><span class="b n">${t.sumber}</span></td><td class="r">${rp(t.total)}</td></tr>`).join('')}</table></div></div>`;
 }
 
+/** Render ulang target halaman ini. | param: - | return: string HTML */
 export function kasir() {
   S.cart = S.cart || new Map(); S.q = S.q || ''; S.k = S.k || '';
   setTimeout(() => {
@@ -63,10 +65,12 @@ export function kasir() {
   <div class="card cb"><h4 style="margin-bottom:12px">Keranjang</h4><div id="cart"></div><div class="li" style="margin-top:12px"><b>Total</b><b id="tot" style="font-size:18px;color:var(--p)">Rp0</b></div><button class="btn bp" id="pay" style="width:100%;margin-top:12px" disabled>Bayar sekarang</button></div></div>`;
 }
 
+/** Render ulang target halaman ini. | param: - | return: string HTML */
 export function produk() {
   return `<div class="card"><div class="ch"><h4>Daftar Produk (${db.produk.length})</h4><div class="flt"><button class="btn bp" data-act="addp">Tambah produk</button><button class="btn" data-act="addk">Tambah kategori</button></div></div>
   <div class="tw"><table><tr><th>Produk</th><th>Kategori</th><th>Barcode</th><th class="r">Harga Jual</th><th class="r">Harga Beli</th><th class="r">Stok</th><th class="r">Aksi</th></tr>
   ${db.produk.map(p => { const k = kat(p.kategori_id); return `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(k?.nama || '-')}</td><td><code>${esc(p.barcode || '-')}</code></td><td class="r">${rp(p.harga)}</td><td class="r">${rp(p.harga_beli)}</td><td class="r"><span class="b ${p.stok <= p.stok_minimum ? 'r' : 'g'}">${p.stok}</span></td><td class="r"><button class="btn sm" data-act="editp" data-id="${p.id}">Ubah</button> <button class="btn sm bd" data-act="delp" data-id="${p.id}">Hapus</button></td></tr>` }).join('') || '<tr><td colspan="7">Belum ada produk.</td></tr>'}</table></div></div>
+/** Render ulang target halaman ini. | param: - | return: string HTML */
 export function stok() {
   setTimeout(() => {
     $('#mform').onsubmit = e => {
@@ -84,6 +88,7 @@ export function stok() {
   ${rec.map(m => { const p = prod(m.produk_id), info = jb[m.jenis] || ['n', m.jenis]; return `<tr><td>${dt(m.waktu)}</td><td>${esc(p?.nama || 'Hapus')}</td><td><span class="b ${info[0]}">${info[1]}</span></td><td class="r">${m.jumlah > 0 ? '+' + m.jumlah : m.jumlah}</td><td class="r">${m.stok_sebelum}</td><td class="r">${m.stok_sesudah}</td><td>${esc(m.catatan || '-')}</td></tr>` }).join('')}</table></div></div>`;
 }
 
+/** Render ulang target halaman ini. | param: - | return: string HTML */
 export function laporan() {
   const totJual = db.transaksi.reduce((a, t) => a + t.total, 0);
   let modalAwal = 0;
@@ -93,12 +98,14 @@ export function laporan() {
   <div class="card"><div class="ch"><h4>Laporan Ringkasan Penjualan</h4></div><div class="cb"><p>Laporan komprehensif mengkalkulasi selisih harga jual dengan estimasi harga beli produk terlaris.</p></div></div>`;
 }
 
+/** Render ulang target halaman ini. | param: - | return: string HTML */
 export function transaksi() {
   const rec = [...db.transaksi].reverse();
   return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Total</th><th class="r">Aksi</th></tr>
   ${rec.map(t => `<tr><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${t.sumber}</span></td><td class="r">${rp(t.total)}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
 }
 
+/** Render ulang target halaman ini. | param: - | return: string HTML */
 export function pengaturan() {
   setTimeout(() => {
     $('#resetDB').onclick = () => { ask('Reset seluruh data ke awal (data contoh)? Data Anda akan terhapus.', () => { setDB(seed()); save(); toast('Data direset ke contoh'); shellRef() }) }

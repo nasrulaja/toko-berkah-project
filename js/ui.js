@@ -1,10 +1,17 @@
+/** Ambil satu elemen. | param: s (selector), r (root) | return: Element */
 export const $ = (s, r = document) => r.querySelector(s);
+/** Ambil semua elemen sebagai array. | param: s (selector), r (root) | return: Element[] */
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+/** Escape karakter HTML. | param: s | return: string aman */
 export const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+/** Format angka jadi Rupiah. | param: n | return: string 'Rp...' */
 export const rp = n => 'Rp' + Math.round(n || 0).toLocaleString('id-ID');
+/** Ubah ISO jadi tanggal YYYY-MM-DD. | param: iso | return: string tanggal */
 export const dk = iso => new Date(iso).toLocaleDateString('en-CA');
+/** Format ISO jadi tanggal+waktu lokal Indonesia. | param: iso | return: string */
 export const dt = iso => new Date(iso).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
+/** Kumpulan path SVG icon. | param: - | return: objek {nama: path} */
 export const IC = {
   home: 'M3 11l9-8 9 8M5 10v10h14V10',
   box: 'M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',
@@ -23,8 +30,10 @@ export const IC = {
   sun: 'M12 3v2m0 14v2m9-9h-2M5 12H3m15.364 6.364l-1.414-1.414M6.343 6.343L4.929 4.929m12.728 0l-1.414 1.414M6.343 17.657l-1.414 1.414M12 7a5 5 0 100 10 5 5 0 000-10z'
 };
 
+/** Bikin markup SVG icon berdasarkan nama. | param: n (nama icon) | return: string SVG */
 export const ico = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`;
 
+/** Tampilkan toast singkat. | param: m (pesan) | return: void */
 export function toast(m) {
   const t = document.createElement('div');
   t.className = 'toast';

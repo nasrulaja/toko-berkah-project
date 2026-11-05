@@ -2,16 +2,21 @@ export const K = 'berkah_db_v1', KS = 'berkah_session';
 export let db;
 export let me = null;
 
+/** Menetapkan user yang sedang login. | param: val (objek user) | return: void */
 export const setMe = (val) => { me = val; };
+/** Menetapkan objek database aktif. | param: val (objek DB) | return: void */
 export const setDB = (val) => { db = val; };
 
+/** Memuat database dari localStorage; jika kosong, buat data contoh via seed(). | param: - | return: objek DB */
 export function load() {
   try { const s = localStorage.getItem(K); if (s) return JSON.parse(s) } catch (e) { }
   return seed();
 }
 
+/** Menyimpan database aktif ke localStorage. | param: - | return: void */
 export function save() { try { localStorage.setItem(K, JSON.stringify(db)) } catch (e) { } }
 
+/** Mencatat satu mutasi stok (masuk/jual/penyesuaian) dan memperbarui stok produk. | param: p (produk), jenis (string), jml (angka delta), o (opsi) | return: void */
 export function mut(p, jenis, jml, o = {}) {
   const b = p.stok; p.stok += jml;
   db.mutasi.push({
@@ -21,6 +26,7 @@ export function mut(p, jenis, jml, o = {}) {
   })
 }
 
+/** Memproses transaksi penjualan: hitung total, catat detail & mutasi stok. | param: items (array [id,qty]), w (waktu ISO), src (sumber) | return: void */
 export function sell(items, w, src) {
   const dk = iso => new Date(iso).toLocaleDateString('en-CA');
   const t = { id: ++db.n, waktu: w, total: 0, sumber: src, user_id: 1 };
@@ -39,6 +45,7 @@ export function sell(items, w, src) {
   db.transaksi.push(t)
 }
 
+/** Membuat data awal contoh (user, kategori, produk, transaksi) untuk DB baru. | param: - | return: objek DB baru */
 export function seed() {
   const iso = new Date().toISOString();
   const newDB = { n: 0, users: [{ id: 1, nama: 'Berkah', email: 'berkah@gmail.com', pw: btoa('berkah123'), created_at: iso }], kategori: [], produk: [], transaksi: [], detail: [], mutasi: [] };
