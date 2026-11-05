@@ -20,23 +20,20 @@ Prototipe web sesuai PRD (bagian Web 4.1).
 - ✅ **Liquid Glass v2** - Full-app clear glassmorphism (`backdrop-filter blur 12-24px`)
 - ✅ **Spring Physics** - Drag vertical + lateral rubber banding
 - ✅ **Polling Sync** - Indikator aktif kebal re-render `#app`
-- ✅ **Mobile Responsive** - Rail hilang < 992px, sidebar asli tetap jalan
+- ✅ **Mobile Responsive** - Rail tetap tampil di semua ukuran layar (collapsed di < 992px)
 
 ## 🔐 Login demo
 - Surel: `berkah@gmail.com`
 - Kata sandi: `berkah123`
 
-## 📁 Struktur
-```
-index.html          halaman utama
-css/
-  style.css         semua gaya (tema terang dan gelap)
-  glass.css         Liquid Glass v2 glassmorphism
-  glass-rail.css    Glass Rail v3 styling
-js/
-  app.js            logika aplikasi, data contoh, penyimpanan
-  glass-rail.js     Floating glass rail v3 (spring physics)
-```
+## 📁 Struktur Kode
+
+- **`js/db.js`**: Modul yang mengelola seluruh interaksi dengan `localStorage`, memuat/menyimpan kondisi basis data, serta menyediakan fungsi seeding data awal dan pencatatan mutasi/transaksi.
+- **`js/ui.js`**: Modul pembantu antarmuka (UI) yang mencakup fungsi utilitas DOM, format Rupiah, tanggal, toast, modal, escape HTML, dan generator SVG icon.
+- **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Kasir, Produk, Stok, Laporan, Transaksi, Pengaturan, dan Login).
+- **`js/app.js`**: Titik masuk (*bootstrap*) aplikasi berbasis modul ES yang menangani routing hash URL, event binding utama, dan animasi partikel latar belakang.
+- **`css/glass.css`**: Berkas gaya terpusat yang menggabungkan efek glassmorphism aplikasi, styling GX Rail vertikal, serta mode performa mobile & fallback.
+- **`js/glass-rail.js`**: Skrip interaktif untuk GX Rail vertikal dengan fisika *spring* (*rubber banding* dan tetesan air), mendukung semua ukuran layar.
 
 ## ⚙️ Catatan teknis
 - Data disimpan di localStorage browser (belum ada backend/database)

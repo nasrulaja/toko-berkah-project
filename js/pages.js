@@ -70,6 +70,10 @@ export function produk() {
   return `<div class="card"><div class="ch"><h4>Daftar Produk (${db.produk.length})</h4><div class="flt"><button class="btn bp" data-act="addp">Tambah produk</button><button class="btn" data-act="addk">Tambah kategori</button></div></div>
   <div class="tw"><table><tr><th>Produk</th><th>Kategori</th><th>Barcode</th><th class="r">Harga Jual</th><th class="r">Harga Beli</th><th class="r">Stok</th><th class="r">Aksi</th></tr>
   ${db.produk.map(p => { const k = kat(p.kategori_id); return `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(k?.nama || '-')}</td><td><code>${esc(p.barcode || '-')}</code></td><td class="r">${rp(p.harga)}</td><td class="r">${rp(p.harga_beli)}</td><td class="r"><span class="b ${p.stok <= p.stok_minimum ? 'r' : 'g'}">${p.stok}</span></td><td class="r"><button class="btn sm" data-act="editp" data-id="${p.id}">Ubah</button> <button class="btn sm bd" data-act="delp" data-id="${p.id}">Hapus</button></td></tr>` }).join('') || '<tr><td colspan="7">Belum ada produk.</td></tr>'}</table></div></div>
+  <div class="card"><div class="ch"><h4>Kategori (${db.kategori.length})</h4></div><div class="tw"><table><tr><th>Nama Kategori</th><th class="r">Jumlah Produk</th><th class="r">Aksi</th></tr>
+  ${db.kategori.map(k => `<tr><td>${esc(k.nama)}</td><td class="r">${db.produk.filter(p => p.kategori_id === k.id).length}</td><td class="r"><button class="btn sm" data-act="editk" data-id="${k.id}">Ubah</button> <button class="btn sm bd" data-act="delk" data-id="${k.id}">Hapus</button></td></tr>`).join('')}</table></div></div>`;
+}
+
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function stok() {
   setTimeout(() => {
@@ -148,8 +152,4 @@ export function login(routeFn) {
     setMe(user);
     try { localStorage.setItem(KS, user.id) } catch (e) { } location.hash = '#dashboard'; routeFn()
   }
-}
-
-  <div class="card"><div class="ch"><h4>Kategori (${db.kategori.length})</h4></div><div class="tw"><table><tr><th>Nama Kategori</th><th class="r">Jumlah Produk</th><th class="r">Aksi</th></tr>
-  ${db.kategori.map(k => `<tr><td>${esc(k.nama)}</td><td class="r">${db.produk.filter(p => p.kategori_id === k.id).length}</td><td class="r"><button class="btn sm" data-act="editk" data-id="${k.id}">Ubah</button> <button class="btn sm bd" data-act="delk" data-id="${k.id}">Hapus</button></td></tr>`).join('')}</table></div></div>`;
 }
