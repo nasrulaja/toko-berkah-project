@@ -1,16 +1,8 @@
-/* ============================================================
-   GX RAIL v3 — floating glass rail untuk Toko Berkah
-   - Baca menu dari .side .nav (TIDAK mengubah app.js)
-   - Sync menu aktif via polling: kebal re-render #app
-   - Klik item rail = klik menu aslinya (di-query fresh tiap kali)
-   - Indikator drag vertikal (spring), rubber band
-   - Tombol "Sembunyikan"/"Menu" di atas rail
-   - Desktop only; mobile sidebar drawer asli tetap jalan
-   ============================================================ */
+/* GX RAIL v4 — floating glass rail, semua ukuran layar */
 (function () {
   'use strict';
 
-  var SLOT = 52, DETACH = 32, MAX_WIDTH = 992;
+  var SLOT = 52, DETACH = 32;
 
   function navsNow() {
     return Array.prototype.slice.call(document.querySelectorAll('.side .nav'));
@@ -32,8 +24,6 @@
     var toggle = document.createElement('button');
     toggle.className = 'gx-rail-toggle';
     toggle.type = 'button';
-    toggle.innerHTML = '<span class="chev">\u00ab</span><span class="tgl-label">Sembunyikan</span>';
-    toggle.title = 'Sembunyikan tulisan menu';
     rail.appendChild(toggle);
 
     var ind = document.createElement('div');
@@ -63,20 +53,19 @@
     document.body.appendChild(rail);
     rail.classList.add('built');
 
-    document.documentElement.classList.add('gx-rail-expanded');
     function applyExpanded(exp) {
       rail.classList.toggle('collapsed', !exp);
       document.documentElement.classList.toggle('gx-rail-expanded', exp);
-      toggle.querySelector('.chev').textContent = exp ? '\u00ab' : '\u00bb';
-      toggle.querySelector('.tgl-label').textContent = exp ? 'Sembunyikan' : 'Menu';
       toggle.title = exp ? 'Sembunyikan tulisan menu' : 'Tampilkan tulisan menu';
+      toggle.querySelector('.tgl-label').textContent = exp ? 'Sembunyikan' : 'Menu';
+      toggle.querySelector('.chev').textContent = exp ? '\u00ab' : '\u00bb';
     }
-    applyExpanded(true);
+    toggle.innerHTML = '<span class="chev"></span><span class="tgl-label"></span>';
+    applyExpanded(window.innerWidth >= 992);
     toggle.addEventListener('click', function () {
       applyExpanded(rail.classList.contains('collapsed'));
     });
 
-    /* ---- fisika spring ---- */
     var pos    = { x: 0, v: 0, t: 0, k: 260, z: 0.55, raf: null },
         pull   = { x: 0, v: 0, t: 0, k: 340, z: 0.30, raf: null },
         rubber = { x: 0, v: 0, t: 0, k: 300, z: 0.55, raf: null };
@@ -105,7 +94,6 @@
       rail.style.transform = 'translateY(-50%) translateY(' + rubber.x + 'px)';
     }
 
-    /* ---- drag ---- */
     var COUNT = items.length, MAX = (COUNT - 1) * SLOT;
     var dragging = false, detached = false, startY = 0, startX = 0, baseX = 0, moved = 0;
 
@@ -159,8 +147,8 @@
         springTo(pull, 0, 260, 0.55, render);
         springTo(rubber, 0, 300, 0.55, render);
         if (moved >= 6) {
-          var n = navsNow()[i];                  /* fresh query */
-          if (n) n.click();                      /* drag berakhir di menu = pilih */
+          var n = navsNow()[i];
+          if (n) n.click();
         }
       }
     }
@@ -176,7 +164,6 @@
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('touchend', onUp);
 
-    /* ---- sync menu aktif: polling, kebal re-render total #app ---- */
     var currentOn = -1;
     function sync() {
       var on = activeIndex();
@@ -190,15 +177,6 @@
     setInterval(sync, 250);
   }
 
-  function boot() {
-    if (window.innerWidth >= MAX_WIDTH) build();
-    var last = window.innerWidth >= MAX_WIDTH;
-    window.addEventListener('resize', function () {
-      var now = window.innerWidth >= MAX_WIDTH;
-      if (now !== last) location.reload();
-    });
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
+  else build();
 })();
