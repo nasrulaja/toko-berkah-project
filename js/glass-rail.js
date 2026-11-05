@@ -2,7 +2,21 @@
 (function () {
   'use strict';
 
-  var SLOT = 52, DETACH = 32;
+  /* TUNING KNOBS - ubah angka di sini saja */
+  var CONFIG = {
+    SLOT: 52,            // tinggi tiap item menu (px) - harus sama dengan CSS .gx-rail-item height
+    DETACH: 32,          // jarak geser horizontal (px) sebelum indikator "lepas" (efek tetesan)
+    SPRING: {            // parameter fisika spring: k = kekakuan, z = damping
+      pos:    { k: 260, z: 0.55 },   // indikator mengikuti posisi
+      pull:   { k: 340, z: 0.30 },   // tarikan horizontal (tetesan air)
+      rubber: { k: 300, z: 0.55 }    // pantulan di ujung atas/bawah
+    },
+    STRETCH_MAX: 1.5,    // batas maksimum peregangan indikator
+    SCALE_X: 0.55,       // faktor pelebaran indikator saat ditarik
+    SCALE_Y: 0.22        // faktor pemipihan indikator saat ditarik
+  };
+
+  var SLOT = CONFIG.SLOT, DETACH = CONFIG.DETACH;
 
   function navsNow() {
     return Array.prototype.slice.call(document.querySelectorAll('.side .nav'));
@@ -66,9 +80,9 @@
       applyExpanded(rail.classList.contains('collapsed'));
     });
 
-    var pos    = { x: 0, v: 0, t: 0, k: 260, z: 0.55, raf: null },
-        pull   = { x: 0, v: 0, t: 0, k: 340, z: 0.30, raf: null },
-        rubber = { x: 0, v: 0, t: 0, k: 300, z: 0.55, raf: null };
+    var pos    = { x: 0, v: 0, t: 0, k: CONFIG.SPRING.pos.k, z: CONFIG.SPRING.pos.z, raf: null },
+        pull   = { x: 0, v: 0, t: 0, k: CONFIG.SPRING.pull.k, z: CONFIG.SPRING.pull.z, raf: null },
+        rubber = { x: 0, v: 0, t: 0, k: CONFIG.SPRING.rubber.k, z: CONFIG.SPRING.rubber.z, raf: null };
 
     function tick(s, cb) {
       s.raf = requestAnimationFrame(function () {
@@ -87,9 +101,9 @@
 
     function render() {
       var p = pull.x,
-          stretch = Math.min(Math.abs(p) / DETACH, 1.5),
-          scX = 1 + stretch * 0.55 * (Math.abs(p) > 0 ? 1 : 0),
-          scY = 1 - Math.min(Math.abs(p) / DETACH, 1) * 0.22 * (Math.abs(p) > 0 ? 1 : 0);
+          stretch = Math.min(Math.abs(p) / DETACH, CONFIG.STRETCH_MAX),
+          scX = 1 + stretch * CONFIG.SCALE_X * (Math.abs(p) > 0 ? 1 : 0),
+          scY = 1 - Math.min(Math.abs(p) / DETACH, 1) * CONFIG.SCALE_Y * (Math.abs(p) > 0 ? 1 : 0);
       ind.style.transform = 'translate(0,' + pos.x + 'px) translateX(' + p + 'px) scale(' + scX.toFixed(3) + ',' + scY.toFixed(3) + ')';
       rail.style.transform = 'translateY(-50%) translateY(' + rubber.x + 'px)';
     }
@@ -137,15 +151,15 @@
       dragging = false;
       rail.classList.remove('grabbing');
       if (detached) {
-        springTo(pull, 0, 340, 0.30, render);
-        springTo(pos, Math.round(pos.t / SLOT) * SLOT, 340, 0.30, render);
-        springTo(rubber, 0, 300, 0.55, render);
+        springTo(pull, 0, CONFIG.SPRING.pull.k, CONFIG.SPRING.pull.z, render);
+        springTo(pos, Math.round(pos.t / SLOT) * SLOT, CONFIG.SPRING.pull.k, CONFIG.SPRING.pull.z, render);
+        springTo(rubber, 0, CONFIG.SPRING.rubber.k, CONFIG.SPRING.rubber.z, render);
         setTimeout(function () { detached = false; }, 350);
       } else {
         var i = Math.round(pos.t / SLOT);
-        springTo(pos, i * SLOT, 260, 0.55, render);
-        springTo(pull, 0, 260, 0.55, render);
-        springTo(rubber, 0, 300, 0.55, render);
+        springTo(pos, i * SLOT, CONFIG.SPRING.pos.k, CONFIG.SPRING.pos.z, render);
+        springTo(pull, 0, CONFIG.SPRING.pos.k, CONFIG.SPRING.pos.z, render);
+        springTo(rubber, 0, CONFIG.SPRING.rubber.k, CONFIG.SPRING.rubber.z, render);
         if (moved >= 6) {
           var n = navsNow()[i];
           if (n) n.click();

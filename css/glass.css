@@ -1,4 +1,8 @@
-﻿/* LIQUID GLASS v3 — full-app clear glassmorphism Toko Berkah */
+/* LIQUID GLASS v3 — full-app clear glassmorphism Toko Berkah */
+
+/* === BAGIAN 1: efek kaca aplikasi (kartu, topbar, modal, dll) === */
+
+/* Aurora background: lapisan fixed di belakang konten (lebih ringan dari background-attachment) */
 body::before{
   content:''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
@@ -7,6 +11,7 @@ body::before{
     radial-gradient(42% 55% at 80% 92%, rgba(62,183,128,.11), transparent 62%),
     radial-gradient(30% 42% at 15% 95%, rgba(255,133,51,.08), transparent 62%);
 }
+/* Aurora versi gelap */
 :root[data-theme=dark] body::before{
   background:
     radial-gradient(45% 55% at 12% 6%,  rgba(61,181,255,.20), transparent 62%),
@@ -14,6 +19,7 @@ body::before{
     radial-gradient(42% 55% at 80% 92%, rgba(62,183,128,.13), transparent 62%),
     radial-gradient(30% 42% at 15% 95%, rgba(255,133,51,.10), transparent 62%);
 }
+/* Token warna & easing kaca */
 :root{
   --gx-spring: cubic-bezier(.22,1,.36,1);
   --gx-fill:      color-mix(in srgb, var(--card) 50%, transparent);
@@ -25,6 +31,7 @@ body::before{
   --gx-fill-soft: rgba(255,255,255,.04);
   --gx-stroke:    rgba(255,255,255,.18);
 }
+/* Topbar: kaca blur ringan */
 .top{
   background: var(--gx-fill);
   -webkit-backdrop-filter: blur(16px) saturate(165%) brightness(1.04);
@@ -32,6 +39,7 @@ body::before{
   border-bottom: 1px solid var(--gx-stroke);
   box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset;
 }
+/* Kartu: kaca + bayangan lembut, hover mengangkat */
 .card{
   background: var(--gx-fill);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
@@ -42,7 +50,9 @@ body::before{
   transition: box-shadow .25s var(--gx-spring);
 }
 .card:hover{ box-shadow: 0 1px 0 0 rgba(255,255,255,.6) inset, 0 14px 40px rgba(9,44,76,.18); }
+/* Overlay gelap transparan */
 .ov{ background: rgba(9,44,76,.32); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+/* Modal: kaca tebal blur */
 .md{
   background: var(--gx-fill);
   -webkit-backdrop-filter: blur(22px) saturate(175%) brightness(1.04);
@@ -51,6 +61,7 @@ body::before{
   border-radius: 20px;
   box-shadow: 0 1px 0 0 rgba(255,255,255,.55) inset, 0 28px 70px rgba(9,44,76,.28);
 }
+/* Toast notifikasi */
 .toast{
   background: color-mix(in srgb, var(--hd) 85%, transparent);
   -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
@@ -58,6 +69,7 @@ body::before{
   border-radius: 999px;
   box-shadow: 0 10px 30px rgba(9,44,76,.25);
 }
+/* Banner sambutan */
 .ban{
   background: color-mix(in srgb, var(--p) 12%, transparent);
   -webkit-backdrop-filter: blur(12px) saturate(160%); backdrop-filter: blur(12px) saturate(160%);
@@ -65,6 +77,7 @@ body::before{
   border-radius: 14px;
   box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset;
 }
+/* Kartu statistik dengan kilau */
 .st{
   position: relative; overflow: hidden;
   border-radius: 16px;
@@ -75,6 +88,7 @@ body::before{
   content:''; position:absolute; inset:0; pointer-events:none;
   background: linear-gradient(115deg, rgba(255,255,255,.28) 0%, transparent 40%);
 }
+/* Tombol dasar */
 .btn{
   background: var(--gx-fill-soft);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -83,12 +97,14 @@ body::before{
 }
 .btn:hover{ transform: translateY(-1px); border-color: var(--p); }
 .btn:active{ transform: scale(.96); }
+/* Tombol primer */
 .bp{
   background: linear-gradient(135deg, var(--p), var(--pd));
   border: none; color: #06283f;
   box-shadow: 0 6px 18px color-mix(in srgb, var(--p) 40%, transparent);
 }
 .bp:hover{ background: linear-gradient(135deg, #6BC8FF, var(--p)); }
+/* Input/select/textarea kaca */
 input, select, textarea{
   background: var(--gx-fill-soft);
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
@@ -98,6 +114,7 @@ input:focus, select:focus, textarea:focus{
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--p) 28%, transparent);
 }
+/* Kartu login */
 .lg-card{
   background: var(--gx-fill);
   -webkit-backdrop-filter: blur(24px) saturate(170%) brightness(1.05);
@@ -105,6 +122,141 @@ input:focus, select:focus, textarea:focus{
   border: 1px solid var(--gx-stroke);
   box-shadow: 0 1px 0 0 rgba(255,255,255,.55) inset, 0 32px 80px rgba(9,44,76,.25);
 }
+
+/* === BAGIAN 2: GX RAIL (rail kaca kiri) === */
+
+/* Sembunyikan sidebar asli di desktop, geser konten untuk rail */
+@media (min-width: 992px) {
+  .side { display: none !important; }
+  .main { margin-left: 0 !important; padding-left: 92px; transition: padding-left .35s cubic-bezier(.22,1,.36,1); }
+  html.gx-rail-expanded .main { padding-left: 216px; }
+}
+/* Rail tetap tampil di mobile: geser konten 76px */
+@media (max-width: 991px) {
+  .main { padding-left: 76px; }
+  .gx-rail { left: 8px; }
+}
+
+/* Wadah rail kaca melayang */
+.gx-rail {
+  --spring: cubic-bezier(.22, 1, .36, 1);
+  display: none;
+  position: fixed; left: 14px; top: 50%; z-index: 30;
+  transform: translateY(-50%);
+  flex-direction: column; align-items: stretch; padding: 6px;
+  width: 208px;
+  border-radius: 22px;
+  font-family: inherit;
+  cursor: grab; touch-action: none;
+  will-change: transform;
+  transition: width .35s var(--spring), border-radius .35s var(--spring);
+  background: color-mix(in srgb, var(--card, #ffffff) 52%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(165%) brightness(1.04);
+  backdrop-filter: blur(16px) saturate(165%) brightness(1.04);
+  border: 1px solid color-mix(in srgb, var(--hd, #092C4C) 13%, transparent);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,.85) inset,
+    0 -10px 26px rgba(9,44,76,.10) inset,
+    0 18px 50px rgba(9,44,76,.20);
+}
+/* State rail aktif & ciut */
+.gx-rail.built { display: flex; }
+.gx-rail.collapsed { width: 64px; border-radius: 999px; }
+
+/* Rail versi gelap */
+:root[data-theme=dark] .gx-rail {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.22);
+  box-shadow:
+    0 1px 0 0 rgba(255,255,255,.55) inset,
+    -10px 0 26px rgba(0,0,0,.28) inset,
+    0 18px 50px rgba(0,0,0,.55);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) .gx-rail {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.22);
+    box-shadow:
+      0 1px 0 0 rgba(255,255,255,.55) inset,
+      -10px 0 26px rgba(0,0,0,.28) inset,
+      0 18px 50px rgba(0,0,0,.55);
+  }
+}
+
+/* Saat rail sedang di-drag */
+.gx-rail.grabbing { cursor: grabbing; }
+
+/* Tombol buka/tutup label menu */
+.gx-rail-toggle {
+  position: relative; z-index: 1; width: 100%; height: 30px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: color-mix(in srgb, var(--hd, #092C4C) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hd, #092C4C) 10%, transparent);
+  border-radius: 999px; padding: 0 10px; margin-bottom: 4px;
+  color: var(--tx, #646B72); cursor: pointer;
+  font: 700 11px/1 inherit;
+  transition: color .2s, background .2s;
+}
+.gx-rail-toggle:hover { color: var(--hd, #092C4C); background: color-mix(in srgb, var(--hd, #092C4C) 12%, transparent); }
+:root[data-theme=dark] .gx-rail-toggle,
+:root[data-theme=dark] .gx-rail-toggle:hover { color: rgba(255,255,255,.75); background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); }
+.gx-rail-toggle .chev { font-size: 13px; transition: transform .3s var(--spring); }
+.gx-rail.collapsed .gx-rail-toggle .chev { transform: rotate(180deg); }
+.gx-rail.collapsed .gx-rail-toggle .tgl-label { display: none; }
+
+/* Indikator geser (blob kaca) */
+.gx-rail-ind {
+  position: absolute; left: 6px; right: 6px; top: 40px; height: 52px;
+  border-radius: 14px; z-index: 0;
+  will-change: transform; pointer-events: none;
+  background: color-mix(in srgb, var(--card, #ffffff) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--hd, #092C4C) 10%, transparent);
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.9) inset, 0 6px 18px rgba(9,44,76,.14);
+}
+:root[data-theme=dark] .gx-rail-ind {
+  background: rgba(255,255,255,.08);
+  border: none;
+  box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset, 6px 0 18px rgba(0,0,0,.30);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) .gx-rail-ind {
+    background: rgba(255,255,255,.08);
+    border: none;
+    box-shadow: 0 1px 0 0 rgba(255,255,255,.5) inset, 6px 0 18px rgba(0,0,0,.30);
+  }
+}
+.gx-rail.collapsed .gx-rail-ind { border-radius: 999px; }
+/* Kilau pada indikator */
+.gx-rail-ind::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255,255,255,.30), transparent 30%, transparent 70%, rgba(255,255,255,.10));
+  pointer-events: none;
+}
+
+/* Tombol menu di rail */
+.gx-rail-item {
+  position: relative; z-index: 1; width: 100%; height: 52px;
+  display: flex; align-items: center; justify-content: flex-start; gap: 11px;
+  background: none; border: none; padding: 0 14px;
+  color: var(--tx, #646B72); cursor: pointer; border-radius: 14px;
+  font: 600 12.5px/1 inherit; white-space: nowrap; overflow: hidden;
+  transition: color .25s, border-radius .35s var(--spring);
+}
+.gx-rail-item svg { width: 21px; height: 21px; flex: none;
+  stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.gx-rail-item.active { color: var(--hd, #092C4C); }
+:root[data-theme=dark] .gx-rail-item.active { color: #fff; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) .gx-rail-item.active { color: #fff; }
+}
+.gx-rail.collapsed .gx-rail-item { justify-content: center; padding: 0; border-radius: 999px; }
+.gx-lbl { display: inline; }
+.gx-rail.collapsed .gx-lbl { display: none; }
+
+/* === BAGIAN 3: mode mobile & fallback === */
+
+/* Di mobile: matikan backdrop-filter pada elemen non-esensial untuk performa.
+   Topbar & modal tetap kaca (blur ringan). */
 @media (max-width: 991px) {
   .card, .ban, .st, .btn, input, select, textarea, .toast, .lg-card {
     -webkit-backdrop-filter: none;
@@ -122,10 +274,24 @@ input:focus, select:focus, textarea:focus{
     -webkit-backdrop-filter: blur(16px) saturate(165%);
     backdrop-filter: blur(16px) saturate(165%);
   }
+  /* Rail mobile: blur lebih ringan */
+  .gx-rail {
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    backdrop-filter: blur(12px) saturate(160%);
+  }
 }
+
+/* Fallback: browser tanpa dukungan backdrop-filter -> pakai warna solid */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
   .top,.card,.md,.ban,.btn,input,select,textarea,.lg-card{ background: var(--card); }
   .toast{ background: var(--hd); }
   .st{ background: transparent; }
+  .gx-rail { background: var(--card, #ffffff); }
+  .gx-rail-ind { background: var(--soft, #E6F6FF); }
 }
-@media (prefers-reduced-motion: reduce){ .card,.btn{ transition: none; } }
+
+/* Hormati preferensi kurangi animasi */
+@media (prefers-reduced-motion: reduce){
+  .card,.btn{ transition: none; }
+  .gx-rail, .gx-rail-item, .main { transition: none; }
+}
