@@ -4,16 +4,16 @@
 
   /* TUNING KNOBS - ubah angka di sini saja */
   var CONFIG = {
-    SLOT: 52,            // tinggi tiap item menu (px) - harus sama dengan CSS .gx-rail-item height
-    DETACH: 32,          // jarak geser horizontal (px) sebelum indikator "lepas" (efek tetesan)
-    SPRING: {            // parameter fisika spring: k = kekakuan, z = damping
-      pos:    { k: 260, z: 0.55 },   // indikator mengikuti posisi
-      pull:   { k: 340, z: 0.30 },   // tarikan horizontal (tetesan air)
-      rubber: { k: 300, z: 0.55 }    // pantulan di ujung atas/bawah
+    SLOT: 52,
+    DETACH: 32,
+    SPRING: {
+      pos:    { k: 260, z: 0.55 },
+      pull:   { k: 340, z: 0.30 },
+      rubber: { k: 300, z: 0.55 }
     },
-    STRETCH_MAX: 1.5,    // batas maksimum peregangan indikator
-    SCALE_X: 0.55,       // faktor pelebaran indikator saat ditarik
-    SCALE_Y: 0.22        // faktor pemipihan indikator saat ditarik
+    STRETCH_MAX: 1.5,
+    SCALE_X: 0.55,
+    SCALE_Y: 0.22
   };
 
   var SLOT = CONFIG.SLOT, DETACH = CONFIG.DETACH;
@@ -27,23 +27,25 @@
     return on;
   }
 
+  /* Bangun / hapus rail sesuai keberadaan menu.
+     Dipanggil berulang (polling) agar sidebar langsung muncul saat login
+     dan hilang saat logout TANPA perlu refresh. */
   function build() {
+    var existing = document.getElementById('gxRail');
     var ns = navsNow();
-    if (!ns.length) return;
+
+    if (!ns.length) {
+      if (existing) existing.remove();
+      document.documentElement.classList.remove('gx-rail-expanded');
+      return;
+    }
+    if (existing) {
+      if (existing.querySelectorAll('.gx-rail-item').length === ns.length) return;
+      existing.remove();
+    }
 
     var rail = document.createElement('div');
     rail.className = 'gx-rail';
-    rail.id = 'gxRail';
-
-    var toggle = document.createElement('button');
-    toggle.className = 'gx-rail-toggle';
-    toggle.type = 'button';
-    rail.appendChild(toggle);
-
-    var ind = document.createElement('div');
-    ind.className = 'gx-rail-ind';
-    rail.appendChild(ind);
-
     var items = ns.map(function (nav, i) {
       var b = document.createElement('button');
       b.className = 'gx-rail-item';
@@ -76,7 +78,8 @@
     }
     toggle.innerHTML = '<span class="chev"></span><span class="tgl-label"></span>';
     applyExpanded(window.innerWidth >= 992);
-    toggle.addEventListener('click', function () {
+    toggle.addEventListener('click', function (e) {
+      e.stopPropagation();
       applyExpanded(rail.classList.contains('collapsed'));
     });
 
@@ -112,6 +115,7 @@
     var dragging = false, detached = false, startY = 0, startX = 0, baseX = 0, moved = 0;
 
     function onDown(e) {
+      if (e.target.closest('.gx-rail-toggle')) return;
       if (dragging) return;
       var pt = e.touches ? e.touches[0] : e;
       dragging = true; detached = false; moved = 0;
@@ -184,13 +188,19 @@
       if (on >= 0 && on !== currentOn) {
         currentOn = on;
         items.forEach(function (t, j) { t.classList.toggle('active', j === on); });
-        snapTo(on, 260, 0.55);
+        snapTo(on, CONFIG.SPRING.pos.k, CONFIG.SPRING.pos.z);
       }
     }
     sync();
-    setInterval(sync, 250);
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build);
-  else build();
+  // Polling berkelanjutan agar rail otomatis muncul/hilang saat login/logout TANPA refresh
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () {
+    build();
+    setInterval(build, 300);
+  });
+  else {
+    build();
+    setInterval(build, 300);
+  }
 })();

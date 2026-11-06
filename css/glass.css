@@ -258,6 +258,7 @@ input:focus, select:focus, textarea:focus{
 /* Di mobile: matikan backdrop-filter pada elemen non-esensial untuk performa.
    Topbar & modal tetap kaca (blur ringan). */
 @media (max-width: 991px) {
+  .side { display: none !important; }
   .card, .ban, .st, .btn, input, select, textarea, .toast, .lg-card {
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
