@@ -1,15 +1,45 @@
+/* ==========================================================================
+   TOKO BERKAH — ui.js
+   Perkakas tampilan yang dipakai semua halaman: pemilih elemen, format
+   Rupiah/tanggal, ikon SVG, toast, modal, dan pembuat elemen.
+   --------------------------------------------------------------------------
+   PETA FILE — cari teks "BAGIAN n":
+     BAGIAN 1  HELPER DOM & FORMAT   $, $$, esc, rp, dk, dt
+     BAGIAN 2  IKON SVG              IC + ico()
+     BAGIAN 3  TOAST & MODAL         toast(), modal(), ask()
+     BAGIAN 4  FORM & LAIN-LAIN      el(), themeIcon(), opts(), popt(), today(), empty()
+   ========================================================================== */
+
+/* ==========================================================================
+   BAGIAN 1 — HELPER DOM & FORMAT
+   ========================================================================== */
+
 /** Ambil satu elemen. | param: s (selector), r (root) | return: Element */
 export const $ = (s, r = document) => r.querySelector(s);
 /** Ambil semua elemen sebagai array. | param: s (selector), r (root) | return: Element[] */
 export const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 /** Escape karakter HTML. | param: s | return: string aman */
-export const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+export const esc = (s) =>
+  String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 /** Format angka jadi Rupiah. | param: n | return: string 'Rp...' */
-export const rp = n => 'Rp' + Math.round(n || 0).toLocaleString('id-ID');
+export const rp = (n) => 'Rp' + Math.round(n || 0).toLocaleString('id-ID');
 /** Ubah ISO jadi tanggal YYYY-MM-DD. | param: iso | return: string tanggal */
-export const dk = iso => new Date(iso).toLocaleDateString('en-CA');
+export const dk = (iso) => new Date(iso).toLocaleDateString('en-CA');
 /** Format ISO jadi tanggal+waktu lokal Indonesia. | param: iso | return: string */
-export const dt = iso => new Date(iso).toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+export const dt = (iso) =>
+  new Date(iso).toLocaleString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+/* ==========================================================================
+   BAGIAN 2 — IKON SVG
+   Satu objek IC berisi path SVG; ico() membungkusnya jadi <svg> siap pakai
+   sehingga ikon tetap tajam dan warnanya ikut currentColor.
+   ========================================================================== */
 
 /** Kumpulan path SVG icon. | param: - | return: objek {nama: path} */
 export const IC = {
@@ -31,7 +61,16 @@ export const IC = {
 };
 
 /** Bikin markup SVG icon berdasarkan nama. | param: n (nama icon) | return: string SVG */
-export const ico = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`;
+export const ico = (n) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`;
+
+/* ==========================================================================
+   BAGIAN 3 — TOAST & MODAL
+   toast() : notifikasi singkat yang hilang sendiri setelah 2,4 detik
+   modal() : isi #ov dengan form; fn dipanggil saat submit, dan modal hanya
+             tertutup bila fn tidak mengembalikan false (validasi gagal)
+   ask()   : modal konfirmasi (dipakai sebelum menghapus data)
+   ========================================================================== */
 
 /** Tampilkan toast singkat. | param: m (pesan) | return: void */
 export function toast(m) {
@@ -39,26 +78,52 @@ export function toast(m) {
   t.className = 'toast';
   t.textContent = m;
   document.body.append(t);
-  setTimeout(() => t.remove(), 2400)
+  setTimeout(() => t.remove(), 2400);
 }
 
 export function modal(title, body, label, fn) {
-  $('#ov').innerHTML = `<div class="ov"><form class="md"><div class="ch"><h3>${title}</h3><button type="button" class="btn sm" data-act="x">Tutup</button></div><div class="cb">${body}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">${label ? `<button type="button" class="btn" data-act="x">Batal</button><button class="btn bp">${label}</button>` : ''}</div></div></form></div>`;
-  const f = $('#ov form'); f.onsubmit = e => { e.preventDefault(); if (fn && fn(Object.fromEntries(new FormData(f))) !== false) $('#ov').innerHTML = '' }; const i = $('input,select', f); i && i.focus()
+  $('#ov').innerHTML =
+    `<div class="ov"><form class="md"><div class="ch"><h3>${title}</h3><button type="button" class="btn sm" data-act="x">Tutup</button></div><div class="cb">${body}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">${label ? `<button type="button" class="btn" data-act="x">Batal</button><button class="btn bp">${label}</button>` : ''}</div></div></form></div>`;
+  const f = $('#ov form');
+  f.onsubmit = (e) => {
+    e.preventDefault();
+    if (fn && fn(Object.fromEntries(new FormData(f))) !== false) $('#ov').innerHTML = '';
+  };
+  const i = $('input,select', f);
+  i && i.focus();
 }
 
-export const ask = (m, fn) => modal('Konfirmasi', `<p>${m}</p>`, 'Ya, lanjutkan', () => { fn() });
+export const ask = (m, fn) =>
+  modal('Konfirmasi', `<p>${m}</p>`, 'Ya, lanjutkan', () => {
+    fn();
+  });
+
+/* ==========================================================================
+   BAGIAN 4 — PEMBUAT FORM & HELPER LAIN
+   el()        : buat elemen beserta atribut, isi string dianggap HTML
+   themeIcon() : ikon matahari/bulan sesuai tema aktif
+   opts()/popt(): daftar <option> untuk select kategori / produk
+   today()     : tanggal hari ini (YYYY-MM-DD, zona waktu lokal)
+   empty()     : kotak "tidak ada data"
+   ========================================================================== */
 
 export const el = (tag, attr = {}, child = '') => {
   const e = document.createElement(tag);
-  Object.entries(attr).forEach(([k, v]) => e[k] = v);
-  if (typeof child === 'string') e.innerHTML = child; else e.append(child);
-  return e
+  Object.entries(attr).forEach(([k, v]) => (e[k] = v));
+  if (typeof child === 'string') e.innerHTML = child;
+  else e.append(child);
+  return e;
 };
 
-export function themeIcon() { return document.documentElement.dataset.theme === 'dark' ? ico('sun') : ico('moon') }
+export function themeIcon() {
+  return document.documentElement.dataset.theme === 'dark' ? ico('sun') : ico('moon');
+}
 
-export const opts = (arr, sel, k = 'nama') => arr.map(x => `<option value="${x.id}" ${x.id == sel ? 'selected' : ''}>${esc(x[k])}</option>`).join('');
-export const popt = (db, sel) => db.produk.map(p => `<option value="${p.id}" ${p.id == sel ? 'selected' : ''}>${esc(p.nama)} (stok ${p.stok})</option>`).join('');
+export const opts = (arr, sel, k = 'nama') =>
+  arr.map((x) => `<option value="${x.id}" ${x.id == sel ? 'selected' : ''}>${esc(x[k])}</option>`).join('');
+export const popt = (db, sel) =>
+  db.produk
+    .map((p) => `<option value="${p.id}" ${p.id == sel ? 'selected' : ''}>${esc(p.nama)} (stok ${p.stok})</option>`)
+    .join('');
 export const today = () => dk(new Date().toISOString());
 export const empty = (t, s) => `<div class="em"><h4>${t}</h4><p>${s}</p></div>`;

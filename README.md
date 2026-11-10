@@ -28,6 +28,12 @@ Prototipe web sesuai PRD (bagian Web 4.1).
 
 ## 📁 Struktur Kode
 
+> Setiap berkas diawali banner **PETA FILE** dan dibagi dengan penanda
+> `BAGIAN n — NAMA`. Cukup cari teks `BAGIAN` di editor untuk melompat
+> antar bagian tanpa perlu membaca seluruh berkas.
+
+- **`index.html`**: Kerangka halaman — hanya berisi wadah kosong (`#app`, `#ov`, `#particles`), pemuatan font/CSS, dan pemanggilan skrip; seluruh isi dirender oleh `js/app.js`.
+- **`css/style.css`**: Gaya utama aplikasi (variabel warna, sidebar, topbar, kartu, form, tabel, dashboard, kasir, modal, login) dalam 9 `BAGIAN`.
 - **`js/db.js`**: Modul yang mengelola seluruh interaksi dengan `localStorage`, memuat/menyimpan kondisi basis data, serta menyediakan fungsi seeding data awal dan pencatatan mutasi/transaksi.
 - **`js/ui.js`**: Modul pembantu antarmuka (UI) yang mencakup fungsi utilitas DOM, format Rupiah, tanggal, toast, modal, escape HTML, dan generator SVG icon.
 - **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Kasir, Produk, Stok, Laporan, Transaksi, Pengaturan, dan Login).
