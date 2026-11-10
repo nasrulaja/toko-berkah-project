@@ -309,8 +309,9 @@ export function kform(k) {
 
 /* ==========================================================================
    BAGIAN 5 — HALAMAN LOGIN
-   Menampilkan kartu login di #app; setelah email & sandi cocok, setMe() +
-   setMe ke localStorage, lalu routeFn() dipanggil agar shell dirender.
+   Menampilkan kartu login di #app. Sandi dibandingkan dengan btoa(pw); bila
+   cocok, setMe() + simpan ID user di localStorage (KS), lalu routeFn() agar
+   shell langsung dirender tanpa refresh.
    ========================================================================== */
 
 export function login(routeFn) {
