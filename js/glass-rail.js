@@ -74,6 +74,20 @@
 
     var rail = document.createElement('div');
     rail.className = 'gx-rail';
+    rail.id = 'gxRail'; // dipakai build() untuk mendeteksi rail yang sudah ada
+
+    /* Tombol buka/tutup tulisan menu. Wajib ada karena applyExpanded() dan
+       listener klik di bawahnya memakai variabel toggle. */
+    var toggle = document.createElement('button');
+    toggle.className = 'gx-rail-toggle';
+    toggle.type = 'button';
+    rail.appendChild(toggle);
+
+    /* Indikator bulat yang bergerak mengikuti ikon aktif (dipakai render()). */
+    var ind = document.createElement('div');
+    ind.className = 'gx-rail-ind';
+    rail.appendChild(ind);
+
     var items = ns.map(function (nav, i) {
       var b = document.createElement('button');
       b.className = 'gx-rail-item';
