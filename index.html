@@ -7,7 +7,7 @@
      --------------------------------------------------------------------------
      PETA FILE — cari teks "BAGIAN n":
        BAGIAN 1  KEPALA DOKUMEN   meta, judul, font, urutan pemuatan CSS
-       BAGIAN 2  BADAN DOKUMEN    wadah #app/#ov/#particles, skrip, watermark
+       BAGIAN 2  BADAN DOKUMEN    wadah #app/#ov, skrip
      ========================================================================== -->
 <html lang="id">
   <head>
@@ -40,29 +40,10 @@
     <!-- Wadah modal & overlay: diisi/dikosongkan oleh fungsi modal() di ui.js -->
     <div id="ov"></div>
 
-    <!-- Titik-titik kaca yang bergerak mengikuti kursor (lihat initParticles) -->
-    <div class="particles" id="particles"></div>
-
     <!-- Skrip: app.js (modul ES) = logika aplikasi, glass-rail.js = rail kaca.
          app.js memakai type="module" karena mengimpor db.js, ui.js, pages.js. -->
     <script type="module" src="js/app.js"></script>
     <script src="js/glass-rail.js" defer></script>
 
-    <!-- Watermark tetap di bawah layar; tidak menangkap klik -->
-    <div
-      style="
-        position: fixed;
-        bottom: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-family: 'Nunito', 'Roboto', sans-serif;
-        font-size: 13px;
-        color: rgba(0, 0, 0, 0.45);
-        z-index: 5;
-        pointer-events: none;
-      "
-    >
-      Dikembangkan oleh Ruelz
-    </div>
   </body>
 </html>

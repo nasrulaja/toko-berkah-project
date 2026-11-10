@@ -58,18 +58,34 @@
   /* Bangun / hapus rail sesuai keberadaan menu.
      Dipanggil berulang (polling) agar sidebar langsung muncul saat login
      dan hilang saat logout TANPA perlu refresh. */
+  /* Label menu: ambil teks .ln saja (badge angka "Stok Menipis2" tidak ikut) */
+  function navLabel(nav) {
+    var ln = nav.querySelector('.ln');
+    return (ln || nav).textContent.trim();
+  }
+  /* Bongkar rail lama: lepas semua listener document + animasi supaya tidak menumpuk */
+  function destroyRail(rail) {
+    if (!rail) return;
+    if (rail._destroy) rail._destroy();
+    rail.remove();
+  }
+
   function build() {
     var existing = document.getElementById('gxRail');
     var ns = navsNow();
 
     if (!ns.length) {
-      if (existing) existing.remove();
+      destroyRail(existing);
       document.documentElement.classList.remove('gx-rail-expanded');
       return;
     }
     if (existing) {
-      if (existing.querySelectorAll('.gx-rail-item').length === ns.length) return;
-      existing.remove();
+      if (existing.querySelectorAll('.gx-rail-item').length === ns.length) {
+        /* rail sudah ada: tetap samakan indikator dengan menu aktif tiap polling */
+        if (existing._sync) existing._sync();
+        return;
+      }
+      destroyRail(existing);
     }
 
     var rail = document.createElement('div');
@@ -92,12 +108,12 @@
       var b = document.createElement('button');
       b.className = 'gx-rail-item';
       b.type = 'button';
-      b.title = nav.textContent.trim();
+      b.title = navLabel(nav);
       var svg = nav.querySelector('svg');
       b.appendChild(svg ? svg.cloneNode(true) : document.createTextNode('\u2022'));
       var lbl = document.createElement('span');
       lbl.className = 'gx-lbl';
-      lbl.textContent = nav.textContent.trim();
+      lbl.textContent = navLabel(nav);
       b.appendChild(lbl);
       b.addEventListener('click', function () {
         if (moved >= 6) return;
@@ -120,6 +136,7 @@
     }
     toggle.innerHTML = '<span class="chev"></span><span class="tgl-label"></span>';
     applyExpanded(window.innerWidth >= 992);
+    rail._applyExpanded = applyExpanded;
     toggle.addEventListener('click', function (e) {
       e.stopPropagation();
       applyExpanded(rail.classList.contains('collapsed'));
@@ -183,11 +200,14 @@
       startY = 0,
       startX = 0,
       baseX = 0,
-      moved = 0;
+      moved = 0,
+      downItem = null;
 
     function onDown(e) {
       if (e.target.closest('.gx-rail-toggle')) return;
       if (dragging) return;
+      /* setPointerCapture membelokkan event click ke rail, jadi item yang ditekan dicatat di sini */
+      downItem = e.target.closest ? e.target.closest('.gx-rail-item') : null;
       var pt = e.touches ? e.touches[0] : e;
       dragging = true;
       detached = false;
@@ -256,8 +276,13 @@
         if (moved >= 6) {
           var n = navsNow()[i];
           if (n) n.click();
+        } else if (downItem) {
+          /* tap biasa: navigasi ke menu aslinya */
+          var n2 = navsNow()[items.indexOf(downItem)];
+          if (n2) n2.click();
         }
       }
+      downItem = null;
     }
 
     rail.addEventListener('pointerdown', onDown);
@@ -270,6 +295,19 @@
     rail.addEventListener('touchstart', onDown, { passive: false });
     document.addEventListener('touchmove', onMove, { passive: false });
     document.addEventListener('touchend', onUp);
+
+    rail._destroy = function () {
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.removeEventListener('touchmove', onMove);
+      document.removeEventListener('touchend', onUp);
+      [pos, pull, rubber].forEach(function (s) {
+        if (s.raf) cancelAnimationFrame(s.raf);
+      });
+    };
 
     /* ======================================================================
        BAGIAN 5 — SINKRON & PENGAWASAN
@@ -288,8 +326,20 @@
         snapTo(on, CONFIG.SPRING.pos.k, CONFIG.SPRING.pos.z);
       }
     }
+    rail._sync = sync;
     sync();
   }
+
+  // Saat layar melewati batas 992px, lebarkan (desktop) atau ciutkan (HP) rail otomatis,
+  // supaya rail tidak menutupi konten setelah resize/rotasi layar
+  var lastWide = window.innerWidth >= 992;
+  window.addEventListener('resize', function () {
+    var wide = window.innerWidth >= 992;
+    if (wide === lastWide) return;
+    lastWide = wide;
+    var r = document.getElementById('gxRail');
+    if (r && r._applyExpanded) r._applyExpanded(wide);
+  });
 
   // Polling berkelanjutan agar rail otomatis muncul/hilang saat login/logout TANPA refresh
   if (document.readyState === 'loading')

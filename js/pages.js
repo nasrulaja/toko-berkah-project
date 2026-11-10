@@ -6,7 +6,7 @@
    --------------------------------------------------------------------------
    PETA FILE — cari teks "BAGIAN n":
      BAGIAN 1  PEMBANTU DATA & STATE   prod(), kat(), low(), jb, shellRef
-     BAGIAN 2  HALAMAN UTAMA           dashboard(), kasir(), produk(), stok()
+     BAGIAN 2  HALAMAN UTAMA           dashboard(), kasir(), produk(), stokMenipis(), stok()
      BAGIAN 3  LAPORAN & SISTEM        laporan(), transaksi(), pengaturan()
      BAGIAN 4  FORM PRODUK & KATEGORI  pform(), saveP(), kform()
      BAGIAN 5  HALAMAN LOGIN           login()
@@ -29,7 +29,12 @@ let S = {};
 const prod = (id) => db.produk.find((x) => x.id == id);
 const kat = (id) => db.kategori.find((x) => x.id == id);
 const low = () => db.produk.filter((p) => p.stok <= p.stok_minimum);
-const jb = { jual: ['r', 'Terjual'], masuk: ['g', 'Barang masuk'], penyesuaian: ['o', 'Penyesuaian'] };
+const jb = {
+  jual: ['r', 'Terjual'],
+  masuk: ['g', 'Barang masuk'],
+  keluar: ['o', 'Barang keluar'],
+  penyesuaian: ['o', 'Penyesuaian']
+};
 
 let shellRef = () => {};
 export function setShellRef(fn) {
@@ -94,9 +99,27 @@ export function kasir() {
             .join('')
         : empty('Keranjang kosong', 'Klik produk di sebelah kiri.');
       $('#tot').textContent = rp(tot);
-      $('#pay').disabled = !items.length;
+      S.total = tot;
+      if (!S.cashTouched) $('#cash').value = tot || '';
+      updPay(items.length);
+    };
+    // hitung kembalian dari uang yang benar-benar diterima kasir
+    const updPay = (n) => {
+      const tot = S.total || 0,
+        cash = +$('#cash').value || 0;
+      $('#chg').textContent = cash >= tot ? rp(cash - tot) : 'Kurang ' + rp(tot - cash);
+      $('#pay').disabled = !n || cash < tot;
     };
     renderCart();
+    $('#cash').oninput = () => {
+      S.cashTouched = true;
+      updPay([...S.cart.keys()].filter((id) => prod(id)).length);
+    };
+    $('#cashpas').onclick = () => {
+      S.cashTouched = false;
+      $('#cash').value = S.total || '';
+      updPay([...S.cart.keys()].filter((id) => prod(id)).length);
+    };
     $('#psearch').oninput = (e) => {
       S.q = e.target.value.toLowerCase();
       drawProds();
@@ -150,15 +173,19 @@ export function kasir() {
     $('#pay').onclick = () => {
       const items = [...S.cart.entries()];
       if (!items.length) return;
-      sell(items, new Date().toISOString(), 'kasir');
+      const cash = +$('#cash').value;
+      if (!(cash >= (S.total || 0))) return toast('Uang diterima kurang dari total');
+      const t = sell(items, new Date().toISOString(), 'kasir', cash);
+      if (!t) return toast('Transaksi gagal: stok tidak cukup');
       save();
       S.cart.clear();
-      toast('Transaksi berhasil!');
+      S.cashTouched = false;
+      toast('Transaksi berhasil! Kembalian ' + rp(t.kembalian));
       shellRef();
     };
   }, 0);
   return `<div class="pos"><div class="card cb"><div class="flt" style="margin-bottom:12px"><input id="psearch" placeholder="Cari nama / barcode..." value="${esc(S.q)}"><select id="pkat"><option value="">Semua Kategori</option>${opts(db.kategori, S.k)}</select></div><div class="pgrid" id="plist"></div></div>
-  <div class="card cb"><h4 style="margin-bottom:12px">Keranjang</h4><div id="cart"></div><div class="li" style="margin-top:12px"><b>Total</b><b id="tot" style="font-size:18px;color:var(--p)">Rp0</b></div><button class="btn bp" id="pay" style="width:100%;margin-top:12px" disabled>Bayar sekarang</button></div></div>`;
+  <div class="card cb"><h4 style="margin-bottom:12px">Keranjang</h4><div id="cart"></div><div class="li" style="margin-top:12px"><b>Total</b><b id="tot" style="font-size:18px;color:var(--p)">Rp0</b></div><div class="fg" style="margin-top:12px"><label for="cash">Uang diterima (Rp)</label><div class="flt" style="flex-wrap:nowrap"><input id="cash" type="number" min="0" step="any" inputmode="numeric" style="flex:1"><button type="button" class="btn" id="cashpas">Uang pas</button></div></div><div class="li"><span>Kembalian</span><b id="chg">Rp0</b></div><button class="btn bp" id="pay" style="width:100%;margin-top:12px" disabled>Bayar sekarang</button></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
@@ -177,32 +204,74 @@ export function produk() {
   ${db.kategori.map((k) => `<tr><td>${esc(k.nama)}</td><td class="r">${db.produk.filter((p) => p.kategori_id === k.id).length}</td><td class="r"><button class="btn sm" data-act="editk" data-id="${k.id}">Ubah</button> <button class="btn sm bd" data-act="delk" data-id="${k.id}">Hapus</button></td></tr>`).join('')}</table></div></div>`;
 }
 
+/** Halaman stok menipis: hanya produk dengan stok <= stok minimum. | param: - | return: string HTML */
+export function stokMenipis() {
+  const L = low().sort((a, b) => a.stok - b.stok);
+  return `<div class="card"><div class="ch"><h4>Produk perlu diisi ulang (${L.length})</h4></div><div class="tw">${
+    L.length
+      ? `<table><tr><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk">Restock</a></td></tr>`).join('')}</table>`
+      : empty('Semua stok aman', 'Tidak ada barang di bawah stok minimum.')
+  }</div></div>`;
+}
+
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function stok() {
   setTimeout(() => {
+    const jenisEl = $('#mjenis'),
+      pidEl = $('#mpid'),
+      jmlEl = $('#mjml'),
+      catEl = $('#mcat'),
+      hbEl = $('#mhb');
+    // sesuaikan isian dengan jenis mutasi: penyesuaian boleh 0 dan wajib alasan; harga beli hanya untuk barang masuk
+    const syncForm = () => {
+      const j = jenisEl.value;
+      jmlEl.min = j === 'penyesuaian' ? '0' : '1';
+      $('#mjml-l').textContent = j === 'penyesuaian' ? 'Stok sebenarnya di rak' : 'Jumlah';
+      catEl.required = j === 'penyesuaian';
+      $('#mhb-w').hidden = j !== 'masuk';
+      hbEl.required = j === 'masuk';
+      const p = prod(pidEl.value);
+      if (p && j === 'masuk') hbEl.value = p.harga_beli;
+    };
+    jenisEl.onchange = syncForm;
+    pidEl.onchange = syncForm;
+    syncForm();
     $('#mform').onsubmit = (e) => {
       e.preventDefault();
-      const pid = +$('#mpid').value,
-        j = $('#mjenis').value,
-        q = +$('#mjml').value;
-      if (!pid || !q) return toast('Isi data dengan benar');
-      const p = prod(pid);
-      if (j === 'jual' && p.stok < q) return toast('Stok tidak cukup');
-      const delta = j === 'jual' ? -q : j === 'masuk' ? q : q - p.stok;
-      mut(p, j, delta, { cat: $('#mcat').value.trim() });
+      const p = prod(pidEl.value),
+        j = jenisEl.value,
+        q = +jmlEl.value,
+        cat = catEl.value.trim();
+      if (!p || !Number.isInteger(q)) return toast('Isi data dengan benar');
+      if (j === 'masuk') {
+        const hb = +hbEl.value;
+        if (q < 1 || !(hb >= 0)) return toast('Isi jumlah dan harga beli dengan benar');
+        mut(p, 'masuk', q, { hb, cat: cat || 'Barang masuk' });
+        p.harga_beli = hb;
+        p.updated_at = new Date().toISOString();
+      } else if (j === 'keluar') {
+        if (q < 1) return toast('Jumlah minimal 1');
+        if (p.stok < q) return toast('Stok tidak cukup');
+        mut(p, 'keluar', -q, { cat: cat || 'Barang keluar' });
+      } else {
+        if (q < 0) return toast('Stok tidak boleh negatif');
+        if (!cat) return toast('Alasan wajib diisi untuk penyesuaian');
+        if (q === p.stok) return toast('Stok sudah sama, tidak ada perubahan');
+        mut(p, 'penyesuaian', q - p.stok, { cat });
+      }
       save();
       toast('Stok diperbarui');
       shellRef();
     };
   }, 0);
-  const rec = [...db.mutasi].reverse();
-  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label>Produk</label><select id="mpid" required><option value="">Pilih Produk...</option>${popt(db)}</select></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="jual">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (set stok)</option></select></div></div><div class="row"><div class="fg"><label>Jumlah / Stok Baru</label><input id="mjml" type="number" min="1" required></div><div class="fg"><label>Catatan</label><input id="mcat" placeholder="Opsional (misal: Rusak, Bonus supplier)"></div></div><button class="btn bp">Simpan Mutasi</button></form></div></div>
-  <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length})</h4></div><div class="tw"><table><tr><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
+  const rec = [...db.mutasi].reverse().slice(0, 200);
+  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label>Produk</label><select id="mpid" required>${popt(db)}</select></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (set stok)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan Mutasi</button></form></div></div>
+  <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length}${db.mutasi.length > rec.length ? ' terbaru' : ''})</h4></div><div class="tw"><table><tr><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
   ${rec
     .map((m) => {
       const p = prod(m.produk_id),
         info = jb[m.jenis] || ['n', m.jenis];
-      return `<tr><td>${dt(m.waktu)}</td><td>${esc(p?.nama || 'Hapus')}</td><td><span class="b ${info[0]}">${info[1]}</span></td><td class="r">${m.jumlah > 0 ? '+' + m.jumlah : m.jumlah}</td><td class="r">${m.stok_sebelum}</td><td class="r">${m.stok_sesudah}</td><td>${esc(m.catatan || '-')}</td></tr>`;
+      return `<tr><td>${dt(m.waktu)}</td><td>${esc(p?.nama || '(produk dihapus)')}</td><td><span class="b ${info[0]}">${info[1]}</span></td><td class="r ${m.jumlah < 0 ? 'neg' : 'pos'}">${m.jumlah > 0 ? '+' + m.jumlah : m.jumlah}</td><td class="r">${m.stok_sebelum}</td><td class="r">${m.stok_sesudah}</td><td>${esc(m.catatan || '-')}</td></tr>`;
     })
     .join('')}</table></div></div>`;
 }
@@ -217,14 +286,24 @@ export function stok() {
 
 export function laporan() {
   const totJual = db.transaksi.reduce((a, t) => a + t.total, 0);
+  // modal dari snapshot harga_beli di detail transaksi (data lama tanpa snapshot: pakai harga beli produk saat ini)
   let modalAwal = 0;
+  const top = new Map();
   db.detail.forEach((d) => {
-    const p = prod(d.produk_id);
-    modalAwal += (p?.harga_beli || 0) * d.jumlah;
+    modalAwal += (d.harga_beli ?? prod(d.produk_id)?.harga_beli ?? 0) * d.jumlah;
+    const x = top.get(d.nama_produk) || { q: 0, v: 0 };
+    x.q += d.jumlah;
+    x.v += d.subtotal;
+    top.set(d.nama_produk, x);
   });
   const laba = totJual - modalAwal;
+  const best = [...top.entries()].sort((a, b) => b[1].q - a[1].q).slice(0, 5);
   return `<div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${db.transaksi.length}</h3></div></div>
-  <div class="card"><div class="ch"><h4>Laporan Ringkasan Penjualan</h4></div><div class="cb"><p>Laporan komprehensif mengkalkulasi selisih harga jual dengan estimasi harga beli produk terlaris.</p></div></div>`;
+  <div class="card"><div class="ch"><h4>Produk terlaris</h4></div><div class="tw">${
+    best.length
+      ? `<table><tr><th>#</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      : empty('Belum ada penjualan', 'Produk terlaris muncul setelah ada transaksi.')
+  }</div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
@@ -259,11 +338,12 @@ export function pengaturan() {
    ========================================================================== */
 
 export function pform(p = {}) {
-  return `<div class="fg"><label>Nama produk</label><input name="nama" required value="${esc(p.nama)}"></div><div class="row"><div class="fg"><label>Barcode</label><input name="barcode" value="${esc(p.barcode)}"></div><div class="fg"><label>Kategori</label><select name="kategori_id"><option value="">Tanpa Kategori</option>${opts(db.kategori, p.kategori_id)}</select></div></div><div class="row"><div class="fg"><label>Harga jual</label><input name="harga" type="number" min="0" required value="${p.harga || ''}"></div><div class="fg"><label>Harga beli</label><input name="harga_beli" type="number" min="0" required value="${p.harga_beli || ''}"></div></div><div class="row">${p.id ? '' : `<div class="fg"><label>Stok awal</label><input name="stok" type="number" min="0" required value="0"></div>`}<div class="fg"><label>Stok minimum</label><input name="stok_minimum" type="number" min="0" required value="${p.stok_minimum ?? 5}"></div></div>`;
+  return `<div class="fg"><label>Nama produk</label><input name="nama" required value="${esc(p.nama)}"></div><div class="row"><div class="fg"><label>Barcode</label><input name="barcode" value="${esc(p.barcode)}"></div><div class="fg"><label>Kategori</label><select name="kategori_id"><option value="">Tanpa Kategori</option>${opts(db.kategori, p.kategori_id)}</select></div></div><div class="row"><div class="fg"><label>Harga jual</label><input name="harga" type="number" min="0" required value="${p.harga ?? ''}"></div><div class="fg"><label>Harga beli</label><input name="harga_beli" type="number" min="0" required value="${p.harga_beli ?? ''}"></div></div><div class="row">${p.id ? '' : `<div class="fg"><label>Stok awal</label><input name="stok" type="number" min="0" required value="0"></div>`}<div class="fg"><label>Stok minimum</label><input name="stok_minimum" type="number" min="0" required value="${p.stok_minimum ?? 5}"></div></div>`;
 }
 
 export function saveP(d, p) {
-  if (db.produk.some((x) => x.barcode === d.barcode.trim() && x.id !== p?.id)) {
+  // barcode opsional: yang kosong tidak dicek keunikannya
+  if (d.barcode.trim() && db.produk.some((x) => x.barcode === d.barcode.trim() && x.id !== p?.id)) {
     toast('Barcode sudah dipakai produk lain');
     return false;
   }

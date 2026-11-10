@@ -519,7 +519,10 @@ th.r {
   background: var(--card);
   color: var(--hd);
   cursor: pointer;
-  font: 600 14px/1 inherit;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
 }
 .qty button:hover {
   border-color: var(--p);
@@ -1306,4 +1309,13 @@ html[data-theme='dark'] .top {
   html[data-theme] .top {
     margin: 10px 12px 0;
   }
+}
+
+/* Footer kredit: bagian dari alur halaman (tidak fixed), jadi tidak menimpa konten */
+.ft {
+  padding: 4px 16px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--tx);
+  opacity: 0.75;
 }

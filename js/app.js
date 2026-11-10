@@ -9,8 +9,7 @@
      BAGIAN 2  ROUTING & KERANGKA        cur(), shell(), route()
      BAGIAN 3  PENANGANAN KLIK           semua aksi data-act (satu listener)
      BAGIAN 4  TEMA & SIDEBAR            sb(), theme()
-     BAGIAN 5  INISIALISASI              pulihkan sesi, hashchange, route awal
-     BAGIAN 6  PARTIKEL KACA             animasi titik mengikuti kursor
+     BAGIAN 5  INISIALISASI              pasang listener klik, pulihkan sesi, hashchange, route awal
    ========================================================================== */
 
 /* ==========================================================================
@@ -19,13 +18,14 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { load, db, setDB, me, setMe, KS, save, mut } from './db.js';
-import { $, $$, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js';
+import { load, db, setDB, me, setMe, KS, save } from './db.js';
+import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js';
 import {
   dashboard,
   kasir,
   produk,
   stok,
+  stokMenipis,
   laporan,
   transaksi,
   pengaturan,
@@ -36,15 +36,13 @@ import {
   kform
 } from './pages.js';
 
-let S = {};
-
 const PG = {
   dashboard: { t: 'Dashboard', s: 'Ringkasan toko hari ini', html: dashboard },
   kasir: { t: 'Kasir / Penjualan', s: 'Transaksi Penjualan Toko', html: kasir },
   produk: { t: 'Manajemen Produk', s: 'Kelola data produk dan kategori', html: produk },
   stok: { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
-  'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: produk },
+  'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
   laporan: { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
   transaksi: { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },
   pengaturan: { t: 'Pengaturan', s: 'Pengaturan aplikasi dan profil', html: pengaturan }
@@ -83,28 +81,28 @@ const NAV = [
    route() : kalau belum login tampilkan form login, kalau sudah render shell
    ========================================================================== */
 
-const cur = () => (location.hash.slice(1) in PG ? location.hash.slice(1) : 'dashboard');
+const cur = () => (Object.prototype.hasOwnProperty.call(PG, location.hash.slice(1)) ? location.hash.slice(1) : 'dashboard');
 
 function shell() {
   const k = cur(),
-    p = PG[k];
+    p = PG[k],
+    navK = k === 'barang-masuk' ? 'stok' : k; // #barang-masuk menyorot menu Manajemen Stok
   $('#app').innerHTML =
-    `<aside class="side" id="sd"><div class="logo"><i>B</i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === k ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'stok-menipis' && db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
+    `<aside class="side" id="sd"><div class="logo"><i>B</i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === navK ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'stok-menipis' && db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
 <div class="main"><header class="top"><button class="ic" id="burger" data-act="menu" aria-label="Menu">${ico('menu')}</button><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="av"><b>${esc(me.nama[0])}</b><span>${esc(me.nama)}</span></div><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
-<main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main></div>`;
-  bind();
+<main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main><footer class="ft">Dikembangkan oleh Ruelz</footer></div>`;
 }
 
 setShellRef(shell);
 
 /* ==========================================================================
    BAGIAN 3 — PENANGANAN KLIK (data-act)
-   Satu listener global di <body> menangani semua tombol: menu, tema, logout,
+   Satu listener global di document menangani semua tombol: menu, tema, logout,
    tambah/ubah/hapus produk & kategori, dan detail transaksi.
    ========================================================================== */
 
-function bind() {
-  document.onclick = (e) => {
+function onClick(e) {
+  {
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const a = b.dataset.act,
@@ -186,7 +184,7 @@ function bind() {
           )}</table></div><div class="li"><span>Total</span><b>${rp(t.total)}</b></div><div class="li"><span>Uang diterima</span><span>${rp(t.uang_diterima)}</span></div><div class="li"><span>Kembalian</span><span>${rp(t.kembalian)}</span></div>`
       );
     }
-  };
+  }
 }
 
 /* ==========================================================================
@@ -224,6 +222,9 @@ function theme(t) {
    aplikasi tetap jalan walau penyimpanan diblokir browser.
    ========================================================================== */
 
+// Satu listener klik untuk seluruh aplikasi (juga aktif di halaman login, mis. tombol tema)
+document.addEventListener('click', onClick);
+
 // Initialization
 try {
   sb(innerWidth < 992 || localStorage.getItem('berkah_sb') !== '0');
@@ -243,34 +244,7 @@ try {
 } catch (e) {}
 
 addEventListener('hashchange', () => {
-  S = {};
   if (innerWidth < 992) sb(true);
   route();
 });
 route();
-
-/* ==========================================================================
-   BAGIAN 6 — PARTIKEL KACA
-   Membuat 5 titik melayang di wadah #particles; geseran mengikuti posisi
-   kursor dengan pengali berbeda tiap titik agar terlihat berlapis.
-   ========================================================================== */
-
-// Liquid Glass Particles Animation
-(function initParticles() {
-  const container = $('#particles');
-  if (!container) return;
-  for (let i = 0; i < 5; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.animationDelay = i * 3 + 's';
-    container.appendChild(p);
-  }
-  document.addEventListener('mousemove', (e) => {
-    const particles = $$('.particle', container);
-    particles.forEach((p, idx) => {
-      const x = (e.clientX / window.innerWidth - 0.5) * 20 * (idx + 1);
-      const y = (e.clientY / window.innerHeight - 0.5) * 20 * (idx + 1);
-      p.style.transform = `translate(${x}px,${y}px)`;
-    });
-  });
-})();
