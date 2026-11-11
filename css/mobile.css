@@ -26,18 +26,30 @@
   body {
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   }
+  /* Topbar HP: menempel di atas, selebar layar, kaca bening (tidak melayang dengan celah) */
   html[data-theme] .top {
-    margin: 8px 10px 0;
-    padding: 0 10px 0 12px;
-    height: 54px;
-    border-radius: 16px;
+    top: 0;
+    margin: 0;
+    padding: calc(env(safe-area-inset-top, 0px)) 12px 0 14px;
+    height: calc(54px + env(safe-area-inset-top, 0px));
+    border-width: 0 0 1px;
+    border-radius: 0 0 18px 18px;
+  }
+  .top .tdate {
+    display: none;
   }
   .brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    min-width: 0;
     font-weight: 700;
     color: var(--hd);
+  }
+  .brand b {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .brand i {
     font-style: normal;

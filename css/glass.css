@@ -535,3 +535,49 @@ textarea:focus {
     transition: none;
   }
 }
+
+/* ==========================================================================
+   BAGIAN 4 — TOPBAR KACA BENING
+   style.css memberi .top warna solid (var(--card)) lewat selektor html[data-theme];
+   di sini diganti dengan kaca transparan + blur supaya konten terlihat samar di baliknya.
+   ========================================================================== */
+html[data-theme] .top {
+  background: color-mix(in srgb, var(--card) 42%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid var(--gx-stroke);
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 0.45) inset,
+    0 8px 24px rgba(9, 44, 76, 0.1);
+}
+html[data-theme='dark'] .top {
+  background: rgba(16, 27, 46, 0.4);
+}
+.top .tdate {
+  font-size: 13px;
+  color: var(--tx);
+}
+.top .bell {
+  position: relative;
+  text-decoration: none;
+}
+.top .bell svg {
+  width: 20px;
+  height: 20px;
+}
+.top .bell em {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--bad);
+  color: #fff;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
