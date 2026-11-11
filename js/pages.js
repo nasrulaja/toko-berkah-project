@@ -6,7 +6,7 @@
    --------------------------------------------------------------------------
    PETA FILE — cari teks "BAGIAN n":
      BAGIAN 1  PEMBANTU DATA & STATE   prod(), kat(), low(), jb, shellRef
-     BAGIAN 2  HALAMAN UTAMA           dashboard(), kasir(), produk(), stokMenipis(), stok()
+     BAGIAN 2  HALAMAN UTAMA           dashboard(), produk(), stokMenipis(), stok()
      BAGIAN 3  LAPORAN & SISTEM        laporan(), transaksi(), pengaturan()
      BAGIAN 4  FORM PRODUK & KATEGORI  pform(), saveP(), kform()
      BAGIAN 5  HALAMAN LOGIN           login()
@@ -14,15 +14,15 @@
 
 /* ==========================================================================
    BAGIAN 1 — PEMBANTU DATA & STATE
-   S   : state sementara per halaman (keranjang kasir, kata kunci, filter)
+   S   : state sementara per halaman (kata kunci, filter, rentang grafik)
    prod/kat/low : pencarian data yang sering dipakai
    jb  : label + warna badge untuk jenis mutasi stok
    shellRef : diisi app.js lewat setShellRef() agar halaman bisa minta render
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, sell, KS, setMe, setDB, seed } from './db.js';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, today, empty, themeIcon } from './ui.js';
+import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, themeIcon } from './ui.js';
 import { barChart, donut, spark, short } from './charts.js';
 
 let S = {};
@@ -45,7 +45,6 @@ export function setShellRef(fn) {
 /* ==========================================================================
    BAGIAN 2 — HALAMAN UTAMA
    dashboard() : KPI + tren, grafik penjualan & laba, donat kategori, terlaris, stok menipis, jam tersibuk
-   kasir()     : pencarian produk, keranjang, hitung kembalian, simpan jual
    produk()    : tabel produk + filter kategori + tombol tambah/ubah/hapus
    stok()      : form barang masuk/penyesuaian + riwayat mutasi stok
    ========================================================================== */
@@ -247,116 +246,9 @@ export function dashboard() {
 
   <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Item</th><th class="r">Total</th></tr>${
     rec.map((t) => `<tr><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${esc(t.sumber)}</span></td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
-    `<tr><td colspan="5">${empty('Belum ada transaksi', 'Transaksi dari kasir akan muncul di sini.')}</td></tr>`
+    `<tr><td colspan="5">${empty('Belum ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
   }</table></div></div>
   <div class="tip" id="tip" hidden></div></div>`;
-}
-
-/** Render ulang target halaman ini. | param: - | return: string HTML */
-export function kasir() {
-  S.cart = S.cart || new Map();
-  S.q = S.q || '';
-  S.k = S.k || '';
-  setTimeout(() => {
-    const renderCart = () => {
-      const items = [...S.cart.entries()].map(([id, q]) => [prod(id), q]).filter(([p]) => p);
-      const tot = items.reduce((a, [p, q]) => a + p.harga * q, 0);
-      $('#cart').innerHTML = items.length
-        ? items
-            .map(
-              ([p, q]) =>
-                `<div class="li"><div><b>${esc(p.nama)}</b><br><small>${rp(p.harga)} × ${q}</small></div><div class="qty"><button data-c="-" data-id="${p.id}">-</button><span>${q}</span><button data-c="+" data-id="${p.id}">+</button><button data-c="x" data-id="${p.id}">×</button></div></div>`
-            )
-            .join('')
-        : empty('Keranjang kosong', 'Klik produk di sebelah kiri.');
-      $('#tot').textContent = rp(tot);
-      S.total = tot;
-      if (!S.cashTouched) $('#cash').value = tot || '';
-      updPay(items.length);
-    };
-    // hitung kembalian dari uang yang benar-benar diterima kasir
-    const updPay = (n) => {
-      const tot = S.total || 0,
-        cash = +$('#cash').value || 0;
-      $('#chg').textContent = cash >= tot ? rp(cash - tot) : 'Kurang ' + rp(tot - cash);
-      $('#pay').disabled = !n || cash < tot;
-    };
-    renderCart();
-    $('#cash').oninput = () => {
-      S.cashTouched = true;
-      updPay([...S.cart.keys()].filter((id) => prod(id)).length);
-    };
-    $('#cashpas').onclick = () => {
-      S.cashTouched = false;
-      $('#cash').value = S.total || '';
-      updPay([...S.cart.keys()].filter((id) => prod(id)).length);
-    };
-    $('#psearch').oninput = (e) => {
-      S.q = e.target.value.toLowerCase();
-      drawProds();
-    };
-    $('#pkat').onchange = (e) => {
-      S.k = e.target.value;
-      drawProds();
-    };
-    const drawProds = () => {
-      const list = db.produk.filter(
-        (p) =>
-          (!S.k || p.kategori_id == S.k) &&
-          (!S.q || p.nama.toLowerCase().includes(S.q) || (p.barcode && p.barcode.includes(S.q)))
-      );
-      $('#plist').innerHTML =
-        list
-          .map(
-            (p) =>
-              `<button class="pcard ${p.stok <= 0 ? 'off' : ''}" data-pid="${p.id}" ${p.stok <= 0 ? 'disabled' : ''}><b>${esc(p.nama)}</b><div class="p"><span class="pr">${rp(p.harga)}</span><span class="b ${p.stok <= p.stok_minimum ? 'r' : 'n'}">Stok ${p.stok}</span></div></button>`
-          )
-          .join('') || empty('Tidak ditemukan', 'Coba kata kunci lain.');
-      $$('#plist .pcard').forEach(
-        (b) =>
-          (b.onclick = () => {
-            const id = +b.dataset.pid,
-              p = prod(id),
-              cur = S.cart.get(id) || 0;
-            if (cur + 1 > p.stok) return toast('Stok tidak mencukupi');
-            S.cart.set(id, cur + 1);
-            renderCart();
-          })
-      );
-    };
-    drawProds();
-    $('#cart').onclick = (e) => {
-      const b = e.target.closest('button');
-      if (!b) return;
-      const c = b.dataset.c,
-        id = +b.dataset.id,
-        p = prod(id),
-        cur = S.cart.get(id) || 0;
-      if (c === '+') {
-        if (cur + 1 > p.stok) return toast('Stok tidak mencukupi');
-        S.cart.set(id, cur + 1);
-      } else if (c === '-') {
-        if (cur - 1 <= 0) S.cart.delete(id);
-        else S.cart.set(id, cur - 1);
-      } else if (c === 'x') S.cart.delete(id);
-      renderCart();
-    };
-    $('#pay').onclick = () => {
-      const items = [...S.cart.entries()];
-      if (!items.length) return;
-      const cash = +$('#cash').value;
-      if (!(cash >= (S.total || 0))) return toast('Uang diterima kurang dari total');
-      const t = sell(items, new Date().toISOString(), 'kasir', cash);
-      if (!t) return toast('Transaksi gagal: stok tidak cukup');
-      save();
-      S.cart.clear();
-      S.cashTouched = false;
-      toast('Transaksi berhasil! Kembalian ' + rp(t.kembalian));
-      shellRef();
-    };
-  }, 0);
-  return `<div class="pos"><div class="card cb"><div class="flt" style="margin-bottom:12px"><input id="psearch" placeholder="Cari nama / barcode..." value="${esc(S.q)}"><select id="pkat"><option value="">Semua Kategori</option>${opts(db.kategori, S.k)}</select></div><div class="pgrid" id="plist"></div></div>
-  <div class="card cb"><h4 style="margin-bottom:12px">Keranjang</h4><div id="cart"></div><div class="li" style="margin-top:12px"><b>Total</b><b id="tot" style="font-size:18px;color:var(--p)">Rp0</b></div><div class="fg" style="margin-top:12px"><label for="cash">Uang diterima (Rp)</label><div class="flt" style="flex-wrap:nowrap"><input id="cash" type="number" min="0" step="any" inputmode="numeric" style="flex:1"><button type="button" class="btn" id="cashpas">Uang pas</button></div></div><div class="li"><span>Kembalian</span><b id="chg">Rp0</b></div><button class="btn bp" id="pay" style="width:100%;margin-top:12px" disabled>Bayar sekarang</button></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
@@ -581,7 +473,7 @@ export function kform(k) {
 
 export function login(routeFn) {
   $('#app').innerHTML =
-    `<div class="lg"><button type="button" class="ic lg-th" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="lg-c"><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Toko Berkah · kelola stok dan penjualan</p><div class="lg-al" id="al" role="alert" hidden></div>
+    `<div class="lg"><button type="button" class="ic lg-th" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="lg-c"><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Toko Berkah · kelola stok dan transaksi</p><div class="lg-al" id="al" role="alert" hidden></div>
   <div class="lg-f"><label class="lg-l" for="em">${ico('mail')}Surel</label><div class="lg-w" id="w1"><span class="lg-i">${ico('mail')}</span><input id="em" name="email" type="email" autocomplete="username" placeholder="surel@contoh.com" value="berkah@gmail.com"></div></div>
   <div class="lg-f"><label class="lg-l" for="pw">${ico('lock')}Kata sandi</label><div class="lg-w" id="w2"><span class="lg-i">${ico('lock')}</span><input id="pw" name="pw" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" value="berkah123"><button type="button" class="lg-eye" id="eye" aria-label="Tampilkan kata sandi">${ico('eye')}</button></div></div>
   <button class="lg-b">Masuk</button></form></div></div>`;

@@ -1,12 +1,12 @@
 /* ==========================================================================
    TOKO BERKAH — db.js
    Sumber data tunggal: muat/simpan dari localStorage, catat mutasi stok,
-   proses transaksi penjualan, dan buat data contoh saat pertama dipakai.
+   buat transaksi data contoh, dan siapkan data awal saat pertama dipakai.
    --------------------------------------------------------------------------
    PETA FILE — cari teks "BAGIAN n":
      BAGIAN 1  KUNCI & STATE        nama kunci localStorage + user aktif
      BAGIAN 2  MUAT & SIMPAN        load(), save()
-     BAGIAN 3  MUTASI & PENJUALAN   mut(), sell()
+     BAGIAN 3  MUTASI & TRANSAKSI   mut(), sell() (sell hanya untuk data contoh)
      BAGIAN 4  DATA CONTOH          seed()
    ========================================================================== */
 
@@ -67,7 +67,7 @@ export function save() {
 /* ==========================================================================
    BAGIAN 3 — MUTASI STOK & TRANSAKSI
    mut()  : satu-satunya jalan mengubah stok, sekaligus mencatat riwayatnya
-   sell() : transaksi penjualan; produk yang stoknya kurang dilewati
+   sell() : membuat transaksi penjualan historis (dipakai seed data contoh)
    ========================================================================== */
 
 /** Mencatat satu mutasi stok (masuk/jual/penyesuaian) dan memperbarui stok produk. | param: p (produk), jenis (string), jml (angka delta), o (opsi) | return: void */
@@ -113,7 +113,7 @@ export function sell(items, w, src, cash) {
     mut(p, 'jual', -q, { tid: t.id, w });
   }
   if (!t.total) return null;
-  // uang diterima dari kasir; untuk data contoh dibulatkan ke kelipatan 5000
+  // uang diterima; untuk data contoh dibulatkan ke kelipatan 5000
   t.uang_diterima = Number.isFinite(cash) && cash >= t.total ? cash : Math.ceil(t.total / 5000) * 5000;
   t.kembalian = t.uang_diterima - t.total;
   db.transaksi.push(t);

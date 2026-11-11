@@ -1,6 +1,7 @@
-# Toko Berkah - Sistem Kasir & Stok (Web)
+# Toko Berkah - Sistem Stok & Transaksi (Web)
 
-Prototipe web sesuai PRD (bagian Web 4.1).
+Prototipe web sesuai PRD (bagian Web 4.1). Fitur kasir/POS tidak disertakan karena
+tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 
 ## 🌐 Demo Hosting
 
@@ -37,10 +38,10 @@ Prototipe web sesuai PRD (bagian Web 4.1).
 > antar bagian tanpa perlu membaca seluruh berkas.
 
 - **`index.html`**: Kerangka halaman — hanya berisi wadah kosong (`#app`, `#ov`), pemuatan font/CSS, dan pemanggilan skrip; seluruh isi dirender oleh `js/app.js`.
-- **`css/style.css`**: Gaya utama aplikasi (variabel warna, sidebar, topbar, kartu, form, tabel, dashboard, kasir, modal, login) dalam 9 `BAGIAN`.
+- **`css/style.css`**: Gaya utama aplikasi (variabel warna, sidebar, topbar, kartu, form, tabel, dashboard, modal, login) dalam 9 `BAGIAN`.
 - **`js/db.js`**: Modul yang mengelola seluruh interaksi dengan `localStorage`, memuat/menyimpan kondisi basis data, serta menyediakan fungsi seeding data awal dan pencatatan mutasi/transaksi.
 - **`js/ui.js`**: Modul pembantu antarmuka (UI) yang mencakup fungsi utilitas DOM, format Rupiah, tanggal, toast, modal, escape HTML, dan generator SVG icon.
-- **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Kasir, Produk, Stok, Laporan, Transaksi, Pengaturan, dan Login).
+- **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Produk, Stok, Laporan, Transaksi, Pengaturan, dan Login).
 - **`js/app.js`**: Titik masuk (*bootstrap*) aplikasi berbasis modul ES yang menangani routing hash URL, event binding utama.
 - **`css/glass.css`**: Berkas gaya terpusat yang menggabungkan efek glassmorphism aplikasi, styling GX Rail desktop, serta mode performa mobile & fallback.
 - **`css/mobile.css`** : Penataan khusus HP (< 992px): bar menu liquid glass di bawah, tabel jadi kartu, modal & form ramah sentuh.

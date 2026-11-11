@@ -22,7 +22,6 @@ import { load, db, setDB, me, setMe, KS, save } from './db.js';
 import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js';
 import {
   dashboard,
-  kasir,
   produk,
   stok,
   stokMenipis,
@@ -38,7 +37,6 @@ import {
 
 const PG = {
   dashboard: { t: 'Dashboard', s: 'Ringkasan toko hari ini', html: dashboard },
-  kasir: { t: 'Kasir / Penjualan', s: 'Transaksi Penjualan Toko', html: kasir },
   produk: { t: 'Manajemen Produk', s: 'Kelola data produk dan kategori', html: produk },
   stok: { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
@@ -52,8 +50,7 @@ const NAV = [
   [
     'UTAMA',
     [
-      ['dashboard', 'home', 'Dashboard'],
-      ['kasir', 'box', 'Kasir']
+      ['dashboard', 'home', 'Dashboard']
     ]
   ],
   [
@@ -98,7 +95,6 @@ function shell() {
 function bottomNav(k) {
   const items = [
       ['dashboard', 'home', 'Beranda'],
-      ['kasir', 'box', 'Kasir'],
       ['produk', 'tag', 'Produk'],
       ['stok', 'in', 'Stok']
     ],
