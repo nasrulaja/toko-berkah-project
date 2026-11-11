@@ -144,6 +144,16 @@ body::before {
   transform: translateY(-1px);
   border-color: var(--p);
 }
+.btn.bd {
+  /* .btn (glass) menimpa background .bd, sehingga teks putih tombol bahaya tak terbaca di tema terang */
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #fff;
+}
+:root[data-theme='dark'] .btn.bd {
+  background: linear-gradient(135deg, #b8391a, #f0623b);
+  border-color: transparent;
+}
 .btn:active {
   transform: scale(0.96);
 }

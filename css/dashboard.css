@@ -385,12 +385,21 @@
 .lgl li b {
   color: var(--hd);
 }
+.kpi {
+  container-type: inline-size;
+}
 .spark {
   position: absolute;
-  top: 14px;
+  bottom: 14px;
   right: 16px;
   width: 62px;
   height: 26px;
+}
+/* kartu sempit: sparkline disembunyikan supaya tidak menimpa teks */
+@container (max-width: 250px) {
+  .spark {
+    display: none;
+  }
 }
 .spark .spl {
   fill: none;
