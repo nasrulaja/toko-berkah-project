@@ -87,11 +87,19 @@
     gap: 2px;
     padding: 6px;
     border-radius: 22px;
-    background: color-mix(in srgb, var(--card) 88%, transparent);
-    -webkit-backdrop-filter: blur(14px) saturate(160%);
-    backdrop-filter: blur(14px) saturate(160%);
-    border: 1px solid color-mix(in srgb, var(--hd) 13%, transparent);
-    box-shadow: 0 10px 30px rgba(9, 44, 76, 0.22);
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--card) 64%, transparent),
+      color-mix(in srgb, var(--card) 42%, transparent)
+    );
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(22px) saturate(180%);
+    border: 1px solid color-mix(in srgb, var(--hd) 16%, transparent);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.72) inset,
+      0 -1px 0 color-mix(in srgb, var(--hd) 6%, transparent) inset,
+      0 12px 34px rgba(9, 44, 76, 0.2);
+    isolation: isolate;
   }
   .bnav a,
   .bnav button {
@@ -115,14 +123,42 @@
     text-decoration: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    transition:
+      background 0.22s var(--gx-spring),
+      box-shadow 0.22s var(--gx-spring),
+      transform 0.22s var(--gx-spring);
   }
   .bnav svg {
+    position: relative;
+    z-index: 1;
     width: 22px;
     height: 22px;
   }
+  .bnav a span,
+  .bnav button span {
+    position: relative;
+    z-index: 1;
+  }
   .bnav .on {
-    background: color-mix(in srgb, var(--p) 22%, transparent);
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--p) 34%, transparent),
+      color-mix(in srgb, var(--card) 48%, transparent)
+    );
     color: var(--hd);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.82) inset,
+      0 0 0 1px color-mix(in srgb, var(--p) 18%, transparent),
+      0 4px 14px color-mix(in srgb, var(--p) 16%, transparent);
+  }
+  .bnav a:active,
+  .bnav button:active {
+    transform: scale(0.94);
+  }
+  .bnav a:focus-visible,
+  .bnav button:focus-visible {
+    outline: 2px solid var(--pd);
+    outline-offset: 1px;
   }
   .bnav em {
     position: absolute;
@@ -228,6 +264,13 @@
   /* --- Kasir --- */
   .pgrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bnav a,
+  .bnav button {
+    transition: none;
   }
 }
 

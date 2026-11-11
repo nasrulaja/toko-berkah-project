@@ -453,8 +453,8 @@ textarea:focus {
    animasi" tidak melihat animasi apa pun.
    ========================================================================== */
 
-/* Di mobile: matikan backdrop-filter pada elemen non-esensial untuk performa.
-   Topbar & modal tetap kaca (blur ringan). */
+/* Di mobile: kurangi blur pada elemen konten; topbar, modal, dan navigasi
+   bawah tetap memakai kaca agar navigasi terasa konsisten. */
 @media (max-width: 991px) {
   .side {
     display: none !important;
@@ -488,11 +488,6 @@ textarea:focus {
   .md {
     -webkit-backdrop-filter: blur(16px) saturate(165%);
     backdrop-filter: blur(16px) saturate(165%);
-  }
-  /* Rail mobile: blur lebih ringan */
-  .gx-rail {
-    -webkit-backdrop-filter: blur(12px) saturate(160%);
-    backdrop-filter: blur(12px) saturate(160%);
   }
 }
 

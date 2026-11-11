@@ -20,11 +20,11 @@ Prototipe web sesuai PRD (bagian Web 4.1).
 (Font memakai Google Fonts, perlu internet agar tampil sempurna.)
 
 ## 📱 Fitur terkini (v2.0)
-- ✅ **Glass Rail v3** - Floating glass rail dengan toggle "Sembunyikan/Menu"
+- ✅ **Navigasi responsif** - Rail kaca mengambang di kiri laptop/desktop, bar menu liquid glass di bawah HP
 - ✅ **Liquid Glass v2** - Full-app clear glassmorphism (`backdrop-filter blur 12-24px`)
 - ✅ **Spring Physics** - Drag vertical + lateral rubber banding
 - ✅ **Polling Sync** - Indikator aktif kebal re-render `#app`
-- ✅ **Mobile Responsive** - Rail tetap tampil di semua ukuran layar (collapsed di < 992px)
+- ✅ **Mobile Responsive** - Bar menu bawah ramah sentuh dengan safe area dan state aktif
 
 ## 🔐 Login demo
 - Surel: `berkah@gmail.com`
@@ -42,9 +42,9 @@ Prototipe web sesuai PRD (bagian Web 4.1).
 - **`js/ui.js`**: Modul pembantu antarmuka (UI) yang mencakup fungsi utilitas DOM, format Rupiah, tanggal, toast, modal, escape HTML, dan generator SVG icon.
 - **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Kasir, Produk, Stok, Laporan, Transaksi, Pengaturan, dan Login).
 - **`js/app.js`**: Titik masuk (*bootstrap*) aplikasi berbasis modul ES yang menangani routing hash URL, event binding utama.
-- **`css/glass.css`**: Berkas gaya terpusat yang menggabungkan efek glassmorphism aplikasi, styling GX Rail vertikal, serta mode performa mobile & fallback.
-- **`css/mobile.css`** : Penataan khusus HP (< 992px): bar menu bawah, tabel jadi kartu, modal & form ramah sentuh.
-- **`js/glass-rail.js`**: Skrip interaktif untuk GX Rail vertikal dengan fisika *spring* (*rubber banding* dan tetesan air), mendukung semua ukuran layar.
+- **`css/glass.css`**: Berkas gaya terpusat yang menggabungkan efek glassmorphism aplikasi, styling GX Rail desktop, serta mode performa mobile & fallback.
+- **`css/mobile.css`** : Penataan khusus HP (< 992px): bar menu liquid glass di bawah, tabel jadi kartu, modal & form ramah sentuh.
+- **`js/glass-rail.js`**: Skrip interaktif untuk GX Rail vertikal di desktop dengan fisika *spring* (*rubber banding* dan tetesan air).
 
 ## ⚙️ Catatan teknis
 - Data disimpan di localStorage browser (belum ada backend/database)
