@@ -23,6 +23,7 @@
 
 import { db, me, save, mut, sell, KS, setMe, setDB, seed } from './db.js';
 import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, today, empty, themeIcon } from './ui.js';
+import { barChart, donut, spark, short } from './charts.js';
 
 let S = {};
 
@@ -43,42 +44,212 @@ export function setShellRef(fn) {
 
 /* ==========================================================================
    BAGIAN 2 — HALAMAN UTAMA
-   dashboard() : ringkasan hari ini, grafik 7 hari, stok menipis, transaksi
+   dashboard() : KPI + tren, grafik penjualan & laba, donat kategori, terlaris, stok menipis, jam tersibuk
    kasir()     : pencarian produk, keranjang, hitung kembalian, simpan jual
    produk()    : tabel produk + filter kategori + tombol tambah/ubah/hapus
    stok()      : form barang masuk/penyesuaian + riwayat mutasi stok
    ========================================================================== */
 
-/** Render ulang target halaman ini. | param: - | return: string HTML */
+/** Agregasi penjualan per hari. | param: - | return: objek { 'YYYY-MM-DD': {sales, profit, count} } */
+const agg = () => {
+  const m = {},
+    tk = new Map();
+  db.transaksi.forEach((t) => {
+    const k = dk(t.waktu);
+    tk.set(t.id, k);
+    const o = (m[k] ||= { sales: 0, profit: 0, count: 0 });
+    o.sales += t.total;
+    o.count++;
+  });
+  // laba per item: harga jual - harga beli (snapshot di detail; data lama: harga beli produk saat ini)
+  db.detail.forEach((d) => {
+    const k = tk.get(d.transaksi_id);
+    if (k) m[k].profit += (d.harga_satuan - (d.harga_beli ?? prod(d.produk_id)?.harga_beli ?? d.harga_satuan)) * d.jumlah;
+  });
+  return m;
+};
+
+/** Ambil n hari terakhir (termasuk hari ini), mundur offset hari. | param: m (hasil agg), n, offset | return: array */
+const lastDays = (m, n, offset = 0) =>
+  [...Array(n)].map((_, i) => {
+    const d = new Date(Date.now() - (n - 1 - i + offset) * 864e5),
+      k = dk(d.toISOString());
+    return { d, k, ...(m[k] || { sales: 0, profit: 0, count: 0 }) };
+  });
+
+/** Badge tren persen vs periode sebelumnya. | param: cur, prev, label | return: string HTML */
+const trend = (cur, prev, label) => {
+  if (!prev && !cur) return `<small>${label}</small>`;
+  if (!prev) return `<span class="tr up">${ico('up')}Baru</span><small>${label}</small>`;
+  const pc = Math.round(((cur - prev) / prev) * 100),
+    up = pc >= 0;
+  return `<span class="tr ${up ? 'up' : 'dn'}">${ico(up ? 'up' : 'down')}${up ? '+' : ''}${pc}%</span><small>${label}</small>`;
+};
+
+/** Kartu KPI dengan ikon, nilai, tren, dan sparkline. | param: { c, ic, l, v, f, sp } | return: string HTML */
+const kpi = ({ c, ic, l, v, f, sp = '' }) =>
+  `<div class="kpi ${c}"><div class="kpi-ic">${ico(ic)}</div><div class="kpi-b"><span class="kpi-l">${l}</span><h3>${v}</h3><div class="kpi-f">${f}</div></div>${sp}</div>`;
+
+/** Halaman dashboard: banner, KPI, grafik penjualan & laba, donat kategori, terlaris, stok menipis, jam tersibuk, transaksi terbaru. | param: - | return: string HTML */
 export function dashboard() {
-  const td = today(),
-    tr = db.transaksi.filter((t) => dk(t.waktu) === td),
-    L = low();
-  const days = [...Array(7)].map((_, i) => {
-      const d = new Date(Date.now() - (6 - i) * 864e5),
-        k = dk(d.toISOString());
-      return {
-        l: d.toLocaleDateString('id-ID', { weekday: 'short' }),
-        v: db.transaksi.filter((t) => dk(t.waktu) === k).reduce((a, t) => a + t.total, 0)
+  const L = low(),
+    m = agg(),
+    range = S.range || 7;
+  const td = lastDays(m, 1)[0],
+    yd = lastDays(m, 1, 1)[0],
+    w7 = lastDays(m, 7),
+    w7p = lastDays(m, 7, 7);
+  const sum = (a, k) => a.reduce((x, y) => x + y[k], 0);
+  const avg = (o) => (o.count ? o.sales / o.count : 0);
+
+  /* --- KPI --- */
+  const stokBeli = db.produk.reduce((a, p) => a + p.stok * p.harga_beli, 0),
+    stokJual = db.produk.reduce((a, p) => a + p.stok * p.harga, 0);
+  const kpis1 = [
+    kpi({ c: 'k1', ic: 'cash', l: 'Penjualan hari ini', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
+    kpi({ c: 'k2', ic: 'cart', l: 'Transaksi hari ini', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
+    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
+    kpi({ c: 'k4', ic: 'wallet', l: 'Rata-rata / transaksi', v: rp(avg(td)), f: trend(avg(td), avg(yd), 'vs kemarin') })
+  ].join('');
+  const kpis2 = [
+    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
+    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', v: rp(stokBeli), f: `<small>Potensi jual ${rp(stokJual)}</small>` }),
+    kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>` }),
+    kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', v: L.length, f: `<a href="#stok-menipis" class="lk">Lihat semua</a>` })
+  ].join('');
+
+  /* --- Grafik penjualan & laba --- */
+  const days = lastDays(m, range);
+  const lab = days.map((x) => (range === 7 ? x.d.toLocaleDateString('id-ID', { weekday: 'short' }) : x.d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })));
+  const chart = barChart({
+    labels: lab,
+    every: range > 14 ? 3 : range > 7 ? 2 : 1,
+    series: [
+      { name: 'Penjualan', cls: 's1', values: days.map((x) => x.sales) },
+      { name: 'Laba', cls: 's2', values: days.map((x) => x.profit) }
+    ],
+    fmt: rp
+  });
+  const rSales = sum(days, 'sales'),
+    rProfit = sum(days, 'profit');
+
+  /* --- Donat kategori --- */
+  const byKat = {};
+  db.detail.forEach((d) => {
+    const n = kat(prod(d.produk_id)?.kategori_id)?.nama || 'Tanpa kategori';
+    byKat[n] = (byKat[n] || 0) + d.subtotal;
+  });
+  const totKat = Object.values(byKat).reduce((a, b) => a + b, 0);
+  const dn = donut({
+    items: Object.entries(byKat).map(([label, value]) => ({ label, value })),
+    center: { top: 'Rp' + short(totKat), bottom: 'Omzet' },
+    fmt: rp
+  });
+
+  /* --- Produk terlaris --- */
+  const tp = {};
+  db.detail.forEach((d) => {
+    const o = (tp[d.produk_id] ||= { nama: d.nama_produk, id: d.produk_id, q: 0, v: 0 });
+    o.q += d.jumlah;
+    o.v += d.subtotal;
+  });
+  const best = Object.values(tp).sort((a, b) => b.q - a.q).slice(0, 5),
+    bmax = Math.max(...best.map((x) => x.q), 1);
+
+  /* --- Jam tersibuk --- */
+  const hrs = db.transaksi.map((t) => new Date(t.waktu).getHours());
+  const h0 = Math.min(8, ...hrs),
+    h1 = Math.max(18, ...hrs);
+  const hours = [...Array(h1 - h0 + 1)].map((_, i) => h0 + i);
+  const hc = hours.map((h) => hrs.filter((x) => x === h).length);
+  const hchart = barChart({
+    labels: hours.map((h) => String(h).padStart(2, '0')),
+    series: [{ name: 'Transaksi', cls: 's3', values: hc }],
+    fmt: (v) => v + ' transaksi',
+    yfmt: (v) => String(Math.round(v)),
+    w: 360,
+    h: 250,
+    left: 30
+  });
+
+  /* --- Transaksi terbaru --- */
+  const items = new Map();
+  db.detail.forEach((d) => items.set(d.transaksi_id, (items.get(d.transaksi_id) || 0) + d.jumlah));
+  const rec = [...db.transaksi].reverse().slice(0, 6);
+
+  setTimeout(() => {
+    $$('.chips button').forEach((b) => {
+      b.onclick = () => {
+        S.range = +b.dataset.r;
+        shellRef();
       };
-    }),
-    mx = Math.max(...days.map((d) => d.v), 1);
-  const bars = days
-    .map((d, i) => {
-      const h = (d.v / mx) * 150;
-      return `<rect x="${i * 60 + 14}" y="${170 - h}" width="34" height="${h}" rx="4" fill="#3DB5FF"><title>${rp(d.v)}</title></rect><text x="${i * 60 + 31}" y="190" text-anchor="middle" font-size="12" fill="currentColor">${d.l}</text>`;
-    })
-    .join('');
-  const rec = [...db.transaksi].reverse().slice(0, 5);
-  return `<div class="ban"><span><b>Selamat datang, ${esc(me.nama)}</b><br>${L.length ? `Ada ${L.length} barang yang stoknya menipis dan perlu dibeli ulang.` : 'Semua stok barang masih aman.'}</span><a class="btn bp" href="#barang-masuk">Catat barang masuk</a></div>
-  <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Penjualan hari ini</span><h3>${rp(tr.reduce((a, t) => a + t.total, 0))}</h3></div><div class="st" style="background:#092C4C"><span>Transaksi hari ini</span><h3>${tr.length}</h3></div><div class="st" style="background:#0E9384"><span>Jumlah produk</span><h3>${db.produk.length}</h3></div><div class="st" style="background:#E04F16"><span>Stok menipis</span><h3>${L.length}</h3></div></div>
-  <div class="g2"><div class="card"><div class="ch"><h4>Penjualan 7 hari terakhir</h4></div><div class="cb"><svg viewBox="0 0 420 200" width="100%" role="img" aria-label="Grafik penjualan 7 hari">${bars}</svg></div></div>
-  <div class="card"><div class="ch"><h4>Stok menipis</h4><a href="#stok-menipis" class="btn sm">Lihat semua</a></div><div class="cb">${
-    L.slice(0, 5)
-      .map((p) => `<div class="li"><span>${esc(p.nama)}</span><span class="b r">${p.stok}</span></div>`)
-      .join('') || empty('Aman', 'Tidak ada barang yang menipis.')
-  }</div></div></div>
-  <div class="card"><div class="ch"><h4>Transaksi terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Total</th></tr>${rec.map((t) => `<tr><td>${t.kode}</td><td>${dt(t.waktu)}</td><td><span class="b n">${t.sumber}</span></td><td class="r">${rp(t.total)}</td></tr>`).join('')}</table></div></div>`;
+    });
+    const root = $('.dash'),
+      tip = $('#tip');
+    if (!root || !tip) return;
+    // tooltip grafik: data-tip = "judul|teks|kelas|teks|kelas..."
+    const show = (e) => {
+      const t = e.target.closest && e.target.closest('[data-tip]');
+      if (!t) return (tip.hidden = true);
+      const [title, ...r] = t.dataset.tip.split('|');
+      let h = `<b>${esc(title)}</b>`;
+      for (let i = 0; i < r.length; i += 2) h += `<div><i class="dot ${esc(r[i + 1] || '')}"></i>${esc(r[i])}</div>`;
+      tip.innerHTML = h;
+      tip.hidden = false;
+      const w = tip.offsetWidth,
+        x = Math.min(e.clientX + 14, innerWidth - w - 8);
+      tip.style.left = Math.max(8, x) + 'px';
+      tip.style.top = e.clientY + 16 + 'px';
+    };
+    root.addEventListener('mousemove', show);
+    root.addEventListener('mouseover', show);
+    root.addEventListener('mouseleave', () => (tip.hidden = true));
+  }, 0);
+
+  const first = L[0];
+  return `<div class="dash">
+  <div class="ban"><span class="ban-ic ${first ? '' : 'ok'}">${ico(first ? 'alert' : 'trend')}</span><span class="ban-t"><b>Selamat datang, ${esc(me.nama)}</b><br>${
+    first
+      ? `Stok <b>${esc(first.nama)}</b> tersisa ${first.stok}${L.length > 1 ? ` dan ${L.length - 1} produk lain perlu dibeli ulang` : ''}.`
+      : 'Semua stok barang masih aman. ' + (td.count ? `Hari ini sudah ada ${td.count} transaksi.` : 'Belum ada transaksi hari ini.')
+  }</span><a class="btn bp" href="#barang-masuk">Tambah stok</a></div>
+  <div class="kpis">${kpis1}</div><div class="kpis">${kpis2}</div>
+
+  <div class="dgrid">
+    <div class="card"><div class="ch"><h4>Penjualan &amp; Laba</h4><div class="chips" role="group" aria-label="Rentang waktu">${[7, 14, 30].map((r) => `<button type="button" data-r="${r}" class="${r === range ? 'on' : ''}">${r}H</button>`).join('')}</div></div>
+      <div class="cb"><div class="lgd"><span><i class="dot s1"></i>Penjualan <b>${rp(rSales)}</b></span><span><i class="dot s2"></i>Laba kotor <b>${rp(rProfit)}</b></span></div><div class="chart-wrap">${chart}</div></div></div>
+    <div class="card"><div class="ch"><h4>Penjualan per Kategori</h4></div><div class="cb">${
+      totKat
+        ? `<div class="dn-wrap">${dn.svg}</div><ul class="lgl">${dn.legend}</ul>`
+        : empty('Belum ada data', 'Grafik muncul setelah ada penjualan.')
+    }</div></div>
+  </div>
+
+  <div class="dgrid3">
+    <div class="card"><div class="ch"><h4>Produk Terlaris</h4><a href="#laporan" class="btn sm">Laporan</a></div><div class="cb">${
+      best
+        .map(
+          (x, i) =>
+            `<div class="tp"><span class="rk">${i + 1}</span><div class="tp-b"><div class="tp-h"><b>${esc(prod(x.id)?.nama || x.nama)}</b><span>${x.q} terjual</span></div><div class="bar"><i style="width:${Math.round((x.q / bmax) * 100)}%"></i></div><small>${rp(x.v)}</small></div></div>`
+        )
+        .join('') || empty('Belum ada penjualan', 'Produk terlaris tampil setelah ada transaksi.')
+    }</div></div>
+    <div class="card"><div class="ch"><h4>Stok Menipis</h4><a href="#stok-menipis" class="btn sm">Lihat semua</a></div><div class="cb">${
+      L.slice(0, 5)
+        .map((p) => {
+          const pc = Math.max(4, Math.min(100, Math.round((p.stok / Math.max(p.stok_minimum, 1)) * 100)));
+          return `<div class="ls"><div class="ls-h"><b>${esc(p.nama)}</b><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : p.stok + ' tersisa'}</span></div><div class="bar ${p.stok <= 0 ? 'bad' : 'warn'}"><i style="width:${pc}%"></i></div><small>Minimum ${p.stok_minimum}</small></div>`;
+        })
+        .join('') || empty('Aman', 'Tidak ada barang yang menipis.')
+    }</div></div>
+    <div class="card"><div class="ch"><h4>Jam Tersibuk</h4></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p></div></div>
+  </div>
+
+  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Item</th><th class="r">Total</th></tr>${
+    rec.map((t) => `<tr><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${esc(t.sumber)}</span></td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
+    `<tr><td colspan="5">${empty('Belum ada transaksi', 'Transaksi dari kasir akan muncul di sini.')}</td></tr>`
+  }</table></div></div>
+  <div class="tip" id="tip" hidden></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
