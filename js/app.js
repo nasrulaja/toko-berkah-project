@@ -282,17 +282,20 @@ try {
   setMe(db.users.find((u) => u.id == s) || null);
 } catch (e) {}
 
-/* Efek loading antar halaman: lapisan #pl tampil sebentar (spinner + logo), halaman diganti
+/* Efek loading antar halaman: lapisan #pl tampil sebentar, halaman diganti
    di baliknya, lalu lapisan memudar. Dilewati bila pengguna memilih "kurangi animasi". */
-const LOAD_MS = 450;
+const LOAD_FEEDBACK_MS = 120;
 let loadTimer;
 function loader(on) {
   let l = $('#pl');
   if (!l) {
     l = document.createElement('div');
     l.id = 'pl';
-    l.setAttribute('aria-hidden', 'true');
-    l.innerHTML = '<div class="pl-box"><i>B</i><span class="pl-ring"></span></div>';
+    l.setAttribute('role', 'status');
+    l.setAttribute('aria-live', 'polite');
+    l.setAttribute('aria-label', 'Memuat halaman');
+    l.innerHTML =
+      '<div class="pl-card"><span class="pl-orbit" aria-hidden="true"><span class="pl-ring"></span></span><span class="pl-label">Memuat halaman</span><span class="pl-track" aria-hidden="true"><span></span></span></div>';
     document.body.append(l);
   }
   // paksa reflow supaya transisi opacity jalan saat lapisan baru dibuat
@@ -303,10 +306,10 @@ function go() {
   clearTimeout(loadTimer);
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return route();
   loader(true);
+  route();
   loadTimer = setTimeout(() => {
-    route();
     loader(false);
-  }, LOAD_MS);
+  }, LOAD_FEEDBACK_MS);
 }
 
 addEventListener('hashchange', () => {
@@ -317,5 +320,5 @@ route();
 if (me && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   // muat awal: tampilkan loading singkat seperti pindah halaman
   loader(true);
-  setTimeout(() => loader(false), LOAD_MS);
+  setTimeout(() => loader(false), LOAD_FEEDBACK_MS);
 }

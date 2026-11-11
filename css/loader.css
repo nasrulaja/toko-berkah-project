@@ -1,7 +1,7 @@
 /* ==========================================================================
    TOKO BERKAH — loader.css
-   Efek loading saat pindah halaman: lapisan blur + logo dengan cincin berputar.
-   Dibuat/diatur oleh loader() di js/app.js. Durasi diatur LOAD_MS di app.js.
+   Efek loading saat pindah halaman: overlay kaca bening + indikator ring dan
+   progress halus. Dibuat/diatur oleh loader() di js/app.js; durasi di LOAD_MS.
    ========================================================================== */
 #pl {
   position: fixed;
@@ -9,58 +9,119 @@
   z-index: 100;
   display: grid;
   place-items: center;
-  background: color-mix(in srgb, var(--bg, #f4f9ff) 72%, transparent);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  padding: 20px;
+  background: rgba(9, 44, 76, 0.12);
+  -webkit-backdrop-filter: blur(7px) saturate(135%);
+  backdrop-filter: blur(7px) saturate(135%);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition:
-    opacity 0.22s ease,
-    visibility 0s linear 0.22s;
+    opacity 0.14s ease,
+    visibility 0s linear 0.14s;
 }
 #pl.on {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transition: opacity 0.12s ease;
+  transition: opacity 0.14s ease;
 }
-.pl-box {
+.pl-card {
   position: relative;
-  width: 72px;
-  height: 72px;
   display: grid;
-  place-items: center;
+  justify-items: center;
+  gap: 12px;
+  width: min(216px, 100%);
+  padding: 22px 24px 18px;
+  overflow: hidden;
+  border: 1px solid var(--gx-stroke, rgba(9, 44, 76, 0.14));
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--card, #fff) 56%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(175%);
+  backdrop-filter: blur(24px) saturate(175%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.72) inset,
+    0 18px 56px rgba(9, 44, 76, 0.2);
+  opacity: 0.88;
+  transform: translateY(8px) scale(0.96);
+  transition:
+    opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.pl-box i {
-  font-style: normal;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: var(--p);
-  color: #092c4c;
-  font-weight: 800;
-  font-size: 20px;
-  animation: pl-pulse 0.9s ease-in-out infinite;
+#pl.on .pl-card {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
-.pl-ring {
+.pl-card::before {
+  content: '';
   position: absolute;
-  inset: 0;
+  top: -54px;
+  left: 50%;
+  width: 150px;
+  height: 100px;
   border-radius: 50%;
-  border: 3px solid color-mix(in srgb, var(--p) 25%, transparent);
-  border-top-color: var(--p);
-  animation: pl-spin 0.8s linear infinite;
+  background: color-mix(in srgb, var(--p, #3db5ff) 30%, transparent);
+  filter: blur(28px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.pl-orbit {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid color-mix(in srgb, var(--p, #3db5ff) 24%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--card, #fff) 44%, transparent);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+    0 6px 18px color-mix(in srgb, var(--p, #3db5ff) 15%, transparent);
+}
+/* Spinner: cincin dengan ekor gradasi yang berputar */
+.pl-ring {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 4%, var(--p) 55%, #8b5cf6 88%, transparent);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  animation: pl-spin 1s linear infinite;
+}
+.pl-label {
+  position: relative;
+  color: var(--hd, #092c4c);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+}
+.pl-track {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--hd, #092c4c) 9%, transparent);
+}
+.pl-track span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 42%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--p, #3db5ff), #8b5cf6);
+  animation: pl-sweep 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes pl-sweep {
+  from {
+    transform: translateX(-110%);
+  }
+  to {
+    transform: translateX(260%);
+  }
 }
 @keyframes pl-spin {
   to {
     transform: rotate(360deg);
-  }
-}
-@keyframes pl-pulse {
-  50% {
-    transform: scale(0.88);
   }
 }
 @media (prefers-reduced-motion: reduce) {
