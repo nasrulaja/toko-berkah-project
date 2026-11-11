@@ -1,0 +1,308 @@
+/* ==========================================================================
+   TOKO BERKAH — mobile.css
+   Penataan khusus HP (< 992px). Dimuat PALING AKHIR agar menimpa style.css,
+   glass.css, dan dashboard.css. Desktop tidak terpengaruh.
+   - Rail kaca kiri diganti bar menu bawah (.bnav)
+   - Tabel jadi kartu per baris (label diisi app.js lewat data-label)
+   - Modal, input, dan toast disesuaikan untuk layar sentuh
+   ========================================================================== */
+
+/* Merek & bar bawah disembunyikan di desktop */
+.brand,
+.bnav {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  /* --- Kerangka: rail kiri dibuang, konten selebar layar --- */
+  .gx-rail {
+    display: none !important;
+  }
+  html .main,
+  html.sbmin .main {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+  }
+  body {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+  html[data-theme] .top {
+    margin: 8px 10px 0;
+    padding: 0 10px 0 12px;
+    height: 54px;
+    border-radius: 16px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    color: var(--hd);
+  }
+  .brand i {
+    font-style: normal;
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: var(--p);
+    color: #092c4c;
+    font-weight: 800;
+  }
+  .pg {
+    padding: 14px 12px;
+  }
+  .ph {
+    margin-bottom: 14px;
+  }
+  .ph h2 {
+    font-size: 20px;
+    margin: 0;
+  }
+  .ft {
+    padding-bottom: 8px;
+  }
+
+  /* --- Bar menu bawah --- */
+  .bnav {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 40;
+    display: flex;
+    gap: 2px;
+    padding: 6px;
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+    border: 1px solid color-mix(in srgb, var(--hd) 13%, transparent);
+    box-shadow: 0 10px 30px rgba(9, 44, 76, 0.22);
+  }
+  .bnav a,
+  .bnav button {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 52px;
+    padding: 0;
+    border: 0;
+    border-radius: 16px;
+    background: none;
+    color: var(--tx);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bnav svg {
+    width: 22px;
+    height: 22px;
+  }
+  .bnav .on {
+    background: color-mix(in srgb, var(--p) 22%, transparent);
+    color: var(--hd);
+  }
+  .bnav em {
+    position: absolute;
+    top: 4px;
+    left: calc(50% + 6px);
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: var(--bad);
+    color: #fff;
+    font-style: normal;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+  }
+
+  /* --- Menu "Lainnya" --- */
+  .mlist {
+    display: grid;
+    gap: 6px;
+  }
+  .mlist a,
+  .mlist button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--bd);
+    border-radius: 14px;
+    background: none;
+    color: var(--hd);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .mlist svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+  }
+  .mlist span {
+    flex: 1;
+  }
+
+  /* --- Kartu & judul kartu --- */
+  .card {
+    margin-bottom: 14px;
+  }
+  .cb {
+    padding: 14px;
+  }
+  .ch {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .flt input,
+  .flt select {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+
+  /* --- Form: huruf 16px supaya iOS tidak zoom saat mengetik --- */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .btn {
+    min-height: 40px;
+  }
+  .btn.sm {
+    min-height: 34px;
+  }
+
+  /* --- Modal: lebar penuh, bisa digulir, tombol mudah dijangkau --- */
+  .ov {
+    padding: 10px;
+    align-items: end;
+  }
+  .md {
+    max-height: calc(100dvh - 20px);
+    border-radius: 20px;
+  }
+  .md .ch,
+  .md .cb {
+    padding: 14px 16px;
+  }
+
+  /* --- Toast di atas bar bawah --- */
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    text-align: center;
+    border-radius: 16px;
+  }
+
+  /* --- Kasir --- */
+  .pgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* --- Tabel jadi kartu per baris di layar sempit --- */
+@media (max-width: 720px) {
+  .tw {
+    overflow-x: visible;
+  }
+  .tw table,
+  .tw tbody {
+    display: block;
+    min-width: 0;
+    width: 100%;
+  }
+  .tw tr:has(th) {
+    display: none;
+  }
+  .tw tr {
+    display: block;
+    margin: 0 0 10px;
+    padding: 6px 12px;
+    border: 1px solid var(--bd);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--card) 70%, transparent);
+  }
+  .tw td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border: 0;
+    text-align: right;
+    min-width: 0;
+    word-break: break-word;
+  }
+  .tw td[data-label]::before {
+    content: attr(data-label);
+    flex: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--tx);
+    text-align: left;
+  }
+  .tw td[colspan] {
+    display: block;
+    text-align: center;
+  }
+  /* kolom aksi: tombol memenuhi baris */
+  .tw td:last-child:has(.btn) {
+    justify-content: flex-end;
+    padding-top: 10px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--bd);
+  }
+  .tw td:last-child:has(.btn)::before {
+    display: none;
+  }
+  /* tabel di dalam modal (detail transaksi) tetap tabel biasa */
+  .md .tw {
+    overflow-x: auto;
+  }
+  .md .tw table {
+    display: table;
+  }
+  .md .tw tbody {
+    display: table-row-group;
+  }
+  .md .tw tr:has(th) {
+    display: table-row;
+  }
+  .md .tw tr {
+    display: table-row;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .md .tw td {
+    display: table-cell;
+    padding: 8px 6px;
+    text-align: left;
+  }
+  .md .tw td.r {
+    text-align: right;
+  }
+  .md .tw td[data-label]::before {
+    display: none;
+  }
+}

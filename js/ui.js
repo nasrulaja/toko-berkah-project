@@ -98,7 +98,7 @@ export function modal(title, body, label, fn) {
     if (fn && fn(Object.fromEntries(new FormData(f))) !== false) $('#ov').innerHTML = '';
   };
   const i = $('input,select', f);
-  i && i.focus();
+  if (i && innerWidth >= 992) i.focus();
 }
 
 export const ask = (m, fn) =>

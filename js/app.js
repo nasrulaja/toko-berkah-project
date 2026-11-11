@@ -89,8 +89,38 @@ function shell() {
     navK = k === 'barang-masuk' ? 'stok' : k; // #barang-masuk menyorot menu Manajemen Stok
   $('#app').innerHTML =
     `<aside class="side" id="sd"><div class="logo"><i>B</i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === navK ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'stok-menipis' && db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
-<div class="main"><header class="top"><button class="ic" id="burger" data-act="menu" aria-label="Menu">${ico('menu')}</button><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="av"><b>${esc(me.nama[0])}</b><span>${esc(me.nama)}</span></div><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
-<main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main><footer class="ft">Dikembangkan oleh Ruelz</footer></div>`;
+<div class="main"><header class="top"><span class="brand"><i>B</i>Toko Berkah</span><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
+<main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main><footer class="ft">Dikembangkan oleh Ruelz</footer></div>${bottomNav(navK)}`;
+  labelTables();
+}
+
+/** Bar menu bawah khusus HP (rail kaca disembunyikan di layar kecil). | param: k (menu aktif) | return: string HTML */
+function bottomNav(k) {
+  const items = [
+      ['dashboard', 'home', 'Beranda'],
+      ['kasir', 'box', 'Kasir'],
+      ['produk', 'tag', 'Produk'],
+      ['stok', 'in', 'Stok']
+    ],
+    nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length,
+    moreOn = ['stok-menipis', 'laporan', 'transaksi', 'pengaturan'].includes(k);
+  return `<nav class="bnav" aria-label="Menu utama">${items
+    .map(([id, ic, l]) => `<a href="#${id}" class="${id === k ? 'on' : ''}">${ico(ic)}<span>${l}</span></a>`)
+    .join('')}<button type="button" data-act="more" class="${moreOn ? 'on' : ''}">${ico('menu')}<span>Lainnya</span>${nLow ? `<em>${nLow}</em>` : ''}</button></nav>`;
+}
+
+/** Beri atribut data-label pada sel tabel agar bisa ditampilkan sebagai kartu di HP. | param: - | return: void */
+function labelTables() {
+  document.querySelectorAll('.tw table').forEach((t) => {
+    const rows = [...t.rows],
+      head = rows.find((r) => r.querySelector('th'));
+    if (!head) return;
+    const names = [...head.cells].map((c) => c.textContent.trim());
+    rows.forEach((r) => {
+      if (r === head || r.cells.length !== names.length) return;
+      [...r.cells].forEach((c, i) => (c.dataset.label = names[i]));
+    });
+  });
 }
 
 setShellRef(shell);
@@ -112,6 +142,14 @@ function onClick(e) {
 
     if (a === 'x') $('#ov').innerHTML = '';
     else if (a === 'menu') $('#sd').classList.toggle('open');
+    else if (a === 'more') {
+      const nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length;
+      modal(
+        'Menu lainnya',
+        `<div class="mlist"><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('list')}<span>Laporan Penjualan</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#pengaturan" data-act="x">${ico('edit')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
+        ''
+      );
+    }
     else if (a === 'collapse') sb(!document.documentElement.classList.contains('sbmin'));
     else if (a === 'theme') {
       const nt = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
@@ -139,6 +177,7 @@ function onClick(e) {
           .catch(() => {});
       }
     } else if (a === 'logout') {
+      $('#ov').innerHTML = '';
       setMe(null);
       try {
         localStorage.removeItem(KS);
@@ -243,8 +282,40 @@ try {
   setMe(db.users.find((u) => u.id == s) || null);
 } catch (e) {}
 
+/* Efek loading antar halaman: lapisan #pl tampil sebentar (spinner + logo), halaman diganti
+   di baliknya, lalu lapisan memudar. Dilewati bila pengguna memilih "kurangi animasi". */
+const LOAD_MS = 450;
+let loadTimer;
+function loader(on) {
+  let l = $('#pl');
+  if (!l) {
+    l = document.createElement('div');
+    l.id = 'pl';
+    l.setAttribute('aria-hidden', 'true');
+    l.innerHTML = '<div class="pl-box"><i>B</i><span class="pl-ring"></span></div>';
+    document.body.append(l);
+  }
+  // paksa reflow supaya transisi opacity jalan saat lapisan baru dibuat
+  void l.offsetWidth;
+  l.classList.toggle('on', on);
+}
+function go() {
+  clearTimeout(loadTimer);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return route();
+  loader(true);
+  loadTimer = setTimeout(() => {
+    route();
+    loader(false);
+  }, LOAD_MS);
+}
+
 addEventListener('hashchange', () => {
   if (innerWidth < 992) sb(true);
-  route();
+  go();
 });
 route();
+if (me && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  // muat awal: tampilkan loading singkat seperti pindah halaman
+  loader(true);
+  setTimeout(() => loader(false), LOAD_MS);
+}

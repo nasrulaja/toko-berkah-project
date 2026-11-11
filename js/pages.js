@@ -362,14 +362,14 @@ export function kasir() {
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function produk() {
   return `<div class="card"><div class="ch"><h4>Daftar Produk (${db.produk.length})</h4><div class="flt"><button class="btn bp" data-act="addp">Tambah produk</button><button class="btn" data-act="addk">Tambah kategori</button></div></div>
-  <div class="tw"><table><tr><th>Produk</th><th>Kategori</th><th>Barcode</th><th class="r">Harga Jual</th><th class="r">Harga Beli</th><th class="r">Stok</th><th class="r">Aksi</th></tr>
+  <div class="tw"><table><tr><th>Produk</th><th>Kategori</th><th>Barcode</th><th class="r">Harga Jual</th><th class="r">Harga Beli</th><th class="r">Stok</th><th class="r">Stok Min</th><th class="r">Aksi</th></tr>
   ${
     db.produk
       .map((p) => {
         const k = kat(p.kategori_id);
-        return `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(k?.nama || '-')}</td><td><code>${esc(p.barcode || '-')}</code></td><td class="r">${rp(p.harga)}</td><td class="r">${rp(p.harga_beli)}</td><td class="r"><span class="b ${p.stok <= p.stok_minimum ? 'r' : 'g'}">${p.stok}</span></td><td class="r"><button class="btn sm" data-act="editp" data-id="${p.id}">Ubah</button> <button class="btn sm bd" data-act="delp" data-id="${p.id}">Hapus</button></td></tr>`;
+        return `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(k?.nama || '-')}</td><td><code>${esc(p.barcode || '-')}</code></td><td class="r">${rp(p.harga)}</td><td class="r">${rp(p.harga_beli)}</td><td class="r"><span class="b ${p.stok <= p.stok_minimum ? 'r' : 'g'}">${p.stok}</span></td><td class="r">${p.stok_minimum}</td><td class="r"><button class="btn sm" data-act="editp" data-id="${p.id}">Ubah</button> <button class="btn sm bd" data-act="delp" data-id="${p.id}">Hapus</button></td></tr>`;
       })
-      .join('') || '<tr><td colspan="7">Belum ada produk.</td></tr>'
+      .join('') || '<tr><td colspan="8">Belum ada produk.</td></tr>'
   }</table></div></div>
   <div class="card"><div class="ch"><h4>Kategori (${db.kategori.length})</h4></div><div class="tw"><table><tr><th>Nama Kategori</th><th class="r">Jumlah Produk</th><th class="r">Aksi</th></tr>
   ${db.kategori.map((k) => `<tr><td>${esc(k.nama)}</td><td class="r">${db.produk.filter((p) => p.kategori_id === k.id).length}</td><td class="r"><button class="btn sm" data-act="editk" data-id="${k.id}">Ubah</button> <button class="btn sm bd" data-act="delk" data-id="${k.id}">Hapus</button></td></tr>`).join('')}</table></div></div>`;
@@ -436,7 +436,7 @@ export function stok() {
     };
   }, 0);
   const rec = [...db.mutasi].reverse().slice(0, 200);
-  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label>Produk</label><select id="mpid" required>${popt(db)}</select></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (set stok)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan Mutasi</button></form></div></div>
+  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label>Produk</label><select id="mpid" required>${popt(db)}</select></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (ubah stok langsung)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan Mutasi</button></form></div></div>
   <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length}${db.mutasi.length > rec.length ? ' terbaru' : ''})</h4></div><div class="tw"><table><tr><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
   ${rec
     .map((m) => {
@@ -509,7 +509,7 @@ export function pengaturan() {
    ========================================================================== */
 
 export function pform(p = {}) {
-  return `<div class="fg"><label>Nama produk</label><input name="nama" required value="${esc(p.nama)}"></div><div class="row"><div class="fg"><label>Barcode</label><input name="barcode" value="${esc(p.barcode)}"></div><div class="fg"><label>Kategori</label><select name="kategori_id"><option value="">Tanpa Kategori</option>${opts(db.kategori, p.kategori_id)}</select></div></div><div class="row"><div class="fg"><label>Harga jual</label><input name="harga" type="number" min="0" required value="${p.harga ?? ''}"></div><div class="fg"><label>Harga beli</label><input name="harga_beli" type="number" min="0" required value="${p.harga_beli ?? ''}"></div></div><div class="row">${p.id ? '' : `<div class="fg"><label>Stok awal</label><input name="stok" type="number" min="0" required value="0"></div>`}<div class="fg"><label>Stok minimum</label><input name="stok_minimum" type="number" min="0" required value="${p.stok_minimum ?? 5}"></div></div>`;
+  return `<div class="fg"><label>Nama produk</label><input name="nama" required value="${esc(p.nama)}"></div><div class="row"><div class="fg"><label>Barcode</label><input name="barcode" value="${esc(p.barcode)}"></div><div class="fg"><label>Kategori</label><select name="kategori_id"><option value="">Tanpa Kategori</option>${opts(db.kategori, p.kategori_id)}</select></div></div><div class="row"><div class="fg"><label>Harga jual</label><input name="harga" type="number" min="0" required value="${p.harga ?? ''}"></div><div class="fg"><label>Harga beli</label><input name="harga_beli" type="number" min="0" required value="${p.harga_beli ?? ''}"></div></div><div class="row"><div class="fg"><label>${p.id ? 'Stok saat ini' : 'Stok awal'}</label><input name="stok" type="number" min="0" step="1" inputmode="numeric" required value="${p.id ? p.stok : 0}"></div><div class="fg"><label>Stok minimum</label><input name="stok_minimum" type="number" min="0" step="1" inputmode="numeric" required value="${p.stok_minimum ?? 5}"></div></div>`;
 }
 
 export function saveP(d, p) {
@@ -518,20 +518,34 @@ export function saveP(d, p) {
     toast('Barcode sudah dipakai produk lain');
     return false;
   }
+  // stok & stok minimum harus bilangan bulat >= 0
+  const stokBaru = d.stok === '' || d.stok == null ? NaN : +d.stok,
+    stokMin = d.stok_minimum === '' || d.stok_minimum == null ? NaN : +d.stok_minimum;
+  if (!Number.isInteger(stokBaru) || stokBaru < 0) {
+    toast('Stok harus bilangan bulat 0 atau lebih');
+    return false;
+  }
+  if (!Number.isInteger(stokMin) || stokMin < 0) {
+    toast('Stok minimum harus bilangan bulat 0 atau lebih');
+    return false;
+  }
   const v = {
     nama: d.nama.trim(),
     barcode: d.barcode.trim(),
     kategori_id: d.kategori_id ? +d.kategori_id : null,
     harga: +d.harga,
     harga_beli: +d.harga_beli,
-    stok_minimum: +d.stok_minimum,
+    stok_minimum: stokMin,
     updated_at: new Date().toISOString()
   };
-  if (p) Object.assign(p, v);
-  else {
+  if (p) {
+    Object.assign(p, v);
+    // stok diubah lewat form produk: dicatat sebagai penyesuaian agar riwayat tetap utuh
+    if (stokBaru !== p.stok) mut(p, 'penyesuaian', stokBaru - p.stok, { cat: 'Diubah lewat form produk' });
+  } else {
     const n = { id: ++db.n, stok: 0, created_at: v.updated_at, ...v };
     db.produk.push(n);
-    if (+d.stok > 0) mut(n, 'masuk', +d.stok, { hb: n.harga_beli, cat: 'Stok awal' });
+    if (stokBaru > 0) mut(n, 'masuk', stokBaru, { hb: n.harga_beli, cat: 'Stok awal' });
   }
   save();
   toast('Produk disimpan');

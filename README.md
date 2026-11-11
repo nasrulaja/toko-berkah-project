@@ -43,6 +43,7 @@ Prototipe web sesuai PRD (bagian Web 4.1).
 - **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Kasir, Produk, Stok, Laporan, Transaksi, Pengaturan, dan Login).
 - **`js/app.js`**: Titik masuk (*bootstrap*) aplikasi berbasis modul ES yang menangani routing hash URL, event binding utama.
 - **`css/glass.css`**: Berkas gaya terpusat yang menggabungkan efek glassmorphism aplikasi, styling GX Rail vertikal, serta mode performa mobile & fallback.
+- **`css/mobile.css`** : Penataan khusus HP (< 992px): bar menu bawah, tabel jadi kartu, modal & form ramah sentuh.
 - **`js/glass-rail.js`**: Skrip interaktif untuk GX Rail vertikal dengan fisika *spring* (*rubber banding* dan tetesan air), mendukung semua ukuran layar.
 
 ## ⚙️ Catatan teknis
