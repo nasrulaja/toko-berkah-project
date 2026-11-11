@@ -1,0 +1,544 @@
+/* ==========================================================================
+   TOKO BERKAH — dashboard.css
+   Gaya halaman dashboard (kartu KPI, grafik SVG, daftar). Dimuat SETELAH
+   glass.css. Semua warna memakai variabel agar terang & gelap konsisten.
+   --------------------------------------------------------------------------
+   PETA FILE — cari teks "BAGIAN n":
+     BAGIAN 1  PALET GRAFIK       --c1..--c6 (terang & gelap)
+     BAGIAN 2  BANNER & KPI       .ban, .kpis, .kpi, .tr
+     BAGIAN 3  GRID & KARTU       .dgrid, .dgrid3, .chips, .lgd
+     BAGIAN 4  GRAFIK SVG         .chart, .donut, .spark, tooltip
+     BAGIAN 5  DAFTAR             .tp (terlaris), .ls (stok), .bar
+     BAGIAN 6  RESPONSIF
+   ========================================================================== */
+
+/* ==========================================================================
+   BAGIAN 1 — PALET GRAFIK
+   ========================================================================== */
+:root {
+  --c1: #3db5ff;
+  --c2: #0e9384;
+  --c3: #f59e0b;
+  --c4: #8b5cf6;
+  --c5: #ef4444;
+  --c6: #94a3b8;
+}
+:root[data-theme='dark'] {
+  --c1: #4dbbff;
+  --c2: #2dd4bf;
+  --c3: #fbbf24;
+  --c4: #a78bfa;
+  --c5: #f87171;
+  --c6: #7b8da1;
+}
+
+/* ==========================================================================
+   BAGIAN 2 — BANNER & KPI
+   ========================================================================== */
+.dash .ban {
+  gap: 14px;
+  flex-wrap: nowrap;
+}
+.dash .ban .ban-t {
+  flex: 1;
+  min-width: 0;
+}
+.ban-ic {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--c3) 20%, transparent);
+  color: var(--c3);
+}
+.ban-ic.ok {
+  background: color-mix(in srgb, var(--c2) 20%, transparent);
+  color: var(--c2);
+}
+.ban-ic svg {
+  width: 22px;
+  height: 22px;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.kpi {
+  --kc: var(--c1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: var(--card);
+  border: 1px solid var(--bd);
+  overflow: hidden;
+  color: var(--kc);
+}
+.kpi.k2 {
+  --kc: var(--c2);
+}
+.kpi.k3 {
+  --kc: var(--c3);
+}
+.kpi.k4 {
+  --kc: var(--c4);
+}
+.kpi.k5 {
+  --kc: var(--c5);
+}
+.kpi-ic {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--kc) 16%, transparent);
+  color: var(--kc);
+}
+.kpi-ic svg {
+  width: 22px;
+  height: 22px;
+}
+.kpi-b {
+  min-width: 0;
+  flex: 1;
+  color: var(--tx);
+}
+.kpi-l {
+  font-size: 13px;
+  display: block;
+}
+.kpi h3 {
+  margin: 2px 0 4px;
+  font-size: 21px;
+  line-height: 1.2;
+  color: var(--hd);
+  overflow-wrap: anywhere;
+}
+.kpi-f {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+}
+.kpi-f small {
+  color: var(--tx);
+  font-size: 12px;
+}
+.kpi .lk {
+  color: var(--pd);
+  font-weight: 500;
+  text-decoration: none;
+}
+:root[data-theme='dark'] .kpi .lk {
+  color: var(--p);
+}
+.kpi .lk:hover {
+  text-decoration: underline;
+}
+.tr {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 7px 1px 4px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 11.5px;
+}
+.tr svg {
+  width: 12px;
+  height: 12px;
+}
+.tr.up {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.15);
+}
+.tr.dn {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.14);
+}
+:root[data-theme='dark'] .tr.up {
+  color: #4ade80;
+}
+:root[data-theme='dark'] .tr.dn {
+  color: #f87171;
+}
+
+/* ==========================================================================
+   BAGIAN 3 — GRID & KARTU
+   ========================================================================== */
+.dgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.dgrid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.dash .card {
+  margin-bottom: 0;
+}
+.dash > .card {
+  margin-bottom: 16px;
+}
+.chips {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--th);
+  border: 1px solid var(--bd);
+}
+.chips button {
+  border: 0;
+  background: transparent;
+  color: var(--tx);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 4px 11px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.chips button:hover {
+  color: var(--hd);
+}
+.chips button.on {
+  background: var(--card);
+  color: var(--hd);
+  box-shadow: 0 1px 4px rgba(9, 44, 76, 0.14);
+}
+:root[data-theme='dark'] .chips button.on {
+  background: var(--c1);
+  color: #04263d;
+  box-shadow: none;
+}
+.lgd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin-bottom: 8px;
+  color: var(--tx);
+  font-size: 13px;
+}
+.lgd b {
+  color: var(--hd);
+  margin-left: 4px;
+}
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: baseline;
+}
+.dot.s1,
+.dot.d0 {
+  background: var(--c1);
+}
+.dot.s2,
+.dot.d1 {
+  background: var(--c2);
+}
+.dot.s3,
+.dot.d2 {
+  background: var(--c3);
+}
+.dot.d3 {
+  background: var(--c4);
+}
+.dot.d4 {
+  background: var(--c5);
+}
+.dot.d5 {
+  background: var(--c6);
+}
+
+/* ==========================================================================
+   BAGIAN 4 — GRAFIK SVG
+   ========================================================================== */
+.chart-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.chart {
+  display: block;
+  min-width: 520px;
+}
+.chart-wrap.sm .chart {
+  min-width: 300px;
+}
+.chart .ca {
+  fill: var(--tx);
+  font-size: 11px;
+  font-family: inherit;
+}
+.chart .cg {
+  stroke: var(--bd);
+  stroke-dasharray: 3 4;
+}
+.chart .s1 {
+  fill: var(--c1);
+}
+.chart .s2 {
+  fill: var(--c2);
+}
+.chart .s3 {
+  fill: var(--c3);
+}
+.chart .band {
+  fill: var(--c1);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.chart .grp:hover .band {
+  opacity: 0.09;
+}
+.chart .hit {
+  fill: transparent;
+}
+.donut {
+  display: block;
+  max-width: 210px;
+  margin: 0 auto;
+}
+.dn-wrap {
+  padding: 2px 0 6px;
+}
+.donut .dn,
+.donut .dn-bg {
+  fill: none;
+  stroke-width: 24;
+}
+.donut .dn-bg {
+  stroke: var(--th);
+}
+.donut .dn {
+  cursor: pointer;
+  transition: stroke-width 0.15s;
+}
+.donut .dn:hover {
+  stroke-width: 28;
+}
+.donut .d0 {
+  stroke: var(--c1);
+}
+.donut .d1 {
+  stroke: var(--c2);
+}
+.donut .d2 {
+  stroke: var(--c3);
+}
+.donut .d3 {
+  stroke: var(--c4);
+}
+.donut .d4 {
+  stroke: var(--c5);
+}
+.donut .d5 {
+  stroke: var(--c6);
+}
+.donut .dc1 {
+  fill: var(--hd);
+  font-size: 19px;
+  font-weight: 700;
+  font-family: inherit;
+}
+.donut .dc2 {
+  fill: var(--tx);
+  font-size: 12px;
+  font-family: inherit;
+}
+.lgl {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.lgl li {
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  border-top: 1px solid var(--bd);
+  color: var(--tx);
+  font-size: 13px;
+}
+.lgl li:first-child {
+  border: 0;
+}
+.lgl li span {
+  flex: 1;
+}
+.lgl li b {
+  color: var(--hd);
+}
+.spark {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 62px;
+  height: 26px;
+}
+.spark .spl {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+.spark .spa {
+  fill: currentColor;
+  opacity: 0.12;
+}
+.tip {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  padding: 8px 11px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #f2f5f8;
+  background: rgba(9, 44, 76, 0.94);
+  box-shadow: 0 8px 24px rgba(9, 44, 76, 0.3);
+  white-space: nowrap;
+}
+.tip[hidden] {
+  display: none;
+}
+.tip b {
+  display: block;
+  margin-bottom: 2px;
+}
+:root[data-theme='dark'] .tip {
+  background: rgba(2, 10, 20, 0.96);
+  border: 1px solid var(--bd);
+}
+.note {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--tx);
+}
+
+/* ==========================================================================
+   BAGIAN 5 — DAFTAR
+   ========================================================================== */
+.bar {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--th);
+  overflow: hidden;
+}
+.bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c1);
+}
+.bar.warn i {
+  background: var(--c3);
+}
+.bar.bad i {
+  background: var(--c5);
+}
+.tp {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--bd);
+}
+.tp:first-child,
+.ls:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.rk {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--pd);
+  background: var(--soft);
+}
+:root[data-theme='dark'] .rk {
+  color: var(--p);
+}
+.tp-b {
+  flex: 1;
+  min-width: 0;
+}
+.tp-h,
+.ls-h {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: var(--tx);
+  font-size: 13px;
+}
+.tp-h b,
+.ls-h b {
+  color: var(--hd);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tp small,
+.ls small {
+  display: block;
+  margin-top: 5px;
+  color: var(--tx);
+  font-size: 12px;
+}
+.ls {
+  padding: 10px 0;
+  border-top: 1px solid var(--bd);
+}
+
+/* ==========================================================================
+   BAGIAN 6 — RESPONSIF
+   ========================================================================== */
+@media (max-width: 1200px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dgrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dgrid3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dgrid3 > .card:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 640px) {
+  .kpis,
+  .dgrid3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dash .ban {
+    flex-wrap: wrap;
+  }
+  .ban-ic {
+    display: none;
+  }
+}
