@@ -9,7 +9,7 @@
        BAGIAN 1  KEPALA DOKUMEN   meta, judul, font, urutan pemuatan CSS
        BAGIAN 2  BADAN DOKUMEN    wadah #app/#ov, skrip
      ========================================================================== -->
-<html lang="id">
+<html lang="id" data-theme="light">
   <head>
     <!-- ====================================================================
          BAGIAN 1 — KEPALA DOKUMEN
@@ -17,6 +17,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Toko Berkah – Sistem Kasir & Stok</title>
+
+    <!-- Tema awal: TERANG. Atribut data-theme="light" di <html> mencegah kilatan gelap
+         untuk pengunjung ber-OS mode gelap; pilihan tema yang pernah disimpan dipulihkan
+         di sini, sebelum halaman digambar. -->
+    <script>
+      try {
+        var t = localStorage.getItem('berkah_theme');
+        if (t === 'dark' || t === 'light') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
 
     <!-- Font: Roboto untuk isi aplikasi, Nunito untuk halaman login -->
     <link
