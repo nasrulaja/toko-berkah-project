@@ -124,7 +124,7 @@ export function dashboard() {
     kpi({ c: 'k1', ic: 'cash', l: 'Penjualan hari ini', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
     kpi({ c: 'k2', ic: 'cart', l: 'Transaksi hari ini', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
     kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
-    kpi({ c: 'k4', ic: 'wallet', l: 'Pembeli teratas', v: tb ? rp(tb[1].v) : 'Rp0', f: tb ? `<small><b>${esc(tb[0])}</b> · ${tb[1].c} transaksi</small>` : '<small>Belum ada transaksi</small>' })
+    kpi({ c: 'k4', ic: 'wallet', l: 'Pembeli teratas', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? 'Total belanja terbesar' : 'Belum ada transaksi'}</small>` })
   ].join('');
   const kpis2 = [
     kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
@@ -260,8 +260,8 @@ export function dashboard() {
     <div class="card"><div class="ch"><h4>Jam Tersibuk</h4></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p></div></div>
   </div>
 
-  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Pembeli</th><th class="r">Barang</th><th class="r">Total</th></tr>${
-    rec.map((t) => `<tr><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td>${esc(t.pembeli || 'Umum')}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
+  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
+    rec.map((t) => `<tr><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
     `<tr><td colspan="5">${empty('Belum ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
   }</table></div></div>
   <div class="tip" id="tip" hidden></div></div>`;
@@ -451,18 +451,18 @@ export function laporan() {
       ? `<table><tr><th>#</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada penjualan', 'Produk terlaris muncul setelah ada transaksi.')
   }</div></div>
-  <div class="card"><div class="ch"><h4>Pembeli teratas</h4></div><div class="tw">${
+  <div class="card"><div class="ch"><h4>Belanja terbesar per pembeli</h4></div><div class="tw">${
     buyers.length
-      ? `<table><tr><th>#</th><th>Pembeli</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
-      : empty('Belum ada pembeli', 'Pembeli teratas muncul setelah ada transaksi.')
+      ? `<table><tr><th>#</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([, x], i) => `<tr><td>${i + 1}</td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      : empty('Belum ada pembeli', 'Daftar muncul setelah ada transaksi.')
   }</div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function transaksi() {
   const rec = [...db.transaksi].reverse();
-  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Pembeli</th><th class="r">Total</th><th class="r">Aksi</th></tr>
-  ${rec.map((t) => `<tr><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td>${esc(t.pembeli || 'Umum')}</td><td class="r">${rp(t.total)}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
+  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th class="r">Total</th><th class="r">Aksi</th></tr>
+  ${rec.map((t) => `<tr><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */

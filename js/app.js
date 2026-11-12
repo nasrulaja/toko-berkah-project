@@ -211,7 +211,7 @@ function onClick(e) {
       const t = db.transaksi.find((x) => x.id === id);
       modal(
         t.kode,
-        `<p>${dt(t.waktu)} · <b>${esc(t.pembeli || "Umum")}</b></p><div class="tw"><table style="min-width:0"><tr><th>Barang</th><th class="r">Harga</th><th class="r">Jml</th><th class="r">Subtotal</th></tr>${db.detail
+        `<p>${dt(t.waktu)}</p><div class="tw"><table style="min-width:0"><tr><th>Barang</th><th class="r">Harga</th><th class="r">Jml</th><th class="r">Subtotal</th></tr>${db.detail
           .filter((d) => d.transaksi_id === id)
           .map(
             (d) =>
