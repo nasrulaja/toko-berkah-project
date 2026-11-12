@@ -25,10 +25,118 @@ const NAV = [
 
 const cur = () => (location.hash.slice(1) in PG ? location.hash.slice(1) : 'dashboard');
 
+function renderNotifContent() {
+  const dk = iso => new Date(iso).toLocaleDateString('en-CA');
+  const td = dk(new Date().toISOString());
+  const yd = dk(new Date(Date.now() - 864e5).toISOString());
+
+  const trTd = db.transaksi.filter(t => dk(t.waktu) === td);
+  const trYd = db.transaksi.filter(t => dk(t.waktu) === yd);
+
+  let salesHtml = '';
+
+  if (!trTd.length) {
+    salesHtml = `
+      <div class="notif-card">
+        <h5>Ringkasan Penjualan Hari Ini</h5>
+        <div class="notif-empty">Belum ada penjualan hari ini</div>
+      </div>
+    `;
+  } else {
+    const totalToday = trTd.reduce((a, t) => a + t.total, 0);
+    const totalYesterday = trYd.reduce((a, t) => a + t.total, 0);
+
+    const txIdsTd = new Set(trTd.map(t => t.id));
+    const detailsTd = db.detail.filter(d => txIdsTd.has(d.transaksi_id));
+    const totalItems = detailsTd.reduce((a, d) => a + d.jumlah, 0);
+
+    const prodQtyMap = {};
+    detailsTd.forEach(d => {
+      prodQtyMap[d.nama_produk] = (prodQtyMap[d.nama_produk] || 0) + d.jumlah;
+    });
+    let topProd = '-', maxQty = 0;
+    Object.entries(prodQtyMap).forEach(([name, qty]) => {
+      if (qty > maxQty) { maxQty = qty; topProd = name; }
+    });
+    const topProdText = maxQty ? `${topProd} (${maxQty} barang)` : '-';
+
+    const diff = totalToday - totalYesterday;
+    let compText = '';
+    if (totalYesterday === 0) {
+      compText = totalToday > 0 ? `<span class="up">▲ +100% vs kemarin</span>` : `<span>0% vs kemarin</span>`;
+    } else {
+      const pct = Math.round((diff / totalYesterday) * 100);
+      if (pct > 0) compText = `<span class="up">▲ Naik ${pct}% (${rp(diff)})</span>`;
+      else if (pct < 0) compText = `<span class="down">▼ Turun ${Math.abs(pct)}% (${rp(Math.abs(diff))})</span>`;
+      else compText = `<span>Sama dengan kemarin</span>`;
+    }
+
+    let webCount = 0, androidCount = 0, desktopCount = 0;
+    trTd.forEach(t => {
+      const s = (t.sumber || '').toLowerCase();
+      if (s.includes('android')) androidCount++;
+      else if (s.includes('desktop')) desktopCount++;
+      else webCount++;
+    });
+
+    salesHtml = `
+      <div class="notif-card">
+        <h5 style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span>Ringkasan Penjualan Hari Ini</span>
+        </h5>
+        <div class="notif-row"><span>Total Penjualan</span><b>${rp(totalToday)}</b></div>
+        <div class="notif-row"><span>Transaksi & Barang</span><b>${trTd.length} transaksi (${totalItems} barang)</b></div>
+        <div class="notif-row"><span>Produk Terlaris</span><b>${esc(topProdText)}</b></div>
+        <div class="notif-row"><span>Perbandingan Kemarin</span><b>${compText}</b></div>
+        <div class="notif-grid">
+          <div class="notif-src"><span>Web</span><b>${webCount}</b></div>
+          <div class="notif-src"><span>Android</span><b>${androidCount}</b></div>
+          <div class="notif-src"><span>Desktop</span><b>${desktopCount}</b></div>
+        </div>
+      </div>
+    `;
+  }
+
+  const lowStock = db.produk.filter(p => p.stok <= p.stok_minimum);
+  let lowHtml = '';
+
+  if (!lowStock.length) {
+    lowHtml = `
+      <div class="notif-sec">
+        <div class="notif-h"><span>Peringatan Stok Menipis</span></div>
+        <div class="notif-empty">Semua stok aman</div>
+      </div>
+    `;
+  } else {
+    lowHtml = `
+      <div class="notif-sec">
+        <div class="notif-h">
+          <span>Stok Menipis (${lowStock.length})</span>
+          <a href="#stok-menipis" data-act="notif-link">Lihat semua</a>
+        </div>
+        ${lowStock.slice(0, 5).map(p => `
+          <div class="notif-item">
+            <span>${esc(p.nama)}</span>
+            <b>Sisa ${p.stok}</b>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="notif-sec">
+      ${salesHtml}
+      ${lowHtml}
+    </div>
+  `;
+}
+
 function shell() {
   const k = cur(), p = PG[k];
+  const lowCount = db.produk.filter(p => p.stok <= p.stok_minimum).length;
   $('#app').innerHTML = `<aside class="side" id="sd"><div class="logo"><i>B</i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === k ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'stok-menipis' && db.produk.filter(p => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter(p => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
-<div class="main"><header class="top"><button class="ic" id="burger" data-act="menu" aria-label="Menu">${ico('menu')}</button><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="av"><b>${esc(me.nama[0])}</b><span>${esc(me.nama)}</span></div><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
+<div class="main"><header class="top"><button class="ic" id="burger" data-act="menu" aria-label="Menu">${ico('menu')}</button><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div style="position:relative"><button class="notif-btn" data-act="notif" aria-label="Notifikasi">${ico('bell')}${lowCount ? `<span class="badge">${lowCount}</span>` : ''}</button><div class="notif-drop" id="notif-drop" hidden></div></div><div class="av"><b>${esc(me.nama[0])}</b><span>${esc(me.nama)}</span></div><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
 <main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main></div>`;
   bind();
 }
@@ -37,12 +145,31 @@ setShellRef(shell);
 
 function bind() {
   document.onclick = e => {
+    const drop = $('#notif-drop');
+    if (drop && !drop.hidden && !e.target.closest('[data-act="notif"]') && !e.target.closest('#notif-drop')) {
+      drop.hidden = true;
+    }
+
     const b = e.target.closest('[data-act]'); if (!b) return;
     const a = b.dataset.act, id = +b.dataset.id;
     const prod = id => db.produk.find(x => x.id == id);
     const kat = id => db.kategori.find(x => x.id == id);
 
     if (a === 'x') $('#ov').innerHTML = '';
+    else if (a === 'notif') {
+      if (drop) {
+        const isHidden = drop.hidden;
+        if (isHidden) {
+          drop.innerHTML = renderNotifContent();
+          drop.hidden = false;
+        } else {
+          drop.hidden = true;
+        }
+      }
+    }
+    else if (a === 'notif-link') {
+      if (drop) drop.hidden = true;
+    }
     else if (a === 'menu') $('#sd').classList.toggle('open');
     else if (a === 'collapse') sb(!document.documentElement.classList.contains('sbmin'));
     else if (a === 'theme') {
