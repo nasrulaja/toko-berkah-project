@@ -152,6 +152,12 @@ export function dashboard() {
   });
   const rSales = sum(days, 'sales'),
     rProfit = sum(days, 'profit');
+  const hariBaik = [...days].sort((a, b) => b.sales - a.sales)[0],
+    ringkasJual = [
+      ['Rata-rata / hari', rp(Math.round(rSales / range))],
+      ['Margin laba', rSales ? (rProfit / rSales * 100).toFixed(1).replace('.', ',') + '%' : '-'],
+      ['Hari terbaik', hariBaik && hariBaik.sales ? hariBaik.d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' }) : '-']
+    ];
 
   /* --- Donat kategori --- */
   const byKat = {};
@@ -226,18 +232,44 @@ export function dashboard() {
     root.addEventListener('mouseleave', () => (tip.hidden = true));
   }, 0);
 
-  const first = L[0];
+  const first = L[0],
+    jam = new Date().getHours(),
+    sapa = jam < 11 ? 'Selamat pagi' : jam < 15 ? 'Selamat siang' : jam < 18 ? 'Selamat sore' : 'Selamat malam';
+  // ringkasan jam/hari tersibuk (semua data) untuk mengisi kartu Jam Tersibuk
+  const cJam = {},
+    cHari = {},
+    tglSet = new Set();
+  db.transaksi.forEach((t) => {
+    const d = new Date(t.waktu),
+      h = d.getHours();
+    cJam[h] = (cJam[h] || 0) + 1;
+    cHari[d.getDay()] = (cHari[d.getDay()] || 0) + 1;
+    tglSet.add(dk(t.waktu));
+  });
+  const top3Jam = Object.entries(cJam).sort((a, b) => b[1] - a[1]).slice(0, 3),
+    maxJam = top3Jam[0]?.[1] || 1;
+  const topK = (o) => Object.entries(o).sort((a, b) => b[1] - a[1])[0],
+    tj = topK(cJam),
+    th = topK(cHari),
+    nmHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
+    ringkasJam = [
+      ['Jam tersibuk', tj ? String(tj[0]).padStart(2, '0') + '.00' : '-'],
+      ['Hari tersibuk', th ? nmHari[th[0]] : '-'],
+      ['Rata-rata / hari', tglSet.size ? (db.transaksi.length / tglSet.size).toFixed(1).replace('.', ',') + ' trx' : '-']
+    ];
+  // kartu stok: bila tidak ada yang menipis, tampilkan 5 produk dengan stok paling sedikit
+  const sedikit = L.length ? L : [...db.produk].sort((a, b) => a.stok / Math.max(a.stok_minimum, 1) - b.stok / Math.max(b.stok_minimum, 1)).slice(0, 5);
   return `<div class="dash">
-  <div class="ban"><span class="ban-ic ${first ? '' : 'ok'}">${ico(first ? 'alert' : 'trend')}</span><span class="ban-t"><b>Selamat datang, ${esc(me.nama)}</b><br>${
+  <div class="ban"><span class="ban-ic ${first ? '' : 'ok'}">${ico(first ? 'alert' : 'trend')}</span><span class="ban-t"><b class="ban-h">${sapa}, ${esc(me.nama)}</b><span class="ban-s">${
     first
       ? `Stok <b>${esc(first.nama)}</b> tersisa ${first.stok}${L.length > 1 ? ` dan ${L.length - 1} produk lain perlu dibeli ulang` : ''}.`
-      : 'Semua stok barang masih aman. ' + (td.count ? `Hari ini sudah ada ${td.count} transaksi.` : 'Belum ada transaksi hari ini.')
-  }</span><a class="btn bp" href="#barang-masuk">Tambah stok</a></div>
+      : 'Semua stok barang masih aman.'
+  }</span><span class="ban-c"><span><i>Penjualan hari ini</i><b>${rp(td.sales)}</b></span><span><i>Transaksi</i><b>${td.count}</b></span><span><i>Laba kotor</i><b>${rp(td.profit)}</b></span><span><i>Stok menipis</i><b>${L.length}</b></span></span></span><span class="ban-a"><a class="btn bp" href="#barang-masuk">Tambah stok</a><a class="btn" href="#laporan">Lihat laporan</a></span></div>
   <div class="kpis">${kpis1}</div><div class="kpis">${kpis2}</div>
 
   <div class="dgrid">
     <div class="card"><div class="ch"><h4>Penjualan &amp; Laba</h4><div class="chips" role="group" aria-label="Rentang waktu">${[7, 14, 30].map((r) => `<button type="button" data-r="${r}" class="${r === range ? 'on' : ''}">${r}H</button>`).join('')}</div></div>
-      <div class="cb"><div class="lgd"><span><i class="dot s1"></i>Penjualan <b>${rp(rSales)}</b></span><span><i class="dot s2"></i>Laba kotor <b>${rp(rProfit)}</b></span></div><div class="chart-wrap">${chart}</div></div></div>
+      <div class="cb"><div class="lgd"><span><i class="dot s1"></i>Penjualan <b>${rp(rSales)}</b></span><span><i class="dot s2"></i>Laba kotor <b>${rp(rProfit)}</b></span></div><div class="chart-wrap">${chart}</div><div class="mini">${ringkasJual.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div></div></div>
     <div class="card"><div class="ch"><h4>Penjualan per Kategori</h4></div><div class="cb">${
       totKat
         ? `<div class="dn-wrap">${dn.svg}</div><ul class="lgl">${dn.legend}</ul>`
@@ -255,14 +287,16 @@ export function dashboard() {
         .join('') || empty('Belum ada penjualan', 'Produk terlaris tampil setelah ada transaksi.')
     }</div></div>
     <div class="card"><div class="ch"><h4>Stok Menipis</h4><a href="#stok-menipis" class="btn sm">Lihat semua</a></div><div class="cb">${
-      L.slice(0, 5)
+      (L.length ? '' : '<p class="note ok">Semua stok aman. Produk dengan stok paling sedikit:</p>') +
+      sedikit
+        .slice(0, 5)
         .map((p) => {
           const pc = Math.max(4, Math.min(100, Math.round((p.stok / Math.max(p.stok_minimum, 1)) * 100)));
-          return `<div class="ls"><div class="ls-h"><b>${esc(p.nama)}</b><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : p.stok + ' tersisa'}</span></div><div class="bar ${p.stok <= 0 ? 'bad' : 'warn'}"><i style="width:${pc}%"></i></div><small>Minimum ${p.stok_minimum}</small></div>`;
+          return `<div class="ls"><div class="ls-h"><b>${esc(p.nama)}</b><span class="b ${p.stok <= 0 ? 'r' : L.length ? 'o' : 'g'}">${p.stok <= 0 ? 'Habis' : p.stok + ' tersisa'}</span></div><div class="bar ${p.stok <= 0 ? 'bad' : L.length ? 'warn' : ''}"><i style="width:${Math.min(100, pc)}%"></i></div><small>Minimum ${p.stok_minimum}${L.length ? '' : ' · ' + packTxt(p)}</small></div>`;
         })
-        .join('') || empty('Aman', 'Tidak ada barang yang menipis.')
+        .join('') || empty('Belum ada produk', 'Tambahkan produk lebih dulu.')
     }</div></div>
-    <div class="card"><div class="ch"><h4>Jam Tersibuk</h4></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p></div></div>
+    <div class="card"><div class="ch"><h4>Jam Tersibuk</h4></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p><div class="mini">${ringkasJam.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>${top3Jam.map(([h, c]) => `<div class="tp" style="margin-top:12px"><span class="rk">${String(h).padStart(2, '0')}</span><div class="tp-b"><div class="tp-h"><b>Pukul ${String(h).padStart(2, '0')}.00</b><span>${c} transaksi</span></div><div class="bar"><i style="width:${Math.round((c / maxJam) * 100)}%"></i></div></div></div>`).join('')}</div></div>
   </div>
 
   <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
