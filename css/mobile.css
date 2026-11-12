@@ -14,10 +14,9 @@
 }
 
 @media (max-width: 991px) {
-  /* --- Kerangka: rail kaca tetap ada (melayang, bisa ditarik), konten selebar layar --- */
+  /* --- Kerangka: tanpa sidebar kiri di HP, konten selebar layar --- */
   .gx-rail {
-    left: 8px;
-    z-index: 65;
+    display: none !important;
   }
   html .main,
   html.sbmin .main {
@@ -27,20 +26,20 @@
   body {
     padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
   }
-  /* Topbar HP: menempel di atas, selebar layar, kaca bening (tidak melayang dengan celah) */
-  html[data-theme] .top {
-    top: 0;
-    margin: 0;
-    padding: calc(env(safe-area-inset-top, 0px)) 12px 0 14px;
-    height: calc(54px + env(safe-area-inset-top, 0px));
-    border-width: 0 0 1px;
-    border-radius: 0 0 18px 18px;
+  /* Topbar HP: sama seperti di web (kartu kaca melayang); tanggal dipendekkan agar muat */
+  .top {
+    gap: 8px;
+    padding: 0 12px;
   }
   .top .tdate {
-    display: none;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12.5px;
   }
   .brand {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 10px;
     min-width: 0;
