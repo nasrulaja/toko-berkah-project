@@ -24,8 +24,6 @@ export const esc = (s) =>
 /** Format angka jadi Rupiah. | param: n | return: string 'Rp...' */
 export const rp = (n) => 'Rp' + Math.round(n || 0).toLocaleString('id-ID');
 /** Ubah ISO jadi tanggal YYYY-MM-DD. | param: iso | return: string tanggal */
-/** Label sumber transaksi dalam bahasa Indonesia. | param: s | return: string */
-export const sumberLbl = (s) => ({ kasir: 'Kasir', offline: 'Toko' })[s] || esc(s);
 export const dk = (iso) => new Date(iso).toLocaleDateString('en-CA');
 /** Format ISO jadi tanggal+waktu lokal Indonesia. | param: iso | return: string */
 export const dt = (iso) =>
