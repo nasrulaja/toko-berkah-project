@@ -569,3 +569,14 @@
   font-size: 14px;
   color: var(--hd);
 }
+
+/* --- Pack stok, filter, grafik hari --- */
+.pk { display: block; margin-top: 3px; font-size: 11.5px; color: var(--mt, #6b7a90); white-space: nowrap; }
+.hr { display: grid; gap: 10px; }
+.hr-r { display: grid; grid-template-columns: 70px 1fr 110px; align-items: center; gap: 10px; }
+.hr-n { font-weight: 600; }
+.hr-b { height: 10px; border-radius: 99px; background: var(--soft); overflow: hidden; }
+.hr-b i { display: block; height: 100%; border-radius: 99px; background: var(--c1, #3db5ff); }
+.hr-v { text-align: right; font-weight: 600; }
+.hr-v small { font-weight: 400; color: var(--mt, #6b7a90); }
+@media (max-width: 640px) { .hr-r { grid-template-columns: 58px 1fr 84px; } .hr-v small { display: none; } }

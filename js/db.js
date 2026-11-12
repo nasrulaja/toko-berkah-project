@@ -25,6 +25,19 @@ export let me = null;
 export const setMe = (val) => {
   me = val;
 };
+/** Isi per pack (pcs) untuk produk contoh; produk lain = 1 (tanpa pack). */
+const PACK = {
+  'Indomie Goreng 85g': 40,
+  'Chitato Sapi Panggang 68g': 10,
+  'Teh Botol Sosro 450ml': 24,
+  'Aqua 600ml': 24,
+  'Kopi Kapal Api Sachet': 10,
+  'Gula Pasir 1kg': 10,
+  'Minyak Goreng Bimoli 1L': 12,
+  'Rinso Cair 800ml': 12,
+  'Sabun Lifebuoy 75g': 12
+};
+
 /** Daftar nama pembeli DUMMY untuk data contoh. */
 const PEMBELI = ['Bu Siti', 'Pak Budi', 'Bu Ani', 'Pak Joko', 'Mbak Rina', 'Pak Hendra', 'Bu Wati', 'Mas Dimas'];
 /** Nama pembeli contoh yang tetap (deterministik) untuk satu id transaksi. | param: id | return: string */
@@ -54,6 +67,9 @@ export function load() {
       if (ok) {
         // migrasi data lama: kolom tutup buku & nama pembeli (data contoh)
         if (!Array.isArray(d.tutup)) d.tutup = [];
+        d.produk.forEach((p) => {
+          if (!(p.isi_pack >= 1)) p.isi_pack = PACK[p.nama] || 1;
+        });
         d.transaksi.forEach((t) => {
           if (!t.pembeli) t.pembeli = namaPembeli(t.id);
         });
@@ -183,6 +199,7 @@ export function seed() {
         harga,
         harga_beli: hb,
         stok: 0,
+        isi_pack: PACK[nama] || 1,
         stok_minimum: mn,
         created_at: iso,
         updated_at: iso
