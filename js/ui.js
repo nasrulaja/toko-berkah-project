@@ -66,6 +66,7 @@ export const IC = {
   layers: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5M3 18l9 5 9-5',
   clock: 'M12 7v5l3 2M12 3a9 9 0 100 18 9 9 0 000-18',
   up: 'M7 17L17 7M9 7h8v8',
+  help: 'M12 21a9 9 0 100-18 9 9 0 000 18zM9.1 9a3 3 0 015.8 1c0 2-3 2.5-3 4M12 17h.01',
   grid: 'M3 3h8v8H3zM13 3h8v5h-8zM13 12h8v9h-8zM3 15h8v6H3z',
   chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
   book: 'M5 3h12a2 2 0 012 2v16H7a2 2 0 01-2-2zM5 19a2 2 0 012-2h12M9 8h6M9 12h4',
@@ -140,4 +141,7 @@ export const popt = (db, sel) =>
     .map((p) => `<option value="${p.id}" ${p.id == sel ? 'selected' : ''}>${esc(p.nama)} (stok ${p.stok})</option>`)
     .join('');
 export const today = () => dk(new Date().toISOString());
+/** Tanda tanya kecil dengan penjelasan saat disentuh/diarahkan. | param: t (teks) | return: string HTML */
+export const tip = (t) => `<span class="inf" tabindex="0" role="note" aria-label="${t.replace(/"/g, '&quot;')}" data-tip="${t.replace(/"/g, '&quot;')}">?</span>`;
+
 export const empty = (t, s) => `<div class="em"><h4>${t}</h4><p>${s}</p></div>`;

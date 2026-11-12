@@ -22,7 +22,7 @@
    ========================================================================== */
 
 import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261112a';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon } from './ui.js?v=20261112a';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon, tip } from './ui.js?v=20261112a';
 import { barChart, donut, spark, short } from './charts.js?v=20261112a';
 
 let S = {};
@@ -91,8 +91,8 @@ const trend = (cur, prev, label) => {
 };
 
 /** Kartu KPI dengan ikon, nilai, tren, dan sparkline. | param: { c, ic, l, v, f, sp } | return: string HTML */
-const kpi = ({ c, ic, l, v, f, sp = '' }) =>
-  `<div class="kpi ${c}"><div class="kpi-ic">${ico(ic)}</div><div class="kpi-b"><span class="kpi-l">${l}</span><h3>${v}</h3><div class="kpi-f">${f}</div></div>${sp}</div>`;
+const kpi = ({ c, ic, l, h, v, f, sp = '' }) =>
+  `<div class="kpi ${c}"><div class="kpi-ic">${ico(ic)}</div><div class="kpi-b"><span class="kpi-l">${l}${h ? tip(h) : ''}</span><h3>${v}</h3><div class="kpi-f">${f}</div></div>${sp}</div>`;
 
 /** Halaman dashboard: banner, KPI, grafik penjualan & laba, donat kategori, terlaris, stok menipis, jam tersibuk, transaksi terbaru. | param: - | return: string HTML */
 export function dashboard() {
@@ -126,16 +126,16 @@ export function dashboard() {
   });
   const stokBeli7 = db.produk.reduce((a, p) => a + (p.stok - (ubah.get(p.id) || 0)) * p.harga_beli, 0);
   const kpis1 = [
-    kpi({ c: 'k1', ic: 'cash', l: 'Penjualan hari ini', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
-    kpi({ c: 'k2', ic: 'cart', l: 'Transaksi hari ini', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
-    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
-    kpi({ c: 'k4', ic: 'wallet', l: 'Pembeli teratas', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? 'Total belanja terbesar' : 'Belum ada transaksi'}</small>` })
+    kpi({ c: 'k1', ic: 'cash', l: 'Penjualan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
+    kpi({ c: 'k2', ic: 'cart', l: 'Transaksi hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
+    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
+    kpi({ c: 'k4', ic: 'wallet', l: 'Pembeli teratas', h: 'Total belanja terbesar dari satu pembeli (seluruh data).', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? 'Total belanja terbesar' : 'Belum ada transaksi'}</small>` })
   ].join('');
   const kpis2 = [
-    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
-    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'vs 7 hari lalu') + `<small class="blk"><span>Potensi jual</span><b>${rp(stokJual)}</b></small>` }),
-    kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>` }),
-    kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', v: L.length, f: `<a href="#stok-menipis" class="lk">Lihat semua</a>` })
+    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
+    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', h: 'Harga beli dikali stok semua barang yang masih ada. Artinya uang modal yang tertanam di barang.', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'vs 7 hari lalu') + `<small class="blk"><span>Potensi jual${tip('Perkiraan uang yang didapat bila semua stok yang ada terjual habis dengan harga jual sekarang.')}</span><b>${rp(stokJual)}</b></small>` }),
+    kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', h: 'Banyaknya jenis barang yang terdaftar.', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>` }),
+    kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', h: 'Barang yang stoknya sudah sama dengan atau di bawah batas minimum. Segera isi ulang.', v: L.length, f: `<a href="#stok-menipis" class="lk">Lihat semua</a>` })
   ].join('');
 
   /* --- Grafik penjualan & laba --- */
@@ -317,8 +317,20 @@ export function produk() {
         S.pk = e.value;
         shellRef();
       };
+    const c = $('#fcari');
+    if (c)
+      c.oninput = () => {
+        const q = c.value.trim().toLowerCase();
+        let n = 0;
+        [...document.querySelectorAll('.pg table')[0].rows].slice(1).forEach((r) => {
+          const ok = !q || r.textContent.toLowerCase().includes(q);
+          r.hidden = !ok;
+          if (ok) n++;
+        });
+        $('#fcount').textContent = q ? n + ' cocok' : '';
+      };
   });
-  return `<div class="card"><div class="ch"><h4>Daftar Produk (${fk ? list.length + ' dari ' + db.produk.length : db.produk.length})</h4><div class="flt"><select id="fkat" aria-label="Filter kategori"><option value="">Semua kategori</option>${db.kategori.map((k) => `<option value="${k.id}"${String(k.id) === fk ? ' selected' : ''}>${esc(k.nama)}</option>`).join('')}</select><button class="btn bp" data-act="addp">Tambah produk</button><button class="btn" data-act="addk">Tambah kategori</button></div></div>
+  return `<div class="card"><div class="ch"><h4>Daftar Produk (${fk ? list.length + ' dari ' + db.produk.length : db.produk.length}) <small id="fcount" class="note"></small></h4><div class="flt"><input id="fcari" type="search" placeholder="Cari nama / barcode…" aria-label="Cari produk" autocomplete="off"><select id="fkat" aria-label="Filter kategori"><option value="">Semua kategori</option>${db.kategori.map((k) => `<option value="${k.id}"${String(k.id) === fk ? ' selected' : ''}>${esc(k.nama)}</option>`).join('')}</select><button class="btn bp" data-act="addp">Tambah produk</button><button class="btn" data-act="addk">Tambah kategori</button></div></div>
   <div class="tw"><table><tr><th>Produk</th><th>Kategori</th><th>Barcode</th><th class="r">Harga Jual</th><th class="r">Harga Beli</th><th class="r">Stok</th><th class="r">Stok Min</th><th class="r">Aksi</th></tr>
   ${
     list
@@ -434,6 +446,46 @@ export function notifikasi() {
       ? `<div class="nlist">${list.map((e) => `<a class="nt${e.ts > st.read ? ' nw' : ''}" href="${e.to}"><span class="nic ${e.c}">${ico(e.ic)}</span><span class="ntx"><b>${esc(e.a)}</b> ${esc(e.b)}</span><span class="ntm">${ago(e.w)}</span></a>`).join('')}</div>${ev.length > list.length ? `<p class="note" style="padding:12px 18px">Menampilkan ${list.length} dari ${ev.length} notifikasi terbaru.</p>` : ''}`
       : empty('Belum ada notifikasi', 'Aktivitas toko akan muncul di sini.')
   }</div>`;
+}
+
+/** Halaman Panduan: cara memakai, arti istilah, dan tanya jawab singkat. | param: - | return: string HTML */
+export function panduan() {
+  const langkah = [
+    ['grid', 'Lihat Dasbor', 'Ringkasan toko hari ini: penjualan, laba, stok yang hampir habis, dan barang terlaris. Buka tiap hari untuk melihat kondisi toko.', '#dashboard'],
+    ['box', 'Isi data Produk', 'Daftarkan barang di Produk & Kategori: nama, harga jual, harga beli, stok, dan isi per pack bila dijual per dus/pack.', '#produk'],
+    ['layers', 'Catat Stok', 'Di Manajemen Stok catat barang masuk, barang keluar, atau penyesuaian bila jumlah di rak berbeda dari catatan.', '#stok'],
+    ['alert', 'Pantau Stok Menipis', 'Barang yang hampir habis dikumpulkan di satu halaman supaya tahu apa yang harus dibeli lagi.', '#stok-menipis'],
+    ['chart', 'Baca Laporan', 'Lihat laba per tanggal, produk terlaris, serta hari dan jam paling ramai.', '#laporan'],
+    ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas.', '#notifikasi']
+  ];
+  const istilah = [
+    ['Omzet', 'Total uang dari penjualan, sebelum dikurangi apa pun.'],
+    ['Laba kotor', 'Omzet dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain (listrik, gaji, sewa).'],
+    ['Margin laba', 'Laba dibanding omzet, dalam persen. Makin besar makin untung per rupiah penjualan.'],
+    ['Nilai stok (modal)', 'Harga beli dikali stok semua barang yang masih ada. Uang modal yang sedang tertanam di barang.'],
+    ['Potensi jual', 'Perkiraan uang bila semua stok yang ada terjual dengan harga jual sekarang.'],
+    ['Stok minimum', 'Batas aman stok. Bila stok sama atau di bawahnya, barang masuk daftar Stok Menipis.'],
+    ['Pack', 'Satu kemasan besar berisi beberapa pcs (misal 1 dus = 24 botol). Stok tampil "3 pack + 6 pcs".'],
+    ['Mutasi stok', 'Setiap perubahan jumlah stok: terjual, barang masuk, barang keluar, atau penyesuaian.'],
+    ['Penyesuaian', 'Mengoreksi stok agar sama dengan hitungan nyata di rak (misal hasil stok opname). Wajib diberi alasan.'],
+    ['Tutup buku', 'Pencocokan uang di laci dengan catatan penjualan sistem pada akhir hari. Selisih menunjukkan uang kurang atau lebih.']
+  ];
+  const tanya = [
+    ['Jumlah stok di sistem berbeda dengan di rak. Bagaimana memperbaikinya?', 'Buka Manajemen Stok, pilih jenis Penyesuaian, isi stok sebenarnya di rak, dan tulis alasannya.'],
+    ['Bagaimana menambah stok setelah belanja barang?', 'Di Manajemen Stok pilih jenis Barang masuk, isi jumlah dan harga beli. Stok bertambah otomatis.'],
+    ['Kenapa angka laba terlihat lebih besar dari untung sebenarnya?', 'Laba kotor belum dikurangi biaya toko seperti listrik, gaji, dan sewa.'],
+    ['Bagaimana mencari satu produk dengan cepat?', 'Di Produk & Kategori ketik nama atau barcode di kotak Cari, atau pilih kategori dari filter.'],
+    ['Notifikasi saya terlalu banyak.', 'Di halaman Notifikasi tekan Tandai semua dibaca atau Hapus semua. Data transaksi dan stok tidak ikut terhapus.'],
+    ['Apakah data saya aman bila browser ditutup?', 'Data tersimpan di browser ini. Jangan hapus data situs, dan jangan memakai tombol Reset di Pengaturan kecuali ingin kembali ke data contoh.']
+  ];
+  return `<div class="card"><div class="ch"><h4>Mulai dari mana?</h4></div><div class="cb gd">${langkah
+    .map(([ic, t, d, h], i) => `<a class="gd-i" href="${h}"><span class="gd-n">${i + 1}</span><span class="nic">${ico(ic)}</span><span><b>${t}</b><small>${d}</small></span></a>`)
+    .join('')}</div></div>
+  <div class="card"><div class="ch"><h4>Arti istilah</h4></div><div class="cb"><dl class="gl">${istilah.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></div></div>
+  <div class="card"><div class="ch"><h4>Pertanyaan umum</h4></div><div class="cb">${tanya
+    .map(([q, a]) => `<details class="fq"><summary>${q}</summary><p>${a}</p></details>`)
+    .join('')}</div></div>
+  <div class="card"><div class="ch"><h4>Tips cepat</h4></div><div class="cb"><ul class="tips"><li>Tanda <span class="inf" style="position:static">?</span> kecil di samping judul angka berisi penjelasan singkat. Arahkan atau sentuh untuk membacanya.</li><li>Angka hijau dengan panah naik berarti lebih baik dari periode sebelumnya, merah berarti turun.</li><li>Di HP gunakan menu bawah. Menu lain ada di tombol <b>Lainnya</b>.</li><li>Tombol bulan/matahari di kanan atas mengganti tema terang dan gelap.</li></ul></div></div>`;
 }
 
 /** Halaman stok menipis: hanya produk dengan stok <= stok minimum. | param: - | return: string HTML */

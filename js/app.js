@@ -27,6 +27,7 @@ import {
   stokMenipis,
   notifikasi,
   notifUnread,
+  panduan,
   laporan,
   hasilTutupBuku,
   transaksi,
@@ -43,6 +44,7 @@ const PG = {
   produk: { t: 'Manajemen Produk', s: 'Kelola data produk dan kategori', html: produk },
   stok: { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
+  panduan: { t: 'Panduan', s: 'Cara memakai Toko Berkah dan arti istilah', html: panduan },
   notifikasi: { t: 'Semua Notifikasi', s: 'Lihat semua aktivitas toko', html: notifikasi },
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
   'tutup-buku': { t: 'Hasil Tutup Buku', s: 'Laporan hasil proses tutup buku desktop', html: hasilTutupBuku },
@@ -75,7 +77,7 @@ const NAV = [
       ['transaksi', 'recv', 'Riwayat Transaksi']
     ]
   ],
-  ['SISTEM', [['pengaturan', 'gear', 'Pengaturan']]]
+  ['SISTEM', [['panduan', 'help', 'Panduan'], ['pengaturan', 'gear', 'Pengaturan']]]
 ];
 
 /* ==========================================================================
@@ -106,7 +108,7 @@ function bottomNav(k) {
       ['stok', 'layers', 'Stok']
     ],
     nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length,
-    moreOn = ['notifikasi', 'stok-menipis', 'laporan', 'tutup-buku', 'transaksi', 'pengaturan'].includes(k);
+    moreOn = ['panduan', 'notifikasi', 'stok-menipis', 'laporan', 'tutup-buku', 'transaksi', 'pengaturan'].includes(k);
   return `<nav class="bnav" aria-label="Menu utama">${items
     .map(([id, ic, l]) => `<a href="#${id}" class="${id === k ? 'on' : ''}">${ico(ic)}<span>${l}</span></a>`)
     .join('')}<button type="button" data-act="more" class="${moreOn ? 'on' : ''}">${ico('menu')}<span>Lainnya</span>${nLow ? `<em>${nLow}</em>` : ''}</button></nav>`;
@@ -149,7 +151,7 @@ function onClick(e) {
       const nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length;
       modal(
         'Menu lainnya',
-        `<div class="mlist"><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span>${notifUnread() ? `<b class="b r">${notifUnread()}</b>` : ''}</a><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('chart')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('book')}<span>Hasil Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#pengaturan" data-act="x">${ico('gear')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
+        `<div class="mlist"><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span>${notifUnread() ? `<b class="b r">${notifUnread()}</b>` : ''}</a><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('chart')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('book')}<span>Hasil Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#panduan" data-act="x">${ico('help')}<span>Panduan</span></a><a href="#pengaturan" data-act="x">${ico('gear')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
         ''
       );
     }
@@ -243,6 +245,25 @@ function route() {
   }
   shell();
   window.scrollTo(0, 0);
+  tour();
+}
+
+/** Sambutan singkat sekali saja bagi pengguna baru. | param: - | return: void */
+function tour() {
+  let seen = '1';
+  try {
+    seen = localStorage.getItem('berkah_tour');
+    if (!seen) localStorage.setItem('berkah_tour', '1');
+  } catch (e) {}
+  if (seen) return;
+  modal(
+    'Selamat datang di Toko Berkah',
+    `<p>Aplikasi ini membantu memantau <b>penjualan, laba, dan stok</b> toko. Empat hal yang perlu diketahui:</p><ul class="tips"><li><b>Dasbor</b> menampilkan kondisi toko hari ini.</li><li><b>Produk</b> dan <b>Manajemen Stok</b> untuk data barang dan jumlahnya.</li><li><b>Laporan</b> menunjukkan laba, produk terlaris, serta jam dan hari ramai.</li><li>Tanda <b>?</b> di samping angka menjelaskan artinya.</li></ul>`,
+    'Buka Panduan',
+    () => {
+      location.hash = '#panduan';
+    }
+  );
 }
 function sb(v) {
   document.documentElement.classList.toggle('sbmin', v);
