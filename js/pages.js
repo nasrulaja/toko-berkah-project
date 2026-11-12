@@ -298,6 +298,110 @@ export function produk() {
   ${db.kategori.map((k) => `<tr><td>${esc(k.nama)}</td><td class="r">${db.produk.filter((p) => p.kategori_id === k.id).length}</td><td class="r"><button class="btn sm" data-act="editk" data-id="${k.id}">Ubah</button> <button class="btn sm bd" data-act="delk" data-id="${k.id}">Hapus</button></td></tr>`).join('')}</table></div></div>`;
 }
 
+/* ==========================================================================
+   NOTIFIKASI  (halaman "Semua Notifikasi" + lencana lonceng)
+   Notifikasi dibentuk dari data: transaksi, mutasi stok, dan tutup buku.
+   Status baca/hapus disimpan per-browser di localStorage (berkah_notif).
+   ========================================================================== */
+const NK = 'berkah_notif';
+const nstate = () => {
+  try {
+    const s = JSON.parse(localStorage.getItem(NK) || '{}');
+    return { read: +s.read || 0, clear: +s.clear || 0 };
+  } catch {
+    return { read: 0, clear: 0 };
+  }
+};
+const nsave = (s) => {
+  try {
+    localStorage.setItem(NK, JSON.stringify(s));
+  } catch {
+    /* penyimpanan tidak tersedia: status baca tidak tersimpan */
+  }
+};
+/** Waktu relatif dalam bahasa Indonesia. | param: iso | return: string */
+const ago = (iso) => {
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return 'Baru saja';
+  if (s < 3600) return Math.floor(s / 60) + ' menit lalu';
+  if (s < 86400) return Math.floor(s / 3600) + ' jam lalu';
+  if (s < 2592000) return Math.floor(s / 86400) + ' hari lalu';
+  if (s < 31536000) return Math.floor(s / 2592000) + ' bulan lalu';
+  return Math.floor(s / 31536000) + ' tahun lalu';
+};
+/** Daftar notifikasi terbaru (belum dihapus), urut terbaru. | param: - | return: array */
+const nevents = () => {
+  const out = [],
+    nama = (id) => db.produk.find((p) => p.id === id)?.nama || 'Produk';
+  db.transaksi.forEach((t) =>
+    out.push({ w: t.waktu, ic: 'cart', c: 'g', to: '#transaksi', a: 'Penjualan ' + t.kode, b: 'senilai ' + rp(t.total) + ' tercatat.' })
+  );
+  db.mutasi
+    .filter((m) => m.jenis !== 'jual')
+    .forEach((m) => {
+      const j = (jb[m.jenis] || ['n', m.jenis])[1];
+      out.push({
+        w: m.waktu,
+        ic: m.jenis === 'masuk' ? 'in' : m.jenis === 'keluar' ? 'up' : 'sliders',
+        c: m.jenis === 'masuk' ? 'g' : 'o',
+        to: '#stok',
+        a: j + ': ' + nama(m.produk_id),
+        b: (m.jumlah > 0 ? '+' : '') + m.jumlah + ' (stok jadi ' + m.stok_sesudah + ').'
+      });
+    });
+  (db.tutup || []).forEach((x) =>
+    out.push({
+      w: x.waktu || x.tanggal + 'T21:00:00',
+      ic: 'book',
+      c: x.selisih === 0 ? 'g' : 'r',
+      to: '#tutup-buku',
+      a: 'Tutup buku ' + x.tanggal,
+      b: x.selisih === 0 ? 'uang sesuai catatan.' : (x.selisih < 0 ? 'uang kurang ' : 'uang lebih ') + rp(Math.abs(x.selisih)) + '.'
+    })
+  );
+  const st = nstate();
+  return out
+    .filter((e) => new Date(e.w).getTime() > st.clear)
+    .sort((a, b) => (a.w < b.w ? 1 : -1))
+    .map((e) => ({ ...e, ts: new Date(e.w).getTime() }));
+};
+/** Jumlah notifikasi yang belum dibaca (untuk lencana lonceng). | param: - | return: number */
+export const notifUnread = () => {
+  const st = nstate();
+  return nevents().filter((e) => e.ts > st.read).length;
+};
+
+/** Halaman Semua Notifikasi. | param: - | return: string HTML */
+export function notifikasi() {
+  const st = nstate(),
+    ev = nevents(),
+    list = ev.slice(0, 50),
+    lowN = low().length;
+  setTimeout(() => {
+    const r = $('#nread'),
+      d = $('#nclear');
+    if (r)
+      r.onclick = () => {
+        nsave({ ...nstate(), read: Date.now() });
+        toast('Semua notifikasi ditandai dibaca');
+        shellRef();
+      };
+    if (d)
+      d.onclick = () =>
+        ask('Hapus semua notifikasi? Riwayat transaksi dan stok tidak ikut terhapus.', () => {
+          nsave({ read: Date.now(), clear: Date.now() });
+          shellRef();
+        });
+  });
+  return `<div class="card"><div class="ch"><h4>Semua Notifikasi (${ev.length})</h4><div class="nact"><button class="btn" id="nread" ${ev.some((e) => e.ts > st.read) ? '' : 'disabled'}>Tandai semua dibaca</button><button class="btn bd" id="nclear" ${ev.length ? '' : 'disabled'}>Hapus semua</button></div></div>
+  ${lowN ? `<a class="nt nt-warn" href="#stok-menipis"><span class="nic r">${ico('alert')}</span><span class="ntx"><b>${lowN} produk stok menipis</b> perlu diisi ulang.</span><span class="ntm">Lihat</span></a>` : ''}
+  ${
+    list.length
+      ? `<div class="nlist">${list.map((e) => `<a class="nt${e.ts > st.read ? ' nw' : ''}" href="${e.to}"><span class="nic ${e.c}">${ico(e.ic)}</span><span class="ntx"><b>${esc(e.a)}</b> ${esc(e.b)}</span><span class="ntm">${ago(e.w)}</span></a>`).join('')}</div>${ev.length > list.length ? `<p class="note" style="padding:12px 18px">Menampilkan ${list.length} dari ${ev.length} notifikasi terbaru.</p>` : ''}`
+      : empty('Belum ada notifikasi', 'Aktivitas toko akan muncul di sini.')
+  }</div>`;
+}
+
 /** Halaman stok menipis: hanya produk dengan stok <= stok minimum. | param: - | return: string HTML */
 export function stokMenipis() {
   const L = low().sort((a, b) => a.stok - b.stok);

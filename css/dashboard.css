@@ -580,3 +580,23 @@
 .hr-v { text-align: right; font-weight: 600; }
 .hr-v small { font-weight: 400; color: var(--mt, #6b7a90); }
 @media (max-width: 640px) { .hr-r { grid-template-columns: 58px 1fr 84px; } .hr-v small { display: none; } }
+/* --- Halaman notifikasi --- */
+.nact { display: flex; gap: 8px; flex-wrap: wrap; }
+.nlist { display: flex; flex-direction: column; }
+.nt { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-top: 1px solid var(--bd); color: var(--tx); text-decoration: none; }
+.nt:hover { background: var(--soft); }
+.nt.nw { background: color-mix(in srgb, var(--p) 6%, transparent); }
+.nt.nw .ntx::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--p); margin-right: 8px; }
+.nt-warn { background: color-mix(in srgb, var(--bad) 8%, transparent); }
+.nic { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--soft); color: var(--p); }
+.nic svg { width: 18px; height: 18px; }
+.nic.g { background: color-mix(in srgb, var(--ok) 15%, transparent); color: var(--ok); }
+.nic.o { background: color-mix(in srgb, #f59e0b 18%, transparent); color: #d97706; }
+.nic.r { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.ntx { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ntm { flex: none; font-size: 12px; color: var(--mt, #6b7a90); white-space: nowrap; }
+@media (max-width: 640px) {
+  .nt { flex-wrap: wrap; align-items: flex-start; padding: 12px 14px; }
+  .ntx { flex-basis: calc(100% - 52px); }
+  .ntm { flex-basis: 100%; padding-left: 52px; margin-top: -6px; }
+}
