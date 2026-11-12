@@ -7,7 +7,7 @@
    PETA FILE — cari teks "BAGIAN n":
      BAGIAN 1  PEMBANTU DATA & STATE   prod(), kat(), low(), jb, shellRef
      BAGIAN 2  HALAMAN UTAMA           dashboard(), produk(), stokMenipis(), stok()
-     BAGIAN 3  LAPORAN & SISTEM        laporan(), hasilTutupBuku(), notifikasi(), transaksi(), pengaturan()
+     BAGIAN 3  LAPORAN & SISTEM        laporan(), transaksi(), pengaturan()
      BAGIAN 4  FORM PRODUK & KATEGORI  pform(), saveP(), kform()
      BAGIAN 5  HALAMAN LOGIN           login()
    ========================================================================== */
@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261112c';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon } from './ui.js?v=20261112c';
-import { barChart, donut, spark, short } from './charts.js?v=20261112c';
+import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261112a';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon } from './ui.js?v=20261112a';
+import { barChart, donut, spark, short } from './charts.js?v=20261112a';
 
 let S = {};
 
@@ -360,7 +360,6 @@ export function stok() {
    BAGIAN 3 — HALAMAN LAPORAN & SISTEM
    laporan()    : ringkasan omzet/laba, grafik, dan produk terlaris
    hasilTutupBuku(): riwayat laporan tutup buku (proses dilakukan di desktop)
-   notifikasi()   : aktivitas stok, transaksi, dan tutup buku untuk owner
    transaksi()  : daftar seluruh transaksi + tombol detail
    pengaturan() : profil toko, ganti user, reset ke data contoh, logout
    ========================================================================== */
@@ -379,82 +378,6 @@ export function hasilTutupBuku() {
       ? `<table><tr><th>Tanggal</th><th class="r">Menurut sistem</th><th class="r">Uang fisik</th><th>Selisih</th></tr>${rec.map((x) => `<tr><td><b>${esc(tglId(x.tanggal))}</b></td><td class="r">${rp(x.total_sistem)}</td><td class="r">${rp(x.uang_fisik)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td></tr>`).join('')}</table>`
       : empty('Belum ada hasil tutup buku', 'Laporan akan tampil di sini setelah proses tutup buku dilakukan di desktop.')
   }</div></div>`;
-}
-
-/** Tampilkan aktivitas toko untuk owner tanpa aksi operasional di web. | param: - | return: string HTML */
-export function notifikasi() {
-  const items = [];
-  db.produk
-    .filter((p) => p.stok <= p.stok_minimum)
-    .forEach((p) =>
-      items.push({
-        icon: 'alert',
-        kind: p.stok <= 0 ? 'critical' : 'warning',
-        title: p.stok <= 0 ? 'Stok produk habis' : 'Stok produk menipis',
-        message: `${esc(p.nama)} tersisa ${p.stok} (minimum ${p.stok_minimum}).`,
-        waktu: p.updated_at || p.created_at,
-        href: '#stok-menipis'
-      })
-    );
-
-  db.mutasi
-    .filter((m) => m.jenis !== 'jual')
-    .slice()
-    .sort((a, b) => Date.parse(b.waktu) - Date.parse(a.waktu))
-    .slice(0, 5)
-    .forEach((m) => {
-      const nama = prod(m.produk_id)?.nama || '(produk dihapus)',
-        masuk = m.jenis === 'masuk';
-      items.push({
-        icon: masuk ? 'in' : 'edit',
-        kind: masuk ? 'success' : 'neutral',
-        title: masuk ? 'Stok masuk dicatat' : 'Penyesuaian stok dicatat',
-        message: `${esc(nama)} · ${m.jumlah > 0 ? '+' : ''}${m.jumlah} unit.`,
-        waktu: m.waktu,
-        href: '#stok'
-      });
-    });
-
-  db.transaksi
-    .slice()
-    .sort((a, b) => Date.parse(b.waktu) - Date.parse(a.waktu))
-    .slice(0, 5)
-    .forEach((t) =>
-      items.push({
-        icon: 'recv',
-        kind: 'success',
-        title: 'Penjualan tercatat',
-        message: `${esc(t.kode)} · ${rp(t.total)}.`,
-        waktu: t.waktu,
-        href: '#transaksi'
-      })
-    );
-
-  db.tutup
-    .slice()
-    .sort((a, b) => Date.parse(b.waktu) - Date.parse(a.waktu))
-    .slice(0, 3)
-    .forEach((t) => {
-      const selisih = t.selisih === 0 ? 'Kas sesuai catatan.' : `${t.selisih < 0 ? 'Kas kurang' : 'Kas lebih'} ${rp(Math.abs(t.selisih))}.`;
-      items.push({
-        icon: 'recv',
-        kind: t.selisih === 0 ? 'success' : 'warning',
-        title: 'Hasil tutup buku tersedia',
-        message: `${new Date(`${t.tanggal}T00:00:00`).toLocaleDateString('id-ID')} · ${selisih}`,
-        waktu: t.waktu,
-        href: '#tutup-buku'
-      });
-    });
-
-  items.sort((a, b) => Date.parse(b.waktu) - Date.parse(a.waktu));
-  return items.length
-    ? `<div class="activity-list" aria-label="Aktivitas terbaru">${items
-        .map(
-          (item) =>
-            `<a class="activity-item" href="${item.href}"><span class="activity-icon ${item.kind}">${ico(item.icon)}</span><span class="activity-copy"><b>${item.title}</b><span>${item.message}</span></span><time>${dt(item.waktu)}</time></a>`
-        )
-        .join('')}</div>`
-    : empty('Belum ada aktivitas', 'Notifikasi stok, transaksi, dan tutup buku akan tampil di sini.');
 }
 
 export function laporan() {
