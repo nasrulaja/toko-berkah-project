@@ -104,6 +104,13 @@ export function dashboard() {
   /* --- KPI --- */
   const stokBeli = db.produk.reduce((a, p) => a + p.stok * p.harga_beli, 0),
     stokJual = db.produk.reduce((a, p) => a + p.stok * p.harga, 0);
+  // nilai stok 7 hari lalu: stok sekarang dikurangi semua mutasi sesudah titik itu (harga beli = harga saat ini)
+  const t7 = Date.now() - 7 * 864e5,
+    ubah = new Map();
+  db.mutasi.forEach((x) => {
+    if (new Date(x.waktu).getTime() > t7) ubah.set(x.produk_id, (ubah.get(x.produk_id) || 0) + x.jumlah);
+  });
+  const stokBeli7 = db.produk.reduce((a, p) => a + (p.stok - (ubah.get(p.id) || 0)) * p.harga_beli, 0);
   const kpis1 = [
     kpi({ c: 'k1', ic: 'cash', l: 'Penjualan hari ini', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
     kpi({ c: 'k2', ic: 'cart', l: 'Transaksi hari ini', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
@@ -112,7 +119,7 @@ export function dashboard() {
   ].join('');
   const kpis2 = [
     kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
-    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', v: rp(stokBeli), f: `<small>Potensi jual ${rp(stokJual)}</small>` }),
+    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'vs 7 hari lalu') + `<small class="blk">Potensi jual ${rp(stokJual)}</small>` }),
     kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>` }),
     kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', v: L.length, f: `<a href="#stok-menipis" class="lk">Lihat semua</a>` })
   ].join('');
