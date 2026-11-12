@@ -368,7 +368,7 @@ export function hasilTutupBuku() {
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Hari sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#0E9384"><span>Hari ada selisih</span><h3>${hariSel}</h3></div><div class="st" style="background:#092C4C"><span>Total uang kurang</span><h3>${rp(-kurang)}</h3></div></div>
   <div class="card"><div class="ch"><h4>Riwayat Hasil Tutup Buku (${rec.length})</h4></div><div class="tw">${
     rec.length
-      ? `<table><tr><th>Tanggal</th><th class="r">Menurut sistem</th><th class="r">Uang fisik</th><th>Selisih</th><th>Catatan</th></tr>${rec.map((x) => `<tr><td><b>${esc(tglId(x.tanggal))}</b></td><td class="r">${rp(x.total_sistem)}</td><td class="r">${rp(x.uang_fisik)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td><td>${esc(x.catatan || '-')}</td></tr>`).join('')}</table>`
+      ? `<table><tr><th>Tanggal</th><th class="r">Menurut sistem</th><th class="r">Uang fisik</th><th>Selisih</th></tr>${rec.map((x) => `<tr><td><b>${esc(tglId(x.tanggal))}</b></td><td class="r">${rp(x.total_sistem)}</td><td class="r">${rp(x.uang_fisik)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td></tr>`).join('')}</table>`
       : empty('Belum ada hasil tutup buku', 'Laporan akan tampil di sini setelah proses tutup buku dilakukan di desktop.')
   }</div></div>`;
 }
