@@ -26,7 +26,7 @@ import {
   stok,
   stokMenipis,
   laporan,
-  tutupBuku,
+  hasilTutupBuku,
   transaksi,
   pengaturan,
   login,
@@ -42,7 +42,7 @@ const PG = {
   stok: { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
-  'tutup-buku': { t: 'Tutup Buku', s: 'Cocokkan uang fisik dengan catatan penjualan', html: tutupBuku },
+  'tutup-buku': { t: 'Hasil Tutup Buku', s: 'Laporan hasil proses tutup buku desktop', html: hasilTutupBuku },
   laporan: { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
   transaksi: { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },
   pengaturan: { t: 'Pengaturan', s: 'Pengaturan aplikasi dan profil', html: pengaturan }
@@ -67,7 +67,7 @@ const NAV = [
     'LAPORAN',
     [
       ['laporan', 'list', 'Laporan Penjualan'],
-      ['tutup-buku', 'wallet', 'Tutup Buku'],
+      ['tutup-buku', 'wallet', 'Hasil Tutup Buku'],
       ['transaksi', 'recv', 'Riwayat Transaksi']
     ]
   ],
@@ -145,7 +145,7 @@ function onClick(e) {
       const nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length;
       modal(
         'Menu lainnya',
-        `<div class="mlist"><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('list')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('wallet')}<span>Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#pengaturan" data-act="x">${ico('edit')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
+        `<div class="mlist"><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('list')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('wallet')}<span>Hasil Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#pengaturan" data-act="x">${ico('edit')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
         ''
       );
     }
