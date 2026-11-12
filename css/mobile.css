@@ -14,9 +14,10 @@
 }
 
 @media (max-width: 991px) {
-  /* --- Kerangka: rail kiri dibuang, konten selebar layar --- */
+  /* --- Kerangka: rail kaca tetap ada (melayang, bisa ditarik), konten selebar layar --- */
   .gx-rail {
-    display: none !important;
+    left: 8px;
+    z-index: 65;
   }
   html .main,
   html.sbmin .main {

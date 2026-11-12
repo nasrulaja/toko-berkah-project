@@ -22,7 +22,7 @@
    ========================================================================== */
 
 import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, themeIcon } from './ui.js';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, themeIcon, sumberLbl } from './ui.js';
 import { barChart, donut, spark, short } from './charts.js';
 
 let S = {};
@@ -244,8 +244,8 @@ export function dashboard() {
     <div class="card"><div class="ch"><h4>Jam Tersibuk</h4></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p></div></div>
   </div>
 
-  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Item</th><th class="r">Total</th></tr>${
-    rec.map((t) => `<tr><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${esc(t.sumber)}</span></td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
+  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Barang</th><th class="r">Total</th></tr>${
+    rec.map((t) => `<tr><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${sumberLbl(t.sumber)}</span></td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
     `<tr><td colspan="5">${empty('Belum ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
   }</table></div></div>
   <div class="tip" id="tip" hidden></div></div>`;
@@ -272,7 +272,7 @@ export function stokMenipis() {
   const L = low().sort((a, b) => a.stok - b.stok);
   return `<div class="card"><div class="ch"><h4>Produk perlu diisi ulang (${L.length})</h4></div><div class="tw">${
     L.length
-      ? `<table><tr><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk">Restock</a></td></tr>`).join('')}</table>`
+      ? `<table><tr><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk">Isi ulang</a></td></tr>`).join('')}</table>`
       : empty('Semua stok aman', 'Tidak ada barang di bawah stok minimum.')
   }</div></div>`;
 }
@@ -373,7 +373,7 @@ export function laporan() {
 export function transaksi() {
   const rec = [...db.transaksi].reverse();
   return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Total</th><th class="r">Aksi</th></tr>
-  ${rec.map((t) => `<tr><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${t.sumber}</span></td><td class="r">${rp(t.total)}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
+  ${rec.map((t) => `<tr><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${sumberLbl(t.sumber)}</span></td><td class="r">${rp(t.total)}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */

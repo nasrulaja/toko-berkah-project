@@ -19,7 +19,7 @@
    ========================================================================== */
 
 import { load, db, setDB, me, setMe, KS, save } from './db.js';
-import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js';
+import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon, sumberLbl } from './ui.js';
 import {
   dashboard,
   produk,
@@ -36,7 +36,7 @@ import {
 } from './pages.js';
 
 const PG = {
-  dashboard: { t: 'Dashboard', s: 'Ringkasan toko hari ini', html: dashboard },
+  dashboard: { t: 'Dasbor', s: 'Ringkasan toko hari ini', html: dashboard },
   produk: { t: 'Manajemen Produk', s: 'Kelola data produk dan kategori', html: produk },
   stok: { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
@@ -50,7 +50,7 @@ const NAV = [
   [
     'UTAMA',
     [
-      ['dashboard', 'home', 'Dashboard']
+      ['dashboard', 'home', 'Dasbor']
     ]
   ],
   [
@@ -208,7 +208,7 @@ function onClick(e) {
       const t = db.transaksi.find((x) => x.id === id);
       modal(
         t.kode,
-        `<p>${dt(t.waktu)} · <span class="b n">${t.sumber}</span></p><div class="tw"><table style="min-width:0"><tr><th>Item</th><th class="r">Harga</th><th class="r">Qty</th><th class="r">Subtotal</th></tr>${db.detail
+        `<p>${dt(t.waktu)} · <span class="b n">${sumberLbl(t.sumber)}</span></p><div class="tw"><table style="min-width:0"><tr><th>Barang</th><th class="r">Harga</th><th class="r">Jml</th><th class="r">Subtotal</th></tr>${db.detail
           .filter((d) => d.transaksi_id === id)
           .map(
             (d) =>
