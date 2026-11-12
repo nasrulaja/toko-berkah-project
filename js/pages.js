@@ -319,7 +319,7 @@ const nevents = () => {
   const out = [],
     nama = (id) => db.produk.find((p) => p.id === id)?.nama || 'Produk';
   db.transaksi.forEach((t) =>
-    out.push({ w: t.waktu, ic: 'recv', c: 'g', to: '#transaksi', a: 'Penjualan ' + t.kode, b: 'senilai ' + rp(t.total) + ' tercatat.' })
+    out.push({ w: t.waktu, ic: 'cart', c: 'g', to: '#transaksi', a: 'Penjualan ' + t.kode, b: 'senilai ' + rp(t.total) + ' tercatat.' })
   );
   db.mutasi
     .filter((m) => m.jenis !== 'jual')
@@ -327,7 +327,7 @@ const nevents = () => {
       const j = (jb[m.jenis] || ['n', m.jenis])[1];
       out.push({
         w: m.waktu,
-        ic: m.jenis === 'masuk' ? 'down' : m.jenis === 'keluar' ? 'box' : 'edit',
+        ic: m.jenis === 'masuk' ? 'in' : m.jenis === 'keluar' ? 'up' : 'sliders',
         c: m.jenis === 'masuk' ? 'g' : 'o',
         to: '#stok',
         a: j + ': ' + nama(m.produk_id),
@@ -337,7 +337,7 @@ const nevents = () => {
   (db.tutup || []).forEach((x) =>
     out.push({
       w: x.waktu || x.tanggal + 'T21:00:00',
-      ic: 'wallet',
+      ic: 'book',
       c: x.selisih === 0 ? 'g' : 'r',
       to: '#tutup-buku',
       a: 'Tutup buku ' + x.tanggal,
