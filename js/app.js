@@ -1,25 +1,26 @@
-import { load, db, setDB, me, setMe, KS, save, mut } from './db.js';
-import { $, $$, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js';
-import { dashboard, kasir, produk, stok, laporan, transaksi, pengaturan, login, setShellRef, pform, saveP, kform } from './pages.js';
+import { load, db, setDB, me, setMe, KS, save, mut } from './db.js?v=20261112b';
+import { $, $$, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js?v=20261112b';
+import { dashboard, produk, stok, laporan, hasilTutupBuku, notifikasi, transaksi, pengaturan, login, setShellRef, pform, saveP, kform } from './pages.js?v=20261112b';
 
 let S = {};
 
 const PG = {
   'dashboard': { t: 'Dashboard', s: 'Ringkasan toko hari ini', html: dashboard },
-  'kasir': { t: 'Kasir / Penjualan', s: 'Transaksi Penjualan Toko', html: kasir },
   'produk': { t: 'Manajemen Produk', s: 'Kelola data produk dan kategori', html: produk },
   'stok': { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: produk },
+  'tutup-buku': { t: 'Hasil Tutup Buku', s: 'Laporan hasil proses tutup buku desktop', html: hasilTutupBuku },
   'laporan': { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
+  'notifikasi': { t: 'Notifikasi', s: 'Aktivitas stok, transaksi, dan tutup buku', html: notifikasi },
   'transaksi': { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },
   'pengaturan': { t: 'Pengaturan', s: 'Pengaturan aplikasi dan profil', html: pengaturan }
 };
 
 const NAV = [
-  ['UTAMA', [['dashboard', 'home', 'Dashboard'], ['kasir', 'box', 'Kasir']]],
+  ['UTAMA', [['dashboard', 'home', 'Dashboard']]],
   ['INVENTARIS', [['produk', 'tag', 'Produk & Kategori'], ['stok', 'in', 'Manajemen Stok'], ['stok-menipis', 'alert', 'Stok Menipis']]],
-  ['LAPORAN', [['laporan', 'list', 'Laporan Penjualan'], ['transaksi', 'recv', 'Riwayat Transaksi']]],
+  ['LAPORAN', [['laporan', 'list', 'Laporan Penjualan'], ['tutup-buku', 'recv', 'Hasil Tutup Buku'], ['notifikasi', 'bell', 'Notifikasi'], ['transaksi', 'recv', 'Riwayat Transaksi']]],
   ['SISTEM', [['pengaturan', 'edit', 'Pengaturan']]]
 ];
 
@@ -128,6 +129,7 @@ function renderNotifContent() {
     <div class="notif-sec">
       ${salesHtml}
       ${lowHtml}
+      <div class="notif-all"><a href="#notifikasi" data-act="notif-link">Lihat semua aktivitas</a></div>
     </div>
   `;
 }
