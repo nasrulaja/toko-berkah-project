@@ -18,8 +18,8 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { load, db, setDB, me, setMe, KS, save } from './db.js';
-import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js';
+import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261112a';
+import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js?v=20261112a';
 import {
   dashboard,
   produk,
@@ -34,7 +34,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js';
+} from './pages.js?v=20261112a';
 
 const PG = {
   dashboard: { t: 'Dasbor', s: 'Ringkasan toko hari ini', html: dashboard },

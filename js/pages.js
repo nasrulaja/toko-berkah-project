@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon } from './ui.js';
-import { barChart, donut, spark, short } from './charts.js';
+import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261112a';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon } from './ui.js?v=20261112a';
+import { barChart, donut, spark, short } from './charts.js?v=20261112a';
 
 let S = {};
 
