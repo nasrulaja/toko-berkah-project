@@ -28,6 +28,7 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - ✅ **Mobile Responsive** - Bar menu bawah ramah sentuh dengan safe area dan state aktif
 - ✅ **Hasil Tutup Buku** - Web menampilkan laporan hasil proses tutup buku desktop dalam mode hanya-baca; data saat ini masih contoh/dummy.
 - ✅ **Notifikasi Aktivitas** - Klik lonceng untuk melihat ringkasan penjualan; pilih “Lihat semua aktivitas” untuk membuka riwayat stok, transaksi, dan hasil tutup buku.
+- ✅ **Navigasi responsif** - Rail vertikal di desktop dan bilah navigasi bawah di HP; tanggal tetap terlihat pada topbar.
 
 ## 🔐 Login demo
 - Surel: `berkah@gmail.com`
@@ -46,7 +47,7 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Produk, Stok, Laporan, Hasil Tutup Buku, Notifikasi, Transaksi, Pengaturan, dan Login).
 - **`js/app.js`**: Titik masuk (*bootstrap*) aplikasi berbasis modul ES yang menangani routing hash URL, event binding utama.
 - **`css/glass.css`**: Berkas gaya terpusat yang menggabungkan efek glassmorphism aplikasi, styling GX Rail desktop, serta mode performa mobile & fallback.
-- **`css/mobile.css`** : Penataan khusus HP (< 992px): bar menu liquid glass di bawah, tabel jadi kartu, modal & form ramah sentuh.
+- **`css/mobile.css`** : Penataan khusus HP (< 992px): navigasi bawah, tanggal di topbar, tabel kartu, modal, dan form ramah sentuh.
 - **`js/glass-rail.js`**: Skrip interaktif untuk GX Rail vertikal di desktop dengan fisika *spring* (*rubber banding* dan tetesan air).
 
 ## ⚙️ Catatan teknis

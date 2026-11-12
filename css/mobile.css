@@ -15,7 +15,9 @@
 
 @media (max-width: 991px) {
   /* --- Kerangka: tanpa sidebar kiri di HP, konten selebar layar --- */
-  .gx-rail {
+  .side,
+  .gx-rail,
+  #burger {
     display: none !important;
   }
   html .main,

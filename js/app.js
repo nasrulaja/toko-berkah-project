@@ -1,6 +1,6 @@
-import { load, db, setDB, me, setMe, KS, save, mut } from './db.js?v=20261112b';
-import { $, $$, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js?v=20261112b';
-import { dashboard, produk, stok, laporan, hasilTutupBuku, notifikasi, transaksi, pengaturan, login, setShellRef, pform, saveP, kform } from './pages.js?v=20261112b';
+import { load, db, setDB, me, setMe, KS, save, mut } from './db.js?v=20261112c';
+import { $, $$, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js?v=20261112c';
+import { dashboard, produk, stok, stokMenipis, laporan, hasilTutupBuku, notifikasi, transaksi, pengaturan, login, setShellRef, pform, saveP, kform } from './pages.js?v=20261112c';
 
 let S = {};
 
@@ -9,7 +9,7 @@ const PG = {
   'produk': { t: 'Manajemen Produk', s: 'Kelola data produk dan kategori', html: produk },
   'stok': { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
-  'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: produk },
+  'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
   'tutup-buku': { t: 'Hasil Tutup Buku', s: 'Laporan hasil proses tutup buku desktop', html: hasilTutupBuku },
   'laporan': { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
   'notifikasi': { t: 'Notifikasi', s: 'Aktivitas stok, transaksi, dan tutup buku', html: notifikasi },
@@ -138,9 +138,22 @@ function shell() {
   const k = cur(), p = PG[k];
   const lowCount = db.produk.filter(p => p.stok <= p.stok_minimum).length;
   $('#app').innerHTML = `<aside class="side" id="sd"><div class="logo"><i>B</i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === k ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'stok-menipis' && db.produk.filter(p => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter(p => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
-<div class="main"><header class="top"><button class="ic" id="burger" data-act="menu" aria-label="Menu">${ico('menu')}</button><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div style="position:relative"><button class="notif-btn" data-act="notif" aria-label="Notifikasi">${ico('bell')}${lowCount ? `<span class="badge">${lowCount}</span>` : ''}</button><div class="notif-drop" id="notif-drop" hidden></div></div><div class="av"><b>${esc(me.nama[0])}</b><span>${esc(me.nama)}</span></div><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
-<main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main></div>`;
+<div class="main"><header class="top"><button class="ic" id="burger" data-act="menu" aria-label="Menu">${ico('menu')}</button><span class="tdate">${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div style="position:relative"><button class="notif-btn" data-act="notif" aria-label="Notifikasi">${ico('bell')}${lowCount ? `<span class="badge">${lowCount}</span>` : ''}</button><div class="notif-drop" id="notif-drop" hidden></div></div><div class="av"><b>${esc(me.nama[0])}</b><span>${esc(me.nama)}</span></div><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
+<main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main></div>${bottomNav(k)}`;
   bind();
+}
+
+function bottomNav(k) {
+  const items = [
+    ['dashboard', 'home', 'Beranda'],
+    ['produk', 'tag', 'Produk'],
+    ['stok', 'in', 'Stok']
+  ];
+  const moreOn = !['dashboard', 'produk', 'stok', 'barang-masuk'].includes(k);
+  const lowCount = db.produk.filter((p) => p.stok <= p.stok_minimum).length;
+  return `<nav class="bnav" aria-label="Navigasi utama">${items
+    .map(([id, icon, label]) => `<a href="#${id}" class="${k === id || (id === 'stok' && k === 'barang-masuk') ? 'on' : ''}">${ico(icon)}<span>${label}</span></a>`)
+    .join('')}<button type="button" data-act="more" class="${moreOn ? 'on' : ''}">${ico('menu')}<span>Lainnya</span>${lowCount ? `<em>${lowCount}</em>` : ''}</button></nav>`;
 }
 
 setShellRef(shell);
@@ -158,6 +171,13 @@ function bind() {
     const kat = id => db.kategori.find(x => x.id == id);
 
     if (a === 'x') $('#ov').innerHTML = '';
+    else if (a === 'more') {
+      modal(
+        'Menu lainnya',
+        `<div class="mlist"><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<b class="b r">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('list')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('recv')}<span>Hasil Tutup Buku</span></a><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#pengaturan" data-act="x">${ico('edit')}<span>Pengaturan</span></a></div>`,
+        ''
+      );
+    }
     else if (a === 'notif') {
       if (drop) {
         const isHidden = drop.hidden;
