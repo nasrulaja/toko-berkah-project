@@ -359,66 +359,24 @@ export function stok() {
 /* ==========================================================================
    BAGIAN 3 — HALAMAN LAPORAN & SISTEM
    laporan()    : ringkasan omzet/laba, grafik, dan produk terlaris
+   hasilTutupBuku(): riwayat laporan tutup buku (proses dilakukan di desktop)
    transaksi()  : daftar seluruh transaksi + tombol detail
    pengaturan() : profil toko, ganti user, reset ke data contoh, logout
    ========================================================================== */
 
-/** Halaman Tutup Buku: cocokkan uang fisik dengan catatan penjualan sistem pada satu tanggal. | param: - | return: string HTML */
-export function tutupBuku() {
-  const tgl = S.tb && S.tb <= today() ? S.tb : today(),
-    tot = db.transaksi.filter((t) => dk(t.waktu) === tgl).reduce((a, t) => a + t.total, 0),
-    ada = db.tutup.find((x) => x.tanggal === tgl);
+/** Tampilkan hasil proses tutup buku; proses tutup buku dilakukan di aplikasi desktop. | param: - | return: string HTML */
+export function hasilTutupBuku() {
   const sel = (n) => (n === 0 ? ['g', 'Sesuai'] : n < 0 ? ['r', 'Kurang ' + rp(-n)] : ['o', 'Lebih ' + rp(n)]);
   const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  setTimeout(() => {
-    const fi = $('#tbfisik'),
-      sl = $('#tbsel'),
-      cat = $('#tbcat');
-    if (!fi) return;
-    const hit = () => {
-      const v = fi.value === '' ? null : +fi.value;
-      if (v === null || !(v >= 0)) {
-        sl.textContent = '-';
-        sl.className = '';
-        cat.required = false;
-        return null;
-      }
-      const d = v - tot,
-        [c, l] = sel(d);
-      sl.textContent = l;
-      sl.className = 'b ' + c;
-      cat.required = d !== 0;
-      return d;
-    };
-    fi.oninput = hit;
-    hit();
-    $('#tbtgl').onchange = (e) => {
-      S.tb = e.target.value || today();
-      shellRef();
-    };
-    $('#tbform').onsubmit = (e) => {
-      e.preventDefault();
-      const d = hit(),
-        v = +fi.value;
-      if (d === null) return toast('Isi uang fisik dengan benar');
-      if (d !== 0 && !cat.value.trim()) return toast('Catatan wajib diisi jika ada selisih');
-      const row = { id: ada ? ada.id : ++db.n, tanggal: tgl, total_sistem: tot, uang_fisik: v, selisih: d, catatan: cat.value.trim(), waktu: new Date().toISOString(), user_id: me?.id || 1 };
-      if (ada) Object.assign(ada, row);
-      else db.tutup.push(row);
-      save();
-      toast(d === 0 ? 'Tutup buku tersimpan: uang sesuai' : 'Tutup buku tersimpan: ' + sel(d)[1]);
-      shellRef();
-    };
-  });
   const rec = [...db.tutup].sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1)),
     kurang = db.tutup.reduce((a, x) => a + (x.selisih < 0 ? x.selisih : 0), 0),
     hariSel = db.tutup.filter((x) => x.selisih !== 0).length;
-  return `<div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Hari sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#0E9384"><span>Hari ada selisih</span><h3>${hariSel}</h3></div><div class="st" style="background:#092C4C"><span>Total uang kurang</span><h3>${rp(-kurang)}</h3></div></div>
-  <div class="card"><div class="ch"><h4>Tutup Buku Harian</h4></div><div class="cb"><form id="tbform" novalidate><div class="row"><div class="fg"><label for="tbtgl">Tanggal</label><input id="tbtgl" type="date" max="${today()}" value="${tgl}"></div><div class="fg"><label>Penjualan menurut sistem</label><div style="font-size:20px;font-weight:700;padding:8px 0">${rp(tot)}</div></div></div>${ada ? `<p class="note">Tanggal ini sudah ditutup (${rp(ada.uang_fisik)}). Menyimpan lagi akan memperbarui catatannya.</p>` : ''}<div class="row"><div class="fg"><label for="tbfisik">Uang fisik yang disetor / dihitung (Rp)</label><input id="tbfisik" type="number" min="0" step="any" inputmode="numeric" value="${ada ? ada.uang_fisik : ''}"></div><div class="fg"><label>Selisih</label><div style="padding:8px 0"><span id="tbsel">-</span></div></div></div><div class="fg"><label for="tbcat">Catatan / alasan selisih</label><input id="tbcat" value="${ada ? esc(ada.catatan) : ''}" placeholder="Wajib diisi bila ada selisih, misal: uang kembalian salah"></div><button class="btn bp" type="submit">${ada ? 'Perbarui Tutup Buku' : 'Tutup Buku'}</button></form></div></div>
-  <div class="card"><div class="ch"><h4>Riwayat Tutup Buku (${rec.length})</h4></div><div class="tw">${
+  return `<div class="card"><div class="cb"><b>Hasil tutup buku</b><p>Proses pencatatan dan penutupan dilakukan di aplikasi desktop. Web ini hanya menampilkan laporannya.</p><span class="b o">Data contoh</span></div></div>
+  <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Hari sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#0E9384"><span>Hari ada selisih</span><h3>${hariSel}</h3></div><div class="st" style="background:#092C4C"><span>Total uang kurang</span><h3>${rp(-kurang)}</h3></div></div>
+  <div class="card"><div class="ch"><h4>Riwayat Hasil Tutup Buku (${rec.length})</h4></div><div class="tw">${
     rec.length
       ? `<table><tr><th>Tanggal</th><th class="r">Menurut sistem</th><th class="r">Uang fisik</th><th>Selisih</th><th>Catatan</th></tr>${rec.map((x) => `<tr><td><b>${esc(tglId(x.tanggal))}</b></td><td class="r">${rp(x.total_sistem)}</td><td class="r">${rp(x.uang_fisik)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td><td>${esc(x.catatan || '-')}</td></tr>`).join('')}</table>`
-      : empty('Belum ada tutup buku', 'Isi uang fisik di atas lalu tekan Tutup Buku.')
+      : empty('Belum ada hasil tutup buku', 'Laporan akan tampil di sini setelah proses tutup buku dilakukan di desktop.')
   }</div></div>`;
 }
 
