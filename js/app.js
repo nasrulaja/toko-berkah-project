@@ -19,7 +19,7 @@
    ========================================================================== */
 
 import { load, db, setDB, me, setMe, KS, save } from './db.js';
-import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js';
+import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon, sumberLbl } from './ui.js';
 import {
   dashboard,
   kasir,
@@ -37,7 +37,7 @@ import {
 } from './pages.js';
 
 const PG = {
-  dashboard: { t: 'Dashboard', s: 'Ringkasan toko hari ini', html: dashboard },
+  dashboard: { t: 'Dasbor', s: 'Ringkasan toko hari ini', html: dashboard },
   kasir: { t: 'Kasir / Penjualan', s: 'Transaksi Penjualan Toko', html: kasir },
   produk: { t: 'Manajemen Produk', s: 'Kelola data produk dan kategori', html: produk },
   stok: { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
@@ -52,8 +52,8 @@ const NAV = [
   [
     'UTAMA',
     [
-      ['dashboard', 'home', 'Dashboard'],
-      ['kasir', 'box', 'Kasir']
+      ['dashboard', 'home', 'Dasbor'],
+      ['kasir', 'cart', 'Kasir']
     ]
   ],
   [
@@ -89,8 +89,42 @@ function shell() {
     navK = k === 'barang-masuk' ? 'stok' : k; // #barang-masuk menyorot menu Manajemen Stok
   $('#app').innerHTML =
     `<aside class="side" id="sd"><div class="logo"><i>B</i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === navK ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'stok-menipis' && db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
-<div class="main"><header class="top"><button class="ic" id="burger" data-act="menu" aria-label="Menu">${ico('menu')}</button><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="av"><b>${esc(me.nama[0])}</b><span>${esc(me.nama)}</span></div><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
-<main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main><footer class="ft">Dikembangkan oleh Ruelz</footer></div>`;
+<div class="main"><header class="top"><button class="ic" id="burger" data-act="menu" aria-label="Menu">${ico('menu')}</button><span class="brand"><i>B</i>Toko Berkah</span><span class="sp"></span><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><div class="av"><b>${esc(me.nama[0])}</b><span>${esc(me.nama)}</span></div><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
+<main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main><footer class="ft">Dikembangkan oleh Ruelz</footer></div>${bottomNav(navK)}`;
+  labelTables();
+}
+
+/* Navigasi bawah khusus HP (<992px): 4 menu utama + "Lainnya" (sheet berisi sisanya).
+   Di desktop elemen ini disembunyikan CSS dan rail kaca yang dipakai. */
+const BN = { dashboard: 'Dasbor', kasir: 'Kasir', produk: 'Produk', stok: 'Stok' };
+function bottomNav(navK) {
+  const flat = NAV.flatMap(([, it]) => it),
+    low = db.produk.filter((p) => p.stok <= p.stok_minimum).length,
+    rest = flat.filter(([id]) => !BN[id]);
+  return `<nav class="bnav" aria-label="Navigasi utama">${flat
+    .filter(([id]) => BN[id])
+    .map(([id, ic]) => `<a href="#${id}" class="${id === navK ? 'on' : ''}">${ico(ic)}<span>${BN[id]}</span></a>`)
+    .join('')}<button type="button" data-act="more" class="${rest.some(([id]) => id === navK) ? 'on' : ''}" aria-label="Menu lainnya">${ico('menu')}<span>Lainnya</span>${low ? '<i class="dotb"></i>' : ''}</button></nav>
+<div class="more" id="more" hidden><div class="more-bg" data-act="more"></div><div class="more-card">${rest
+    .map(([id, ic, l]) => `<a href="#${id}" class="${id === navK ? 'on' : ''}">${ico(ic)}<span>${l}</span>${id === 'stok-menipis' && low ? `<b class="b r">${low}</b>` : ''}</a>`)
+    .join('')}</div></div>`;
+}
+
+/* Tabel -> kartu di HP: isi atribut data-label tiap sel dari teks header kolomnya
+   (dipakai CSS mobile.css lewat attr(data-label)). */
+function labelTables() {
+  document.querySelectorAll('.pg .tw table').forEach((t) => {
+    const rows = [...t.querySelectorAll('tr')],
+      head = rows.find((r) => r.querySelector('th'));
+    if (!head) return;
+    const labels = [...head.children].map((h) => h.textContent.trim());
+    rows.forEach((r) => {
+      if (r === head) return;
+      [...r.children].forEach((td, i) => {
+        if (labels[i] && td.colSpan === 1) td.dataset.label = labels[i];
+      });
+    });
+  });
 }
 
 setShellRef(shell);
@@ -111,6 +145,10 @@ function onClick(e) {
     const kat = (id) => db.kategori.find((x) => x.id == id);
 
     if (a === 'x') $('#ov').innerHTML = '';
+    else if (a === 'more') {
+      const m = $('#more');
+      if (m) m.hidden = !m.hidden;
+    }
     else if (a === 'menu') $('#sd').classList.toggle('open');
     else if (a === 'collapse') sb(!document.documentElement.classList.contains('sbmin'));
     else if (a === 'theme') {
@@ -173,7 +211,7 @@ function onClick(e) {
       const t = db.transaksi.find((x) => x.id === id);
       modal(
         t.kode,
-        `<p>${dt(t.waktu)} · <span class="b n">${t.sumber}</span></p><div class="tw"><table style="min-width:0"><tr><th>Item</th><th class="r">Harga</th><th class="r">Qty</th><th class="r">Subtotal</th></tr>${db.detail
+        `<p>${dt(t.waktu)} · <span class="b n">${sumberLbl(t.sumber)}</span></p><div class="tw"><table style="min-width:0"><tr><th>Barang</th><th class="r">Harga</th><th class="r">Jml</th><th class="r">Subtotal</th></tr>${db.detail
           .filter((d) => d.transaksi_id === id)
           .map(
             (d) =>
@@ -224,6 +262,14 @@ function theme(t) {
 
 // Satu listener klik untuk seluruh aplikasi (juga aktif di halaman login, mis. tombol tema)
 document.addEventListener('click', onClick);
+
+// Tutup sheet "Lainnya" saat salah satu tautannya diketuk (termasuk halaman yang sedang aktif)
+document.addEventListener('click', (e) => {
+  if (e.target.closest && e.target.closest('.more-card a')) {
+    const m = $('#more');
+    if (m) m.hidden = true;
+  }
+});
 
 // Initialization
 try {

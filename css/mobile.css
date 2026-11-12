@@ -1,0 +1,106 @@
+/* ==========================================================================
+   mobile.css — tampilan HP (< 992px): navigasi bawah, kartu tabel, sheet modal
+   ========================================================================== */
+.bnav, .more, .cartbar, .brand { display: none; }
+
+@media (max-width: 991px) {
+  .gx-rail { display: none !important; }
+  html .main, html.sbmin .main { margin-left: 0 !important; padding-left: 0 !important; }
+  body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+
+  /* bar atas */
+  #burger { display: none; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: var(--tx); }
+  .brand i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 9px; background: var(--p); color: #fff; font-style: normal; font-size: 14px; }
+  .av span { display: none; }
+  .pg { padding: 14px 12px; }
+  .ph h2 { font-size: 20px; }
+  .cb, .ch { padding-left: 14px; padding-right: 14px; }
+
+  /* navigasi bawah */
+  .bnav {
+    display: flex; position: fixed; z-index: 60; left: 12px; right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)); height: 64px; padding: 6px;
+    gap: 2px; border-radius: 22px; background: var(--card); border: 1px solid var(--bd);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  }
+  .bnav a, .bnav button {
+    flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; border: 0; background: none; border-radius: 16px;
+    color: var(--mt, #6b7a90); font: inherit; font-size: 11px; font-weight: 600; text-decoration: none; cursor: pointer;
+  }
+  .bnav svg { width: 22px; height: 22px; }
+  .bnav .on { background: var(--soft); color: var(--p); }
+  .dotb { position: absolute; top: 8px; right: calc(50% - 18px); width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
+
+  /* menu "Lainnya" */
+  .more { position: fixed; inset: 0; z-index: 70; }
+  .more:not([hidden]) { display: block; }
+  .more-bg { position: absolute; inset: 0; background: rgba(0, 0, 0, .35); }
+  .more-card {
+    position: absolute; left: 12px; right: 12px; bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    padding: 8px; border-radius: 20px; background: var(--card); border: 1px solid var(--bd);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, .25);
+  }
+  .more-card a { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; color: var(--tx); text-decoration: none; font-weight: 600; }
+  .more-card a .badge, .more-card a b { margin-left: auto; }
+  .more-card a.on { background: var(--soft); color: var(--p); }
+  .more-card svg { width: 20px; height: 20px; }
+
+  .toast { right: 12px; left: 12px; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
+
+  /* form: cegah zoom iOS, target sentuh nyaman */
+  input, select, textarea { font-size: 16px; min-height: 44px; }
+  .btn { min-height: 40px; }
+
+  /* modal jadi bottom-sheet */
+  .ov { place-items: end center; padding: 0; }
+  .md { width: 100%; max-width: 100%; border-radius: 18px 18px 0 0; max-height: 92vh; }
+
+  /* kasir: bar keranjang melayang */
+  .pos { padding-bottom: 60px; }
+  .cartbar:not([hidden]) {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; position: fixed; z-index: 55;
+    left: 12px; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); padding: 12px 16px;
+    border: 0; border-radius: 16px; color: #fff; font: inherit; font-weight: 600; cursor: pointer;
+    background: linear-gradient(135deg, var(--p), #0a6c9c); box-shadow: 0 8px 22px rgba(0, 0, 0, .25);
+  }
+  .dash .ban { flex-wrap: wrap; }
+  .dash .ban .btn { width: 100%; }
+}
+
+@media (max-width: 640px) {
+  .kpis { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .kpi { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; }
+  .kpi h3 { font-size: 17px; }
+  .spark { display: none !important; }
+  .chart, .chart-wrap.sm .chart { min-width: 0; }
+  .pgrid { grid-template-columns: 1fr 1fr !important; }
+  .flt input, .flt select { width: 100%; }
+
+  /* tabel -> kartu (kecuali .keep) */
+  .pg .tw { overflow: visible; }
+  .pg .tw table:not(.keep), .pg .tw table:not(.keep) tbody { display: block; min-width: 0 !important; width: 100%; }
+  .pg .tw table:not(.keep) tr:has(th) { display: none; }
+  .pg .tw table:not(.keep) tr {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; padding: 12px 14px; border-top: 1px solid var(--bd);
+  }
+  .pg .tw table:not(.keep) td { display: block; padding: 0; border: 0; text-align: left !important; min-width: 0; overflow-wrap: anywhere; }
+  .pg .tw table:not(.keep) td::before {
+    content: attr(data-label); display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--mt, #6b7a90); margin-bottom: 1px;
+  }
+  .pg .tw table:not(.keep) td:not([data-label])::before { display: none; }
+  .pg .tw table:not(.keep) td:first-child { grid-column: 1 / -1; font-size: 15px; }
+  .pg .tw table:not(.keep) td:first-child::before { display: none; }
+  .pg .tw table:not(.keep) td[colspan] { grid-column: 1 / -1; text-align: center !important; }
+  .pg .tw table:not(.keep) td:last-child:has(.btn) { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; }
+  .pg .tw table:not(.keep) td:last-child:has(.btn)::before { display: none; }
+}
+
+@media (max-width: 640px) {
+  .stats { grid-template-columns: 1fr !important; }
+  .pg .card, .pg .tw { max-width: 100%; }
+  .pg .tw:has(table.keep) { overflow-x: auto; }
+}
+@media (max-width:991px){.dash .ban .btn{justify-content:center;text-align:center}}

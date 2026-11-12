@@ -22,7 +22,7 @@
    ========================================================================== */
 
 import { db, me, save, mut, sell, KS, setMe, setDB, seed } from './db.js';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, today, empty, themeIcon } from './ui.js';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, today, empty, themeIcon, sumberLbl } from './ui.js';
 import { barChart, donut, spark, short } from './charts.js';
 
 let S = {};
@@ -128,7 +128,8 @@ export function dashboard() {
       { name: 'Penjualan', cls: 's1', values: days.map((x) => x.sales) },
       { name: 'Laba', cls: 's2', values: days.map((x) => x.profit) }
     ],
-    fmt: rp
+    fmt: rp,
+    ...(innerWidth < 640 ? { w: 360, h: 250, left: 40 } : {})
   });
   const rSales = sum(days, 'sales'),
     rProfit = sum(days, 'profit');
@@ -245,8 +246,8 @@ export function dashboard() {
     <div class="card"><div class="ch"><h4>Jam Tersibuk</h4></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p></div></div>
   </div>
 
-  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Item</th><th class="r">Total</th></tr>${
-    rec.map((t) => `<tr><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${esc(t.sumber)}</span></td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
+  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Barang</th><th class="r">Total</th></tr>${
+    rec.map((t) => `<tr><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${sumberLbl(t.sumber)}</span></td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
     `<tr><td colspan="5">${empty('Belum ada transaksi', 'Transaksi dari kasir akan muncul di sini.')}</td></tr>`
   }</table></div></div>
   <div class="tip" id="tip" hidden></div></div>`;
@@ -270,6 +271,10 @@ export function kasir() {
             .join('')
         : empty('Keranjang kosong', 'Klik produk di sebelah kiri.');
       $('#tot').textContent = rp(tot);
+      const n = items.reduce((a, [, q]) => a + q, 0);
+      $('#cartbar').hidden = !n;
+      $('#cb-n').textContent = n + ' item';
+      $('#cb-t').textContent = rp(tot);
       S.total = tot;
       if (!S.cashTouched) $('#cash').value = tot || '';
       updPay(items.length);
@@ -282,6 +287,8 @@ export function kasir() {
       $('#pay').disabled = !n || cash < tot;
     };
     renderCart();
+    // HP: bar melayang untuk lompat ke keranjang tanpa menggulir semua produk
+    $('#cartbar').onclick = () => $('#cart').closest('.card').scrollIntoView({ behavior: 'smooth', block: 'start' });
     $('#cash').oninput = () => {
       S.cashTouched = true;
       updPay([...S.cart.keys()].filter((id) => prod(id)).length);
@@ -356,7 +363,8 @@ export function kasir() {
     };
   }, 0);
   return `<div class="pos"><div class="card cb"><div class="flt" style="margin-bottom:12px"><input id="psearch" placeholder="Cari nama / barcode..." value="${esc(S.q)}"><select id="pkat"><option value="">Semua Kategori</option>${opts(db.kategori, S.k)}</select></div><div class="pgrid" id="plist"></div></div>
-  <div class="card cb"><h4 style="margin-bottom:12px">Keranjang</h4><div id="cart"></div><div class="li" style="margin-top:12px"><b>Total</b><b id="tot" style="font-size:18px;color:var(--p)">Rp0</b></div><div class="fg" style="margin-top:12px"><label for="cash">Uang diterima (Rp)</label><div class="flt" style="flex-wrap:nowrap"><input id="cash" type="number" min="0" step="any" inputmode="numeric" style="flex:1"><button type="button" class="btn" id="cashpas">Uang pas</button></div></div><div class="li"><span>Kembalian</span><b id="chg">Rp0</b></div><button class="btn bp" id="pay" style="width:100%;margin-top:12px" disabled>Bayar sekarang</button></div></div>`;
+  <div class="card cb"><h4 style="margin-bottom:12px">Keranjang</h4><div id="cart"></div><div class="li" style="margin-top:12px"><b>Total</b><b id="tot" style="font-size:18px;color:var(--p)">Rp0</b></div><div class="fg" style="margin-top:12px"><label for="cash">Uang diterima (Rp)</label><div class="flt" style="flex-wrap:nowrap"><input id="cash" type="number" min="0" step="any" inputmode="numeric" style="flex:1"><button type="button" class="btn" id="cashpas">Uang pas</button></div></div><div class="li"><span>Kembalian</span><b id="chg">Rp0</b></div><button class="btn bp" id="pay" style="width:100%;margin-top:12px" disabled>Bayar sekarang</button></div>
+  <button type="button" class="cartbar" id="cartbar" hidden><span id="cb-n">0 item</span><b id="cb-t">Rp0</b><span>Lihat keranjang ›</span></button></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
@@ -380,7 +388,7 @@ export function stokMenipis() {
   const L = low().sort((a, b) => a.stok - b.stok);
   return `<div class="card"><div class="ch"><h4>Produk perlu diisi ulang (${L.length})</h4></div><div class="tw">${
     L.length
-      ? `<table><tr><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk">Restock</a></td></tr>`).join('')}</table>`
+      ? `<table><tr><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p) => `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk">Isi ulang</a></td></tr>`).join('')}</table>`
       : empty('Semua stok aman', 'Tidak ada barang di bawah stok minimum.')
   }</div></div>`;
 }
@@ -407,6 +415,12 @@ export function stok() {
     jenisEl.onchange = syncForm;
     pidEl.onchange = syncForm;
     syncForm();
+    const mm = $('#moreMut');
+    if (mm)
+      mm.onclick = () => {
+        S.ml = (S.ml || 50) + 50;
+        shellRef();
+      };
     $('#mform').onsubmit = (e) => {
       e.preventDefault();
       const p = prod(pidEl.value),
@@ -435,7 +449,7 @@ export function stok() {
       shellRef();
     };
   }, 0);
-  const rec = [...db.mutasi].reverse().slice(0, 200);
+  const rec = [...db.mutasi].reverse().slice(0, S.ml || 50);
   return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label>Produk</label><select id="mpid" required>${popt(db)}</select></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (set stok)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan Mutasi</button></form></div></div>
   <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length}${db.mutasi.length > rec.length ? ' terbaru' : ''})</h4></div><div class="tw"><table><tr><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
   ${rec
@@ -444,7 +458,7 @@ export function stok() {
         info = jb[m.jenis] || ['n', m.jenis];
       return `<tr><td>${dt(m.waktu)}</td><td>${esc(p?.nama || '(produk dihapus)')}</td><td><span class="b ${info[0]}">${info[1]}</span></td><td class="r ${m.jumlah < 0 ? 'neg' : 'pos'}">${m.jumlah > 0 ? '+' + m.jumlah : m.jumlah}</td><td class="r">${m.stok_sebelum}</td><td class="r">${m.stok_sesudah}</td><td>${esc(m.catatan || '-')}</td></tr>`;
     })
-    .join('')}</table></div></div>`;
+    .join('')}</table></div>${db.mutasi.length > rec.length ? `<div class="cb"><button type="button" class="btn" id="moreMut" style="width:100%">Tampilkan lebih banyak (${db.mutasi.length - rec.length} lagi)</button></div>` : ''}</div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
@@ -472,7 +486,7 @@ export function laporan() {
   return `<div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${db.transaksi.length}</h3></div></div>
   <div class="card"><div class="ch"><h4>Produk terlaris</h4></div><div class="tw">${
     best.length
-      ? `<table><tr><th>#</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      ? `<table class="keep"><tr><th>#</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada penjualan', 'Produk terlaris muncul setelah ada transaksi.')
   }</div></div>`;
 }
@@ -481,7 +495,7 @@ export function laporan() {
 export function transaksi() {
   const rec = [...db.transaksi].reverse();
   return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4></div><div class="tw"><table><tr><th>Kode</th><th>Waktu</th><th>Sumber</th><th class="r">Total</th><th class="r">Aksi</th></tr>
-  ${rec.map((t) => `<tr><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${t.sumber}</span></td><td class="r">${rp(t.total)}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
+  ${rec.map((t) => `<tr><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td><span class="b n">${sumberLbl(t.sumber)}</span></td><td class="r">${rp(t.total)}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
