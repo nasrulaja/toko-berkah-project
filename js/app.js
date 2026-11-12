@@ -26,6 +26,7 @@ import {
   stok,
   stokMenipis,
   laporan,
+  tutupBuku,
   transaksi,
   pengaturan,
   login,
@@ -41,6 +42,7 @@ const PG = {
   stok: { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
+  'tutup-buku': { t: 'Tutup Buku', s: 'Cocokkan uang fisik dengan catatan penjualan', html: tutupBuku },
   laporan: { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
   transaksi: { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },
   pengaturan: { t: 'Pengaturan', s: 'Pengaturan aplikasi dan profil', html: pengaturan }
@@ -65,6 +67,7 @@ const NAV = [
     'LAPORAN',
     [
       ['laporan', 'list', 'Laporan Penjualan'],
+      ['tutup-buku', 'wallet', 'Tutup Buku'],
       ['transaksi', 'recv', 'Riwayat Transaksi']
     ]
   ],
@@ -99,7 +102,7 @@ function bottomNav(k) {
       ['stok', 'in', 'Stok']
     ],
     nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length,
-    moreOn = ['stok-menipis', 'laporan', 'transaksi', 'pengaturan'].includes(k);
+    moreOn = ['stok-menipis', 'laporan', 'tutup-buku', 'transaksi', 'pengaturan'].includes(k);
   return `<nav class="bnav" aria-label="Menu utama">${items
     .map(([id, ic, l]) => `<a href="#${id}" class="${id === k ? 'on' : ''}">${ico(ic)}<span>${l}</span></a>`)
     .join('')}<button type="button" data-act="more" class="${moreOn ? 'on' : ''}">${ico('menu')}<span>Lainnya</span>${nLow ? `<em>${nLow}</em>` : ''}</button></nav>`;
@@ -142,7 +145,7 @@ function onClick(e) {
       const nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length;
       modal(
         'Menu lainnya',
-        `<div class="mlist"><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('list')}<span>Laporan Penjualan</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#pengaturan" data-act="x">${ico('edit')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
+        `<div class="mlist"><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('list')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('wallet')}<span>Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#pengaturan" data-act="x">${ico('edit')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
         ''
       );
     }

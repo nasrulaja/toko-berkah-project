@@ -22,7 +22,7 @@
    ========================================================================== */
 
 import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, themeIcon, sumberLbl } from './ui.js';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon, sumberLbl } from './ui.js';
 import { barChart, donut, spark, short } from './charts.js';
 
 let S = {};
@@ -347,6 +347,65 @@ export function stok() {
    pengaturan() : profil toko, ganti user, reset ke data contoh, logout
    ========================================================================== */
 
+/** Halaman Tutup Buku: cocokkan uang fisik dengan catatan penjualan sistem pada satu tanggal. | param: - | return: string HTML */
+export function tutupBuku() {
+  const tgl = S.tb && S.tb <= today() ? S.tb : today(),
+    tot = db.transaksi.filter((t) => dk(t.waktu) === tgl).reduce((a, t) => a + t.total, 0),
+    ada = db.tutup.find((x) => x.tanggal === tgl);
+  const sel = (n) => (n === 0 ? ['g', 'Sesuai'] : n < 0 ? ['r', 'Kurang ' + rp(-n)] : ['o', 'Lebih ' + rp(n)]);
+  const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  setTimeout(() => {
+    const fi = $('#tbfisik'),
+      sl = $('#tbsel'),
+      cat = $('#tbcat');
+    if (!fi) return;
+    const hit = () => {
+      const v = fi.value === '' ? null : +fi.value;
+      if (v === null || !(v >= 0)) {
+        sl.textContent = '-';
+        sl.className = '';
+        cat.required = false;
+        return null;
+      }
+      const d = v - tot,
+        [c, l] = sel(d);
+      sl.textContent = l;
+      sl.className = 'b ' + c;
+      cat.required = d !== 0;
+      return d;
+    };
+    fi.oninput = hit;
+    hit();
+    $('#tbtgl').onchange = (e) => {
+      S.tb = e.target.value || today();
+      shellRef();
+    };
+    $('#tbform').onsubmit = (e) => {
+      e.preventDefault();
+      const d = hit(),
+        v = +fi.value;
+      if (d === null) return toast('Isi uang fisik dengan benar');
+      if (d !== 0 && !cat.value.trim()) return toast('Catatan wajib diisi jika ada selisih');
+      const row = { id: ada ? ada.id : ++db.n, tanggal: tgl, total_sistem: tot, uang_fisik: v, selisih: d, catatan: cat.value.trim(), waktu: new Date().toISOString(), user_id: me?.id || 1 };
+      if (ada) Object.assign(ada, row);
+      else db.tutup.push(row);
+      save();
+      toast(d === 0 ? 'Tutup buku tersimpan: uang sesuai' : 'Tutup buku tersimpan: ' + sel(d)[1]);
+      shellRef();
+    };
+  });
+  const rec = [...db.tutup].sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1)),
+    kurang = db.tutup.reduce((a, x) => a + (x.selisih < 0 ? x.selisih : 0), 0),
+    hariSel = db.tutup.filter((x) => x.selisih !== 0).length;
+  return `<div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Hari sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#0E9384"><span>Hari ada selisih</span><h3>${hariSel}</h3></div><div class="st" style="background:#092C4C"><span>Total uang kurang</span><h3>${rp(-kurang)}</h3></div></div>
+  <div class="card"><div class="ch"><h4>Tutup Buku Harian</h4></div><div class="cb"><form id="tbform" novalidate><div class="row"><div class="fg"><label for="tbtgl">Tanggal</label><input id="tbtgl" type="date" max="${today()}" value="${tgl}"></div><div class="fg"><label>Penjualan menurut sistem</label><div style="font-size:20px;font-weight:700;padding:8px 0">${rp(tot)}</div></div></div>${ada ? `<p class="note">Tanggal ini sudah ditutup (${rp(ada.uang_fisik)}). Menyimpan lagi akan memperbarui catatannya.</p>` : ''}<div class="row"><div class="fg"><label for="tbfisik">Uang fisik yang disetor / dihitung (Rp)</label><input id="tbfisik" type="number" min="0" step="any" inputmode="numeric" value="${ada ? ada.uang_fisik : ''}"></div><div class="fg"><label>Selisih</label><div style="padding:8px 0"><span id="tbsel">-</span></div></div></div><div class="fg"><label for="tbcat">Catatan / alasan selisih</label><input id="tbcat" value="${ada ? esc(ada.catatan) : ''}" placeholder="Wajib diisi bila ada selisih, misal: uang kembalian salah"></div><button class="btn bp" type="submit">${ada ? 'Perbarui Tutup Buku' : 'Tutup Buku'}</button></form></div></div>
+  <div class="card"><div class="ch"><h4>Riwayat Tutup Buku (${rec.length})</h4></div><div class="tw">${
+    rec.length
+      ? `<table><tr><th>Tanggal</th><th class="r">Menurut sistem</th><th class="r">Uang fisik</th><th>Selisih</th><th>Catatan</th></tr>${rec.map((x) => `<tr><td><b>${esc(tglId(x.tanggal))}</b></td><td class="r">${rp(x.total_sistem)}</td><td class="r">${rp(x.uang_fisik)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td><td>${esc(x.catatan || '-')}</td></tr>`).join('')}</table>`
+      : empty('Belum ada tutup buku', 'Isi uang fisik di atas lalu tekan Tutup Buku.')
+  }</div></div>`;
+}
+
 export function laporan() {
   const totJual = db.transaksi.reduce((a, t) => a + t.total, 0);
   // modal dari snapshot harga_beli di detail transaksi (data lama tanpa snapshot: pakai harga beli produk saat ini)
@@ -361,11 +420,25 @@ export function laporan() {
   });
   const laba = totJual - modalAwal;
   const best = [...top.entries()].sort((a, b) => b[1].q - a[1].q).slice(0, 5);
+  // pembeli dengan total belanja terbesar (nama pembeli pada data contoh adalah DUMMY)
+  const by = new Map();
+  db.transaksi.forEach((t) => {
+    const x = by.get(t.pembeli || 'Umum') || { c: 0, v: 0 };
+    x.c++;
+    x.v += t.total;
+    by.set(t.pembeli || 'Umum', x);
+  });
+  const buyers = [...by.entries()].sort((a, b) => b[1].v - a[1].v).slice(0, 5);
   return `<div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${db.transaksi.length}</h3></div></div>
   <div class="card"><div class="ch"><h4>Produk terlaris</h4></div><div class="tw">${
     best.length
       ? `<table><tr><th>#</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada penjualan', 'Produk terlaris muncul setelah ada transaksi.')
+  }</div></div>
+  <div class="card"><div class="ch"><h4>Pembeli teratas</h4></div><div class="tw">${
+    buyers.length
+      ? `<table><tr><th>#</th><th>Pembeli</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      : empty('Belum ada pembeli', 'Pembeli teratas muncul setelah ada transaksi.')
   }</div></div>`;
 }
 

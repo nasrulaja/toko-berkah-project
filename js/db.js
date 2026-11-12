@@ -25,6 +25,11 @@ export let me = null;
 export const setMe = (val) => {
   me = val;
 };
+/** Daftar nama pembeli DUMMY untuk data contoh. */
+const PEMBELI = ['Bu Siti', 'Pak Budi', 'Bu Ani', 'Pak Joko', 'Mbak Rina', 'Pak Hendra', 'Bu Wati', 'Mas Dimas'];
+/** Nama pembeli contoh yang tetap (deterministik) untuk satu id transaksi. | param: id | return: string */
+const namaPembeli = (id) => PEMBELI[(id * 5 + (id >> 2)) % PEMBELI.length];
+
 /** Menetapkan objek database aktif. | param: val (objek DB) | return: void */
 export const setDB = (val) => {
   db = val;
@@ -46,7 +51,14 @@ export function load() {
         d &&
         Number.isFinite(d.n) &&
         ['users', 'kategori', 'produk', 'transaksi', 'detail', 'mutasi'].every((k) => Array.isArray(d[k]));
-      if (ok) return d;
+      if (ok) {
+        // migrasi data lama: kolom tutup buku & nama pembeli (data contoh)
+        if (!Array.isArray(d.tutup)) d.tutup = [];
+        d.transaksi.forEach((t) => {
+          if (!t.pembeli) t.pembeli = namaPembeli(t.id);
+        });
+        return d;
+      }
     }
   } catch (e) {}
   // data contoh langsung disimpan agar konsisten setelah halaman dimuat ulang
@@ -90,9 +102,10 @@ export function mut(p, jenis, jml, o = {}) {
 }
 
 /** Memproses transaksi penjualan: hitung total, catat detail & mutasi stok. | param: items (array [id,qty]), w (waktu ISO), src (sumber), cash (uang diterima, opsional) | return: objek transaksi, atau null bila tidak ada item yang terjual */
-export function sell(items, w, src, cash) {
+export function sell(items, w, src, cash, buyer) {
   const dk = (iso) => new Date(iso).toLocaleDateString('en-CA');
   const t = { id: ++db.n, waktu: w, total: 0, sumber: src, user_id: 1 };
+  t.pembeli = buyer || namaPembeli(t.id);
   const n = db.transaksi.length + 1;
   t.kode = 'TRX-' + dk(w).replace(/-/g, '') + '-' + String(n).padStart(3, '0');
   for (const [pid, q] of items) {
@@ -137,7 +150,8 @@ export function seed() {
     produk: [],
     transaksi: [],
     detail: [],
-    mutasi: []
+    mutasi: [],
+    tutup: []
   };
   const prev = db;
   db = newDB; // mut() dan sell() bekerja pada db aktif; kembalikan di akhir
@@ -193,6 +207,24 @@ export function seed() {
           it.push([newDB.produk[Math.floor(rnd() * newDB.produk.length)].id, 1 + Math.floor(rnd() * 4)]);
         sell(it, when.toISOString(), 'offline');
       }
+    }
+    // contoh tutup buku (DUMMY): 2 hari lalu uang fisik kurang Rp100.000 dari catatan sistem
+    const hari = new Date(now - 2 * 864e5).toLocaleDateString('en-CA');
+    const tot = newDB.transaksi
+      .filter((t) => new Date(t.waktu).toLocaleDateString('en-CA') === hari)
+      .reduce((a, t) => a + t.total, 0);
+    if (tot > 0) {
+      const fisik = Math.max(0, tot - 100000);
+      newDB.tutup.push({
+        id: ++newDB.n,
+        tanggal: hari,
+        total_sistem: tot,
+        uang_fisik: fisik,
+        selisih: fisik - tot,
+        catatan: 'Contoh: uang kembalian salah hitung',
+        waktu: new Date(now - 2 * 864e5 + 21 * 36e5).toISOString(),
+        user_id: 1
+      });
     }
   } finally {
     db = prev;
