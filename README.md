@@ -27,6 +27,7 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - ✅ **Polling Sync** - Indikator aktif kebal re-render `#app`
 - ✅ **Mobile Responsive** - Bar menu bawah ramah sentuh dengan safe area dan state aktif
 - ✅ **Hasil Tutup Buku** - Web menampilkan laporan hasil proses tutup buku desktop dalam mode hanya-baca; data saat ini masih contoh/dummy.
+- ✅ **Notifikasi Aktivitas** - Klik lonceng untuk melihat ringkasan stok menipis, perubahan stok, transaksi, dan hasil tutup buku.
 
 ## 🔐 Login demo
 - Surel: `berkah@gmail.com`
@@ -42,7 +43,7 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - **`css/style.css`**: Gaya utama aplikasi (variabel warna, sidebar, topbar, kartu, form, tabel, dashboard, modal, login) dalam 9 `BAGIAN`.
 - **`js/db.js`**: Modul yang mengelola seluruh interaksi dengan `localStorage`, memuat/menyimpan kondisi basis data, serta menyediakan fungsi seeding data awal dan pencatatan mutasi/transaksi.
 - **`js/ui.js`**: Modul pembantu antarmuka (UI) yang mencakup fungsi utilitas DOM, format Rupiah, tanggal, toast, modal, escape HTML, dan generator SVG icon.
-- **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Produk, Stok, Laporan, Hasil Tutup Buku, Transaksi, Pengaturan, dan Login).
+- **`js/pages.js`**: Modul yang berisi seluruh fungsi render halaman utama aplikasi (Dashboard, Produk, Stok, Laporan, Hasil Tutup Buku, Notifikasi, Transaksi, Pengaturan, dan Login).
 - **`js/app.js`**: Titik masuk (*bootstrap*) aplikasi berbasis modul ES yang menangani routing hash URL, event binding utama.
 - **`css/glass.css`**: Berkas gaya terpusat yang menggabungkan efek glassmorphism aplikasi, styling GX Rail desktop, serta mode performa mobile & fallback.
 - **`css/mobile.css`** : Penataan khusus HP (< 992px): bar menu liquid glass di bawah, tabel jadi kartu, modal & form ramah sentuh.

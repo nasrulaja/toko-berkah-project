@@ -27,6 +27,7 @@ import {
   stokMenipis,
   laporan,
   hasilTutupBuku,
+  notifikasi,
   transaksi,
   pengaturan,
   login,
@@ -43,6 +44,7 @@ const PG = {
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
   'tutup-buku': { t: 'Hasil Tutup Buku', s: 'Laporan hasil proses tutup buku desktop', html: hasilTutupBuku },
+  notifikasi: { t: 'Notifikasi', s: 'Aktivitas stok, transaksi, dan tutup buku', html: notifikasi },
   laporan: { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
   transaksi: { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },
   pengaturan: { t: 'Pengaturan', s: 'Pengaturan aplikasi dan profil', html: pengaturan }
@@ -89,7 +91,7 @@ function shell() {
     navK = k === 'barang-masuk' ? 'stok' : k; // #barang-masuk menyorot menu Manajemen Stok
   $('#app').innerHTML =
     `<aside class="side" id="sd"><div class="logo"><i>B</i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === navK ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'stok-menipis' && db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
-<div class="main"><header class="top"><span class="brand"><i>B</i><b>${p.t}</b></span><span class="tdate">${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span><span class="sp"></span><a class="ic bell" href="#stok-menipis" title="Stok menipis" aria-label="Stok menipis">${ico('bell')}${db.produk.filter((x) => x.stok <= x.stok_minimum).length ? `<em>${db.produk.filter((x) => x.stok <= x.stok_minimum).length}</em>` : ''}</a><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
+<div class="main"><header class="top"><span class="brand"><i>B</i><b>${p.t}</b></span><span class="tdate">${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span><span class="sp"></span><a class="ic bell" href="#notifikasi" title="Notifikasi" aria-label="Notifikasi">${ico('bell')}${db.produk.filter((x) => x.stok <= x.stok_minimum).length ? `<em>${db.produk.filter((x) => x.stok <= x.stok_minimum).length}</em>` : ''}</a><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
 <main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main><footer class="ft">Dikembangkan oleh Ruelz</footer></div>${bottomNav(navK)}`;
   labelTables();
 }
@@ -102,7 +104,7 @@ function bottomNav(k) {
       ['stok', 'in', 'Stok']
     ],
     nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length,
-    moreOn = ['stok-menipis', 'laporan', 'tutup-buku', 'transaksi', 'pengaturan'].includes(k);
+    moreOn = ['stok-menipis', 'notifikasi', 'laporan', 'tutup-buku', 'transaksi', 'pengaturan'].includes(k);
   return `<nav class="bnav" aria-label="Menu utama">${items
     .map(([id, ic, l]) => `<a href="#${id}" class="${id === k ? 'on' : ''}">${ico(ic)}<span>${l}</span></a>`)
     .join('')}<button type="button" data-act="more" class="${moreOn ? 'on' : ''}">${ico('menu')}<span>Lainnya</span>${nLow ? `<em>${nLow}</em>` : ''}</button></nav>`;
