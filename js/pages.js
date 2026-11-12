@@ -128,7 +128,7 @@ export function dashboard() {
   ].join('');
   const kpis2 = [
     kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
-    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'vs 7 hari lalu') + `<small class="blk">Potensi jual ${rp(stokJual)}</small>` }),
+    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'vs 7 hari lalu') + `<small class="blk"><span>Potensi jual</span><b>${rp(stokJual)}</b></small>` }),
     kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>` }),
     kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', v: L.length, f: `<a href="#stok-menipis" class="lk">Lihat semua</a>` })
   ].join('');
