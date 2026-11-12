@@ -4,7 +4,8 @@
 .bnav, .more, .cartbar, .brand { display: none; }
 
 @media (max-width: 991px) {
-  .gx-rail { display: none !important; }
+  /* rail kaca melayang tetap ada di HP: bisa ditarik, tidak memakan tempat konten */
+  .gx-rail { left: 8px; z-index: 65; }
   html .main, html.sbmin .main { margin-left: 0 !important; padding-left: 0 !important; }
   body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
 
