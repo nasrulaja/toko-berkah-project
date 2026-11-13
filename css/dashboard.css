@@ -114,7 +114,16 @@
 }
 .kpi-l {
   font-size: 13px;
-  display: block;
+  /* inline-flex: label dan tanda tanya duduk sebaris, bukan turun ke bawah */
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+}
+/* tanda tanya tidak boleh menyusut walau label panjang */
+.kpi-l .inf {
+  flex: 0 0 auto;
+  margin-left: 2px;
 }
 .kpi h3 {
   margin: 2px 0 4px;
