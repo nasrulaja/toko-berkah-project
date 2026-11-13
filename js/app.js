@@ -18,8 +18,8 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261114d';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261114d';
+import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261114f';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261114f';
 import {
   dashboard,
   produk,
@@ -37,7 +37,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261114d';
+} from './pages.js?v=20261114f';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -73,7 +73,7 @@ const NAV = [
     'LAPORAN',
     [
       ['laporan', 'chart', 'Laporan Penjualan'],
-      ['tutup-buku', 'book', 'Hasil harian tutup buku'],
+      ['tutup-buku', 'book', 'Tutup Buku'],
       ['transaksi', 'recv', 'Riwayat Transaksi']
     ]
   ],
@@ -235,7 +235,7 @@ function onClick(e) {
       const nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length;
       modal(
         'Menu lainnya',
-        `<div class="mlist"><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span>${notifUnread() ? `<b class="b r">${notifUnread()}</b>` : ''}</a><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('chart')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('book')}<span>Hasil harian tutup buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#panduan" data-act="x">${ico('help')}<span>Panduan</span></a><a href="#pengaturan" data-act="x">${ico('gear')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
+        `<div class="mlist"><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span>${notifUnread() ? `<b class="b r">${notifUnread()}</b>` : ''}</a><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('chart')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('book')}<span>Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#panduan" data-act="x">${ico('help')}<span>Panduan</span></a><a href="#pengaturan" data-act="x">${ico('gear')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
         ''
       );
     }
