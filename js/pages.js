@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261113b';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon, tip } from './ui.js?v=20261113b';
-import { barChart, donut, spark, short } from './charts.js?v=20261113b';
+import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261113c';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon, tip } from './ui.js?v=20261113c';
+import { barChart, donut, spark, short } from './charts.js?v=20261113c';
 
 let S = {};
 
@@ -355,9 +355,9 @@ const NK = 'berkah_notif';
 const nstate = () => {
   try {
     const s = JSON.parse(localStorage.getItem(NK) || '{}');
-    return { read: +s.read || 0, clear: +s.clear || 0, on: s.on !== false };
+    return { read: +s.read || 0, clear: +s.clear || 0, on: s.on !== false, seen: Array.isArray(s.seen) ? s.seen : [] };
   } catch {
-    return { read: 0, clear: 0, on: true };
+    return { read: 0, clear: 0, on: true, seen: [] };
   }
 };
 const nsave = (s) => {
@@ -411,7 +411,7 @@ const nevents = () => {
   return out
     .filter((e) => new Date(e.w).getTime() > st.clear)
     .sort((a, b) => (a.w < b.w ? 1 : -1))
-    .map((e) => ({ ...e, ts: new Date(e.w).getTime() }));
+    .map((e) => ({ ...e, ts: new Date(e.w).getTime(), id: e.to + '|' + e.w + '|' + e.a }));
 };
 /** Jumlah notifikasi yang belum dibaca (untuk lencana lonceng). | param: - | return: number */
 /** Sakelar notifikasi aktif/nonaktif (dipakai di halaman Notifikasi & Pengaturan). | param: id | return: string HTML */
@@ -430,7 +430,7 @@ const bindSwitch = (id) => {
 export const notifUnread = () => {
   const st = nstate();
   if (!st.on) return 0;
-  return nevents().filter((e) => e.ts > st.read).length;
+  return nevents().filter((e) => e.ts > st.read && !st.seen.includes(e.id)).length;
 };
 
 /** Halaman Semua Notifikasi. | param: - | return: string HTML */
@@ -445,11 +445,18 @@ export function notifikasi() {
     lowN = low().length;
   setTimeout(() => {
     bindSwitch('nsw');
+    document.querySelectorAll('.nt[data-nid]').forEach((a) => {
+      a.addEventListener('click', () => {
+        const n = nstate();
+        if (!n.seen.includes(a.dataset.nid)) nsave({ ...n, seen: [...n.seen, a.dataset.nid].slice(-500) });
+        a.classList.remove('nw');
+      });
+    });
     const r = $('#nread'),
       d = $('#nclear');
     if (r)
       r.onclick = () => {
-        nsave({ ...nstate(), read: Date.now() });
+        nsave({ ...nstate(), read: Date.now(), seen: [] });
         toast('Semua notifikasi ditandai dibaca');
         shellRef();
       };
@@ -460,11 +467,11 @@ export function notifikasi() {
           shellRef();
         });
   });
-  return `<div class="card"><div class="ch"><h4>Semua Notifikasi (${ev.length})</h4><div class="nact">${notifSwitch('nsw')}<button class="btn" id="nread" ${ev.some((e) => e.ts > st.read) ? '' : 'disabled'}>Tandai semua dibaca</button><button class="btn bd" id="nclear" ${ev.length ? '' : 'disabled'}>Hapus semua</button></div></div>
+  return `<div class="card"><div class="ch"><h4>Semua Notifikasi (${ev.length})</h4><div class="nact">${notifSwitch('nsw')}<button class="btn" id="nread" ${ev.some((e) => e.ts > st.read && !st.seen.includes(e.id)) ? '' : 'disabled'}>Tandai semua dibaca</button><button class="btn bd" id="nclear" ${ev.length ? '' : 'disabled'}>Hapus semua</button></div></div>
   ${lowN ? `<a class="nt nt-warn" href="#stok-menipis"><span class="nic r">${ico('alert')}</span><span class="ntx"><b>${lowN} produk stok menipis</b> perlu diisi ulang.</span><span class="ntm">Lihat</span></a>` : ''}
   ${
     list.length
-      ? `<div class="nlist">${list.map((e) => `<a class="nt${e.ts > st.read ? ' nw' : ''}" href="${e.to}"><span class="nic ${e.c}">${ico(e.ic)}</span><span class="ntx"><b>${esc(e.a)}</b> ${esc(e.b)}</span><span class="ntm">${ago(e.w)}</span></a>`).join('')}</div>${ev.length > list.length ? `<p class="note" style="padding:12px 18px">Menampilkan ${list.length} dari ${ev.length} notifikasi terbaru.</p>` : ''}`
+      ? `<div class="nlist">${list.map((e) => `<a class="nt${e.ts > st.read && !st.seen.includes(e.id) ? ' nw' : ''}" data-nid="${esc(e.id)}" href="${e.to}"><span class="nic ${e.c}">${ico(e.ic)}</span><span class="ntx"><b>${esc(e.a)}</b> ${esc(e.b)}</span><span class="ntm">${ago(e.w)}</span></a>`).join('')}</div>${ev.length > list.length ? `<p class="note" style="padding:12px 18px">Menampilkan ${list.length} dari ${ev.length} notifikasi terbaru.</p>` : ''}`
       : empty('Belum ada notifikasi', 'Aktivitas toko akan muncul di sini.')
   }</div>`;
 }
