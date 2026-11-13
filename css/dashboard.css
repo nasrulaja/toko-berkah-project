@@ -628,8 +628,7 @@
 
 /* --- Bantuan: tooltip ?, panduan, pencarian --- */
 .inf { position: relative; display: inline-grid; place-items: center; width: 16px; height: 16px; margin-left: 6px; border-radius: 50%; background: var(--soft); color: var(--p); font-size: 11px; font-weight: 700; cursor: help; vertical-align: middle; font-style: normal; text-transform: none; letter-spacing: 0; }
-.inf::after { content: attr(data-tip); position: absolute; z-index: 40; left: 50%; bottom: calc(100% + 8px); transform: translateX(-30%); width: max-content; max-width: 240px; padding: 8px 10px; border-radius: 10px; background: #0f2438; color: #fff; font-size: 12px; font-weight: 400; line-height: 1.4; text-align: left; white-space: normal; opacity: 0; pointer-events: none; transition: opacity .15s; box-shadow: 0 8px 20px rgba(0,0,0,.25); }
-.inf:hover::after, .inf:focus::after { opacity: 1; }
+
 .gd { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .gd-i { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 1px solid var(--bd); border-radius: 14px; color: var(--tx); text-decoration: none; position: relative; }
 .gd-i:hover { background: var(--soft); }
@@ -645,4 +644,8 @@
 .fq p { margin: 8px 0 0; color: var(--tx); }
 .tips { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; }
 #fcari { min-width: 200px; }
-@media (max-width: 640px) { .gl { grid-template-columns: 1fr; gap: 2px; } .gl dd { margin-bottom: 8px; } .inf::after { transform: translateX(-60%); } #fcari { min-width: 0; width: 100%; } }
+@media (max-width: 640px) { .gl { grid-template-columns: 1fr; gap: 2px; } .gl dd { margin-bottom: 8px; } #fcari { min-width: 0; width: 100%; } }
+
+/* tooltip melayang (tidak terpotong kartu) */
+.tipx { position: fixed; z-index: 300; max-width: 240px; padding: 9px 12px; border-radius: 12px; background: var(--card); color: var(--tx); border: 1px solid var(--bd); box-shadow: 0 10px 28px rgba(0, 0, 0, .18); font-size: 12.5px; line-height: 1.45; pointer-events: none; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+.tipx[hidden] { display: none; }

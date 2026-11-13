@@ -142,6 +142,6 @@ export const popt = (db, sel) =>
     .join('');
 export const today = () => dk(new Date().toISOString());
 /** Tanda tanya kecil dengan penjelasan saat disentuh/diarahkan. | param: t (teks) | return: string HTML */
-export const tip = (t) => `<span class="inf" tabindex="0" role="note" aria-label="${t.replace(/"/g, '&quot;')}" data-tip="${t.replace(/"/g, '&quot;')}">?</span>`;
+export const tip = (t) => `<span class="inf" tabindex="0" role="note" aria-label="${t.replace(/"/g, '&quot;')}" data-info="${t.replace(/"/g, '&quot;')}">?</span>`;
 
 export const empty = (t, s) => `<div class="em"><h4>${t}</h4><p>${s}</p></div>`;
