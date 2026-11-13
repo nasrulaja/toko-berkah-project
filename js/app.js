@@ -40,14 +40,14 @@ import {
 } from './pages.js?v=20261113e';
 
 const PG = {
-  dashboard: { t: 'Dasbor', s: 'Ringkasan toko hari ini', html: dashboard },
+  dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
   produk: { t: 'Manajemen Produk', s: 'Kelola data produk dan kategori', html: produk },
   stok: { t: 'Manajemen Stok', s: 'Catat mutasi dan penyesuaian stok', html: stok },
   'barang-masuk': { t: 'Barang Masuk', s: 'Pencatatan Stok Masuk', html: stok },
   panduan: { t: 'Panduan', s: 'Cara memakai Toko Berkah dan arti istilah', html: panduan },
   notifikasi: { t: 'Semua Notifikasi', s: 'Lihat semua aktivitas toko', html: notifikasi },
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
-  'tutup-buku': { t: 'Hasil Tutup Buku', s: 'Laporan hasil proses tutup buku desktop', html: hasilTutupBuku },
+  'tutup-buku': { t: 'Hasil harian tutup buku', s: 'Laporan hasil proses tutup buku desktop', html: hasilTutupBuku },
   laporan: { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
   transaksi: { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },
   pengaturan: { t: 'Pengaturan', s: 'Pengaturan aplikasi dan profil', html: pengaturan }
@@ -57,7 +57,7 @@ const NAV = [
   [
     'UTAMA',
     [
-      ['dashboard', 'grid', 'Dasbor'],
+      ['dashboard', 'grid', 'Beranda'],
       ['notifikasi', 'bell', 'Notifikasi']
     ]
   ],
@@ -73,7 +73,7 @@ const NAV = [
     'LAPORAN',
     [
       ['laporan', 'chart', 'Laporan Penjualan'],
-      ['tutup-buku', 'book', 'Hasil Tutup Buku'],
+      ['tutup-buku', 'book', 'Hasil harian tutup buku'],
       ['transaksi', 'recv', 'Riwayat Transaksi']
     ]
   ],
@@ -190,7 +190,7 @@ function onClick(e) {
       const nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length;
       modal(
         'Menu lainnya',
-        `<div class="mlist"><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span>${notifUnread() ? `<b class="b r">${notifUnread()}</b>` : ''}</a><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('chart')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('book')}<span>Hasil Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#panduan" data-act="x">${ico('help')}<span>Panduan</span></a><a href="#pengaturan" data-act="x">${ico('gear')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
+        `<div class="mlist"><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span>${notifUnread() ? `<b class="b r">${notifUnread()}</b>` : ''}</a><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('chart')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('book')}<span>Hasil harian tutup buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#panduan" data-act="x">${ico('help')}<span>Panduan</span></a><a href="#pengaturan" data-act="x">${ico('gear')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
         ''
       );
     }
@@ -318,7 +318,7 @@ function tour() {
   if (seen) return;
   modal(
     'Selamat datang di Toko Berkah',
-    `<p>Aplikasi ini membantu memantau <b>penjualan, laba, dan stok</b> toko. Empat hal yang perlu diketahui:</p><ul class="tips"><li><b>Dasbor</b> menampilkan kondisi toko hari ini.</li><li><b>Produk</b> dan <b>Manajemen Stok</b> untuk data barang dan jumlahnya.</li><li><b>Laporan</b> menunjukkan laba, produk terlaris, serta jam dan hari ramai.</li><li>Tanda <b>?</b> di samping angka menjelaskan artinya.</li></ul>`,
+    `<p>Aplikasi ini membantu memantau <b>penjualan, laba, dan stok</b> toko. Empat hal yang perlu diketahui:</p><ul class="tips"><li><b>Beranda</b> menampilkan kondisi toko hari ini.</li><li><b>Produk</b> dan <b>Manajemen Stok</b> untuk data barang dan jumlahnya.</li><li><b>Laporan</b> menunjukkan laba, produk terlaris, serta jam dan hari ramai.</li><li>Tanda <b>?</b> di samping angka menjelaskan artinya.</li></ul>`,
     'Buka Panduan',
     () => {
       location.hash = '#panduan';

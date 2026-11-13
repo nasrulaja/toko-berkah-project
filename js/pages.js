@@ -126,10 +126,10 @@ export function dashboard() {
   });
   const stokBeli7 = db.produk.reduce((a, p) => a + (p.stok - (ubah.get(p.id) || 0)) * p.harga_beli, 0);
   const kpis1 = [
-    kpi({ c: 'k1', ic: 'cash', l: 'Penjualan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
-    kpi({ c: 'k2', ic: 'cart', l: 'Transaksi hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
+    kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
+    kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
     kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
-    kpi({ c: 'k4', ic: 'wallet', l: 'Pembeli teratas', h: 'Total belanja terbesar dari satu pembeli (seluruh data).', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? 'Total belanja terbesar' : 'Belum ada transaksi'}</small>` })
+    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar', h: 'Total belanja terbesar dari satu pembeli (seluruh data).', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? 'Total belanja terbesar' : 'Belum ada transaksi'}</small>` })
   ].join('');
   const kpis2 = [
     kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
@@ -155,7 +155,7 @@ export function dashboard() {
   const hariBaik = [...days].sort((a, b) => b.sales - a.sales)[0],
     ringkasJual = [
       ['Rata-rata / hari', rp(Math.round(rSales / range))],
-      ['Margin laba', rSales ? (rProfit / rSales * 100).toFixed(1).replace('.', ',') + '%' : '-'],
+      ['Perbandingan laba', rSales ? (rProfit / rSales * 100).toFixed(1).replace('.', ',') + '%' : '-'],
       ['Hari terbaik', hariBaik && hariBaik.sales ? hariBaik.d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' }) : '-']
     ];
 
@@ -479,7 +479,7 @@ export function notifikasi() {
 /** Halaman Panduan: cara memakai, arti istilah, dan tanya jawab singkat. | param: - | return: string HTML */
 export function panduan() {
   const langkah = [
-    ['grid', 'Lihat Dasbor', 'Ringkasan toko hari ini: penjualan, laba, stok yang hampir habis, dan barang terlaris. Buka tiap hari untuk melihat kondisi toko.', '#dashboard'],
+    ['grid', 'Lihat Beranda', 'Ringkasan toko hari ini: penjualan, laba, stok yang hampir habis, dan barang terlaris. Buka tiap hari untuk melihat kondisi toko.', '#dashboard'],
     ['box', 'Isi data Produk', 'Daftarkan barang di Produk & Kategori: nama, harga jual, harga beli, stok, dan isi per pack bila dijual per dus/pack.', '#produk'],
     ['layers', 'Catat Stok', 'Di Manajemen Stok catat barang masuk, barang keluar, atau penyesuaian bila jumlah di rak berbeda dari catatan.', '#stok'],
     ['alert', 'Pantau Stok Menipis', 'Barang yang hampir habis dikumpulkan di satu halaman supaya tahu apa yang harus dibeli lagi.', '#stok-menipis'],
@@ -616,7 +616,7 @@ export function hasilTutupBuku() {
     hariSel = db.tutup.filter((x) => x.selisih !== 0).length;
   return `<div class="card"><div class="cb"><b>Hasil tutup buku</b><p>Proses pencatatan dan penutupan dilakukan di aplikasi desktop. Web ini hanya menampilkan laporannya.</p><span class="b o">Data contoh</span></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Hari sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#0E9384"><span>Hari ada selisih</span><h3>${hariSel}</h3></div><div class="st" style="background:#092C4C"><span>Total uang kurang</span><h3>${rp(-kurang)}</h3></div></div>
-  <div class="card"><div class="ch"><h4>Riwayat Hasil Tutup Buku (${rec.length})</h4></div><div class="tw">${
+  <div class="card"><div class="ch"><h4>Riwayat Hasil harian tutup buku (${rec.length})</h4></div><div class="tw">${
     rec.length
       ? `<table><tr><th>Tanggal</th><th class="r">Menurut sistem</th><th class="r">Uang fisik</th><th>Selisih</th></tr>${rec.map((x) => `<tr><td><b>${esc(tglId(x.tanggal))}</b></td><td class="r">${rp(x.total_sistem)}</td><td class="r">${rp(x.uang_fisik)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td></tr>`).join('')}</table>`
       : empty('Belum ada hasil tutup buku', 'Laporan akan tampil di sini setelah proses tutup buku dilakukan di desktop.')
