@@ -129,7 +129,7 @@ export function dashboard() {
     kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
     kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
     kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
-    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar', h: 'Total belanja terbesar dari satu pembeli (seluruh data).', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? 'Total belanja terbesar' : 'Belum ada transaksi'}</small>` })
+    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar', h: 'Total belanja terbesar dari satu pembeli (seluruh data).', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? `Dari ${esc(tb[0])}` : 'Belum ada transaksi'}</small>` })
   ].join('');
   const kpis2 = [
     kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
