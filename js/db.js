@@ -117,9 +117,21 @@ export function mut(p, jenis, jml, o = {}) {
   });
 }
 
-/** Memproses transaksi penjualan: hitung total, catat detail & mutasi stok. | param: items (array [id,qty]), w (waktu ISO), src (sumber), cash (uang diterima, opsional) | return: objek transaksi, atau null bila tidak ada item yang terjual */
+/** Cari kunci periode tutup buku untuk sebuah waktu; null bila belum ditutup. | param: w (waktu ISO) | return: string kunci atau null */
+export function cariKunci(w) {
+  const k = new Date(w).toLocaleDateString('en-CA');
+  for (const x of db.tutup) {
+    if (x.dari && x.sampai && k >= x.dari && k <= x.sampai) return x.kunci;
+  }
+  return null;
+}
+
+/** Memproses transaksi penjualan: hitung total, catat detail & mutasi stok. | param: items (array [id,qty]), w (waktu ISO), src (sumber), cash (uang diterima, opsional) | return: objek transaksi, atau null bila tidak ada item yang terjual atau periode sudah ditutup */
 export function sell(items, w, src, cash, buyer) {
   const dk = (iso) => new Date(iso).toLocaleDateString('en-CA');
+  // tolak penjualan yang masuk ke periode yang sudah ditutup buku
+  const kunci = cariKunci(w);
+  if (kunci) return null;
   const t = { id: ++db.n, waktu: w, total: 0, sumber: src, user_id: 1 };
   t.pembeli = buyer || namaPembeli(t.id);
   const n = db.transaksi.length + 1;
@@ -148,6 +160,115 @@ export function sell(items, w, src, cash, buyer) {
   db.transaksi.push(t);
   return t;
 }
+/* ==========================================================================
+   BAGIAN 3b — TUTUP BUKU (AKHIR PERIODE)
+   Menutup satu periode (harian / bulanan / tahunan): menghitung pendapatan,
+   pengeluaran (modal barang terjual), dan laba; lalu MENGUNCI semua transaksi
+   di dalam periode itu agar tidak bisa diubah lagi dan tidak ikut terhitung
+   di periode berikutnya. Hasilnya disimpan di db.tutup.
+   ========================================================================== */
+
+/** Daftar periode yang bisa ditutup beserta rentang tanggalnya. | param: jenis, acuan (Date) | return: { dari, sampai, label, kunci } */
+export function rentangPeriode(jenis, acuan = new Date()) {
+  const y = acuan.getFullYear(),
+    m = acuan.getMonth(),
+    d = acuan.getDate(),
+    iso = (v) => v.toLocaleDateString('en-CA');
+  if (jenis === 'bulanan') {
+    const dari = new Date(y, m, 1),
+      sampai = new Date(y, m + 1, 0);
+    return {
+      dari: iso(dari),
+      sampai: iso(sampai),
+      label: dari.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }),
+      kunci: `B${y}-${String(m + 1).padStart(2, '0')}`
+    };
+  }
+  if (jenis === 'tahunan') {
+    return {
+      dari: iso(new Date(y, 0, 1)),
+      sampai: iso(new Date(y, 11, 31)),
+      label: 'Tahun ' + y,
+      kunci: `T${y}`
+    };
+  }
+  const hari = new Date(y, m, d);
+  return {
+    dari: iso(hari),
+    sampai: iso(hari),
+    label: hari.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+    kunci: 'H' + iso(hari)
+  };
+}
+
+/** Hitung ringkasan satu periode TANPA menyimpan apa pun. | param: jenis, acuan | return: objek ringkasan */
+export function ringkasPeriode(jenis, acuan = new Date()) {
+  const r = rentangPeriode(jenis, acuan);
+  const didalam = (w) => {
+    const k = new Date(w).toLocaleDateString('en-CA');
+    return k >= r.dari && k <= r.sampai;
+  };
+  const trx = db.transaksi.filter((t) => didalam(t.waktu)),
+    idOk = new Set(trx.map((t) => t.id));
+  const pendapatan = trx.reduce((a, t) => a + t.total, 0);
+  // pengeluaran = modal (harga beli) barang yang terjual pada periode ini
+  let pengeluaran = 0;
+  db.detail.forEach((d) => {
+    if (!idOk.has(d.transaksi_id)) return;
+    pengeluaran += (d.harga_beli ?? db.produk.find((p) => p.id === d.produk_id)?.harga_beli ?? 0) * d.jumlah;
+  });
+  const trxTerkunci = trx.filter((t) => t.terkunci).length;
+  return {
+    ...r,
+    jenis,
+    transaksi: trx.length,
+    pendapatan,
+    pengeluaran,
+    laba: pendapatan - pengeluaran,
+    sudahDitutup: trxTerkunci > 0,
+    trxTerkunci,
+    // periode dianggap bisa ditutup bila ada transaksi dan belum ada yang terkunci
+    bisaDitutup: trx.length > 0 && trxTerkunci === 0
+  };
+}
+
+/** Tutup buku: kunci transaksi periode ini dan simpan laporannya. | param: jenis, acuan, uangFisik (opsional), catatan | return: objek laporan, atau null bila tidak bisa ditutup */
+export function tutupBuku(jenis, acuan = new Date(), uangFisik = null, catatan = '') {
+  const ring = ringkasPeriode(jenis, acuan);
+  if (!ring.bisaDitutup) return null;
+  // kunci transaksi di dalam rentang
+  db.transaksi.forEach((t) => {
+    const k = new Date(t.waktu).toLocaleDateString('en-CA');
+    if (k >= ring.dari && k <= ring.sampai) t.terkunci = ring.kunci;
+  });
+  // uang fisik opsional: bila diisi, hitung selisih terhadap pendapatan sistem
+  const fisik = Number.isFinite(uangFisik) && uangFisik >= 0 ? uangFisik : ring.pendapatan;
+  const laporan = {
+    id: ++db.n,
+    jenis,
+    tanggal: ring.sampai,
+    dari: ring.dari,
+    sampai: ring.sampai,
+    periode: ring.label,
+    kunci: ring.kunci,
+    transaksi: ring.transaksi,
+    total_sistem: ring.pendapatan,
+    pendapatan: ring.pendapatan,
+    pengeluaran: ring.pengeluaran,
+    laba: ring.laba,
+    uang_fisik: fisik,
+    selisih: fisik - ring.pendapatan,
+    catatan: catatan || '',
+    waktu: new Date().toISOString(),
+    user_id: 1
+  };
+  db.tutup.push(laporan);
+  return laporan;
+}
+
+/** Apakah transaksi terkunci (sudah masuk tutup buku). | param: t (transaksi) | return: boolean */
+export const terkunci = (t) => !!t.terkunci;
+
 
 /* ==========================================================================
    BAGIAN 4 — DATA CONTOH (SEED)
@@ -227,15 +348,33 @@ export function seed() {
     }
     // contoh tutup buku (DUMMY): 2 hari lalu uang fisik kurang Rp100.000 dari catatan sistem
     const hari = new Date(now - 2 * 864e5).toLocaleDateString('en-CA');
-    const tot = newDB.transaksi
-      .filter((t) => new Date(t.waktu).toLocaleDateString('en-CA') === hari)
-      .reduce((a, t) => a + t.total, 0);
+    const trxHari = newDB.transaksi.filter((t) => new Date(t.waktu).toLocaleDateString('en-CA') === hari);
+    const tot = trxHari.reduce((a, t) => a + t.total, 0);
     if (tot > 0) {
-      const fisik = Math.max(0, tot - 100000);
+      // selisih contoh: 20% dari total (dibulatkan ke 1000) agar selalu masuk akal,
+      // karena total satu hari bisa lebih kecil dari Rp100.000
+      const kurangContoh = Math.min(100000, Math.max(1000, Math.round((tot * 0.2) / 1000) * 1000));
+      const fisik = Math.max(0, tot - kurangContoh);
+      // pengeluaran = modal barang terjual hari itu
+      const idHari = new Set(trxHari.map((t) => t.id));
+      const modal = newDB.detail.reduce((a, d) => (idHari.has(d.transaksi_id) ? a + (d.harga_beli ?? 0) * d.jumlah : a), 0);
+      // kunci transaksi hari itu supaya konsisten dengan status tutup buku
+      trxHari.forEach((t) => {
+        t.terkunci = 'H' + hari;
+      });
       newDB.tutup.push({
         id: ++newDB.n,
+        jenis: 'harian',
         tanggal: hari,
+        dari: hari,
+        sampai: hari,
+        periode: new Date(hari + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+        kunci: 'H' + hari,
+        transaksi: trxHari.length,
         total_sistem: tot,
+        pendapatan: tot,
+        pengeluaran: modal,
+        laba: tot - modal,
         uang_fisik: fisik,
         selisih: fisik - tot,
         catatan: 'Contoh: uang kembalian salah hitung',

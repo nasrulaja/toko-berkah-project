@@ -18,8 +18,8 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261114b';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261114b';
+import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261114c';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261114c';
 import {
   dashboard,
   produk,
@@ -37,7 +37,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261114b';
+} from './pages.js?v=20261114c';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -47,7 +47,7 @@ const PG = {
   panduan: { t: 'Panduan', s: 'Cara memakai Toko Berkah dan arti istilah', html: panduan },
   notifikasi: { t: 'Semua Notifikasi', s: 'Lihat semua aktivitas toko', html: notifikasi },
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
-  'tutup-buku': { t: 'Hasil harian tutup buku', s: 'Laporan hasil proses tutup buku desktop', html: hasilTutupBuku },
+  'tutup-buku': { t: 'Tutup Buku', s: 'Tutup akhir periode harian, bulanan, atau tahunan', html: hasilTutupBuku },
   laporan: { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
   transaksi: { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },
   pengaturan: { t: 'Pengaturan', s: 'Pengaturan aplikasi dan profil', html: pengaturan }

@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261114b';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114b';
-import { barChart, donut, spark, short } from './charts.js?v=20261114b';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114c';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114c';
+import { barChart, donut, spark, short } from './charts.js?v=20261114c';
 
 let S = {};
 
@@ -104,15 +104,18 @@ export function dashboard() {
     w7 = lastDays(m, 7),
     w7p = lastDays(m, 7, 7);
   const sum = (a, k) => a.reduce((x, y) => x + y[k], 0);
-  // pembeli dengan total belanja terbesar (seluruh data)
-  const byr = new Map();
-  db.transaksi.forEach((t) => {
-    const k = t.pembeli || 'Umum',
-      x = byr.get(k) || { c: 0, v: 0 };
-    x.c++;
-    x.v += t.total;
-    byr.set(k, x);
-  });
+  // pembeli dengan total belanja terbesar HARI INI (bukan seluruh data)
+  const hariIni = lastDays(m, 1)[0].k,
+    byr = new Map();
+  db.transaksi
+    .filter((t) => dk(t.waktu) === hariIni)
+    .forEach((t) => {
+      const k = t.pembeli || 'Umum',
+        x = byr.get(k) || { c: 0, v: 0 };
+      x.c++;
+      x.v += t.total;
+      byr.set(k, x);
+    });
   const tb = [...byr.entries()].sort((a, b) => b[1].v - a[1].v)[0];
 
   /* --- KPI --- */
@@ -129,7 +132,7 @@ export function dashboard() {
     kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
     kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
     kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
-    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar', h: 'Total belanja terbesar dari satu pembeli (seluruh data).', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? `Dari ${esc(tb[0])}` : 'Belum ada transaksi'}</small>` })
+    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Total belanja terbesar dari satu pembeli pada hari ini. Bukan total seluruh data.', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? `Dari ${esc(tb[0])}` : 'Belum ada transaksi hari ini'}</small>` })
   ].join('');
   const kpis2 = [
     kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
@@ -607,28 +610,93 @@ export function stok() {
    pengaturan() : profil toko, ganti user, reset ke data contoh, logout
    ========================================================================== */
 
-/** Tampilkan hasil proses tutup buku; proses tutup buku dilakukan di aplikasi desktop. | param: - | return: string HTML */
+/** Tampilkan & jalankan tutup buku (akhir periode harian/bulanan/tahunan). | param: - | return: string HTML */
 export function hasilTutupBuku() {
   const sel = (n) => (n === 0 ? ['g', 'Sesuai'] : n < 0 ? ['r', 'Kurang ' + rp(-n)] : ['o', 'Lebih ' + rp(n)]);
   const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const rec = [...db.tutup].sort((a, b) => (a.tanggal < b.tanggal ? 1 : -1)),
-    kurang = db.tutup.reduce((a, x) => a + (x.selisih < 0 ? x.selisih : 0), 0),
-    hariSel = db.tutup.filter((x) => x.selisih !== 0).length;
-  return `<div class="card"><div class="cb"><b>Hasil tutup buku</b><p>Proses pencatatan dan penutupan dilakukan di aplikasi desktop. Web ini hanya menampilkan laporannya.</p><span class="b o">Data contoh</span></div></div>
-  <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Hari sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#0E9384"><span>Hari ada selisih</span><h3>${hariSel}</h3></div><div class="st" style="background:#092C4C"><span>Total uang kurang</span><h3>${rp(-kurang)}</h3></div></div>
-  <div class="card"><div class="ch"><h4>Riwayat Hasil harian tutup buku (${rec.length})</h4></div><div class="tw">${
+  const jn = { harian: 'Harian', bulanan: 'Bulanan', tahunan: 'Tahunan' };
+  const jenis = jn[S.tb] ? S.tb : 'harian',
+    ring = ringkasPeriode(jenis);
+  // tombol proses: hari ini / bulan ini / tahun ini sesuai jenis terpilih
+  const proses = (e) => {
+    e.preventDefault();
+    if (!ring.bisaDitutup) return;
+    const f = $('#tbfisik');
+    const raw = f && f.value.trim() !== '' ? Number(f.value) : NaN;
+    const cat = ($('#tbcat') || {}).value || '';
+    ask(`Tutup buku <b>${jn[jenis]}</b> periode <b>${esc(ring.label)}</b>?<br><br>Pendapatan ${rp(ring.pendapatan)} − pengeluaran ${rp(ring.pengeluaran)} = laba <b>${rp(ring.laba)}</b>.<br><br>Setelah ditutup, ${ring.transaksi} transaksi periode ini <b>dikunci</b> dan tidak bisa diubah.`, () => {
+      const l = tutupBuku(jenis, new Date(), Number.isFinite(raw) ? raw : null, cat);
+      if (!l) {
+        toast('Periode ini tidak bisa ditutup');
+        return;
+      }
+      save();
+      toast('Tutup buku berhasil · ' + l.periode);
+      shellRef();
+    });
+  };
+  const rec = [...db.tutup].sort((a, b) => (a.waktu < b.waktu ? 1 : -1)),
+    selisihHari = db.tutup.filter((x) => x.selisih !== 0).length,
+    pendapatanAll = db.tutup.reduce((a, x) => a + (x.pendapatan ?? x.total_sistem ?? 0), 0),
+    pengeluaranAll = db.tutup.reduce((a, x) => a + (x.pengeluaran ?? 0), 0);
+  // pasang handler setelah HTML disisipkan
+  setTimeout(() => {
+    const jenisSel = $('#tbjenis');
+    if (jenisSel)
+      jenisSel.onchange = () => {
+        S.tb = jenisSel.value;
+        shellRef();
+      };
+    const form = $('#tbform');
+    if (form) form.onsubmit = proses;
+  }, 0);
+  return `<div class="card"><div class="cb"><b>Apa itu tutup buku?</b><p>Tutup buku adalah proses akhir periode (harian, bulanan, atau tahunan) untuk mengunci seluruh catatan transaksi, menghitung total pendapatan dan pengeluaran, serta merapikan pembukuan agar siap digunakan untuk periode berikutnya.</p></div></div>
+  <div class="card"><div class="ch"><h4>Proses tutup buku</h4><div class="flt"><select id="tbjenis" aria-label="Jenis periode tutup buku">${Object.entries(jn).map(([k, v]) => `<option value="${k}"${k === jenis ? ' selected' : ''}>${v}</option>`).join('')}</select></div></div><div class="cb">
+    <div class="row"><div class="fg"><label>Periode</label><input value="${esc(ring.label)}" readonly></div><div class="fg"><label>Rentang</label><input value="${esc(ring.dari === ring.sampai ? ring.dari : ring.dari + ' s/d ' + ring.sampai)}" readonly></div></div>
+    <div class="row"><div class="fg"><label>Transaksi</label><input value="${ring.transaksi}" readonly></div><div class="fg"><label>Status</label><input value="${ring.bisaDitutup ? 'Siap ditutup' : ring.sudahDitutup ? 'Sudah ditutup' : 'Belum ada transaksi'}" readonly></div></div>
+    <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Pendapatan</span><h3>${rp(ring.pendapatan)}</h3></div><div class="st" style="background:#B54708"><span>Pengeluaran (modal)</span><h3>${rp(ring.pengeluaran)}</h3></div><div class="st" style="background:#0E9384"><span>Laba</span><h3>${rp(ring.laba)}</h3></div></div>
+    <div class="row"><div class="fg"><label for="tbfisik">Uang fisik di kasir (opsional)</label><input id="tbfisik" type="number" min="0" step="any" placeholder="Kosongkan bila tidak dihitung"></div><div class="fg"><label for="tbcat">Catatan</label><input id="tbcat" placeholder="Misal: uang kembalian salah hitung"></div></div>
+    <form id="tbform"><button class="btn bp"${ring.bisaDitutup ? '' : ' disabled'}>${ring.bisaDitutup ? `Tutup buku ${jn[jenis].toLowerCase()} ini` : 'Tidak bisa ditutup'}</button></form>
+  </div></div>
+  <div class="stats"><div class="st" style="background:#092C4C"><span>Periode sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#B54708"><span>Periode ada selisih</span><h3>${selisihHari}</h3></div><div class="st" style="background:#0E9384"><span>Total pendapatan</span><h3>${rp(pendapatanAll)}</h3></div><div class="st" style="background:#475467"><span>Total pengeluaran</span><h3>${rp(pengeluaranAll)}</h3></div></div>
+  <div class="card"><div class="ch"><h4>Riwayat tutup buku (${rec.length})</h4></div><div class="tw">${
     rec.length
-      ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Menurut sistem</th><th class="r">Uang fisik</th><th>Selisih</th></tr>${rec.map((x, i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(x.tanggal))}</b></td><td class="r">${rp(x.total_sistem)}</td><td class="r">${rp(x.uang_fisik)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td></tr>`).join('')}</table>`
-      : empty('Belum ada hasil tutup buku', 'Laporan akan tampil di sini setelah proses tutup buku dilakukan di desktop.')
+      ? `<table data-size="5"><tr><th>No</th><th>Periode</th><th>Pendapatan</th><th>Pengeluaran</th><th>Laba</th><th>Selisih</th></tr>${rec.map((x, i) => `<tr><td>${i + 1}</td><td><b>${esc(x.periode || tglId(x.tanggal))}</b><small class="note">${esc(jn[x.jenis] || 'Harian')}</small></td><td class="r">${rp(x.pendapatan ?? x.total_sistem ?? 0)}</td><td class="r">${rp(x.pengeluaran ?? 0)}</td><td class="r">${rp(x.laba ?? (x.total_sistem ?? 0) - (x.pengeluaran ?? 0))}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td></tr>`).join('')}</table>`
+      : empty('Belum ada hasil tutup buku', 'Pilih periode lalu tekan tombol tutup buku untuk mengunci catatan periode tersebut.')
   }</div></div>`;
 }
 
 export function laporan() {
-  const totJual = db.transaksi.reduce((a, t) => a + t.total, 0);
+  /* --- Filter periode: menyaring SEMUA angka & tabel di halaman ini --- */
+  const tf = ['semua', 'hari', '7hari', '30hari', 'bulan', 'tahun'].includes(S.lp) ? S.lp : 'semua';
+  const kini = new Date(),
+    awalHari = new Date(kini.getFullYear(), kini.getMonth(), kini.getDate()).getTime();
+  const batas = {
+    semua: 0,
+    hari: awalHari,
+    '7hari': awalHari - 6 * 864e5,
+    '30hari': awalHari - 29 * 864e5,
+    bulan: new Date(kini.getFullYear(), kini.getMonth(), 1).getTime(),
+    tahun: new Date(kini.getFullYear(), 0, 1).getTime()
+  }[tf];
+  const labelPeriode = {
+    semua: 'seluruh data',
+    hari: 'hari ini',
+    '7hari': '7 hari terakhir',
+    '30hari': '30 hari terakhir',
+    bulan: 'bulan ini',
+    tahun: 'tahun ini'
+  }[tf];
+  // transaksi yang lolos filter; idOk dipakai untuk menyaring detail
+  const trx = db.transaksi.filter((t) => new Date(t.waktu).getTime() >= batas),
+    idOk = new Set(trx.map((t) => t.id));
+
+  const totJual = trx.reduce((a, t) => a + t.total, 0);
   // modal dari snapshot harga_beli di detail transaksi (data lama tanpa snapshot: pakai harga beli produk saat ini)
   let modalAwal = 0;
   const top = new Map();
   db.detail.forEach((d) => {
+    if (!idOk.has(d.transaksi_id)) return;
     modalAwal += (d.harga_beli ?? prod(d.produk_id)?.harga_beli ?? 0) * d.jumlah;
     const x = top.get(d.nama_produk) || { q: 0, v: 0 };
     x.q += d.jumlah;
@@ -639,13 +707,14 @@ export function laporan() {
   // laba per transaksi (harga jual - snapshot harga beli) lalu dikelompokkan per tanggal & per hari
   const labaT = new Map();
   db.detail.forEach((d) => {
+    if (!idOk.has(d.transaksi_id)) return;
     const hb = d.harga_beli ?? prod(d.produk_id)?.harga_beli ?? d.harga_satuan;
     labaT.set(d.transaksi_id, (labaT.get(d.transaksi_id) || 0) + (d.harga_satuan - hb) * d.jumlah);
   });
   const perTgl = new Map(),
     namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
     perHari = namaHari.map(() => ({ c: 0, v: 0 }));
-  db.transaksi.forEach((t) => {
+  trx.forEach((t) => {
     const k = dk(t.waktu),
       x = perTgl.get(k) || { c: 0, v: 0, l: 0 };
     x.c++;
@@ -665,25 +734,44 @@ export function laporan() {
   const best = [...top.entries()].sort((a, b) => b[1].q - a[1].q).slice(0, 5);
   // pembeli dengan total belanja terbesar (nama pembeli pada data contoh adalah DUMMY)
   const by = new Map();
-  db.transaksi.forEach((t) => {
+  trx.forEach((t) => {
     const x = by.get(t.pembeli || 'Umum') || { c: 0, v: 0 };
     x.c++;
     x.v += t.total;
     by.set(t.pembeli || 'Umum', x);
   });
   const buyers = [...by.entries()].sort((a, b) => b[1].v - a[1].v).slice(0, 5);
-  return `<div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${db.transaksi.length}</h3></div></div>
-  <div class="card"><div class="ch"><h4>Penjualan &amp; laba per tanggal</h4></div><div class="tw">${
+  // filter periode: menyaring semua tabel & angka di bawah ini
+  setTimeout(() => {
+    const e = $('#flp');
+    if (e)
+      e.onchange = () => {
+        S.lp = e.value;
+        shellRef();
+      };
+  });
+  const opsi = [
+      ['semua', 'Semua data'],
+      ['hari', 'Hari ini'],
+      ['7hari', '7 hari terakhir'],
+      ['30hari', '30 hari terakhir'],
+      ['bulan', 'Bulan ini'],
+      ['tahun', 'Tahun ini']
+    ],
+    fltBar = `<div class="flt"><select id="flp" aria-label="Filter periode laporan">${opsi.map(([k, v]) => `<option value="${k}"${k === tf ? ' selected' : ''}>${v}</option>`).join('')}</select></div>`;
+  return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b> — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
+  <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
+  <div class="card"><div class="ch"><h4>Penjualan &amp; laba harian</h4></div><div class="tw">${
     harian.length
       ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th><th class="r">Laba kotor</th></tr>${harian.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td><td class="r"><span class="b ${x.l >= 0 ? 'g' : 'r'}">${rp(x.l)}</span></td></tr>`).join('')}</table>`
-      : empty('Belum ada penjualan', 'Laba per tanggal muncul setelah ada transaksi.')
+      : empty('Belum ada penjualan', 'Laba harian muncul setelah ada transaksi.')
   }</div></div>
-  <div class="card"><div class="ch"><h4>Transaksi terbanyak per tanggal</h4></div><div class="tw">${
+  <div class="card"><div class="ch"><h4>Transaksi terbanyak harian</h4></div><div class="tw">${
     ramai.length
       ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada transaksi', 'Daftar muncul setelah ada transaksi.')
   }</div></div>
-  <div class="card"><div class="ch"><h4>Transaksi terbanyak per hari</h4>${hariTop && hariTop.c ? `<span class="b g">Tersibuk: ${hariTop.n} (${hariTop.c} transaksi)</span>` : ''}</div><div class="cb hr">${urutHari
+  <div class="card"><div class="ch"><h4>Transaksi terbanyak mingguan</h4>${hariTop && hariTop.c ? `<span class="b g">Tersibuk: ${hariTop.n} (${hariTop.c} transaksi)</span>` : ''}</div><div class="cb hr">${urutHari
     .map((h) => `<div class="hr-r"><span class="hr-n">${h.n}</span><span class="hr-b"><i style="width:${Math.round((h.c / maxHari) * 100)}%"></i></span><span class="hr-v">${h.c} <small>transaksi</small></span></div>`)
     .join('')}</div></div>
   <div class="card"><div class="ch"><h4>Produk terlaris</h4></div><div class="tw">${
@@ -693,16 +781,17 @@ export function laporan() {
   }</div></div>
   <div class="card"><div class="ch"><h4>Belanja terbesar per pembeli</h4></div><div class="tw">${
     buyers.length
-      ? `<table data-size="5"><tr><th>No</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([, x], i) => `<tr><td>${i + 1}</td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      ? `<table data-size="5"><tr><th>No</th><th>Pembeli</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([nm, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(nm)}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada pembeli', 'Daftar muncul setelah ada transaksi.')
   }</div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function transaksi() {
-  const rec = [...db.transaksi].reverse();
-  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th class="r">Aksi</th></tr>
-  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
+  const rec = [...db.transaksi].reverse(),
+    nKunci = rec.filter(terkunci).length;
+  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4>${nKunci ? `<span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
+  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
