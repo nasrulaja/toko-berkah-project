@@ -260,7 +260,7 @@ export function dashboard() {
   // kartu stok: bila tidak ada yang menipis, tampilkan 5 produk dengan stok paling sedikit
   const sedikit = L.length ? L : [...db.produk].sort((a, b) => a.stok / Math.max(a.stok_minimum, 1) - b.stok / Math.max(b.stok_minimum, 1)).slice(0, 5);
   return `<div class="dash">
-  <div class="ban"><span class="ban-ic ${first ? '' : 'ok'}">${ico(first ? 'alert' : 'trend')}</span><span class="ban-t"><b class="ban-h">${sapa}, ${esc(me.nama)}</b><span class="ban-s">${
+  <div class="ban"><span class="ban-ic ${first ? '' : 'ok'}">${ico(first ? 'alert' : 'trend')}</span><span class="ban-t"><b class="ban-h">${sapa}, Toko Berkah</b><span class="ban-s">${
     first
       ? `Stok <b>${esc(first.nama)}</b> tersisa ${first.stok}${L.length > 1 ? ` dan ${L.length - 1} produk lain perlu dibeli ulang` : ''}.`
       : 'Semua stok barang masih aman.'
@@ -353,9 +353,9 @@ const NK = 'berkah_notif';
 const nstate = () => {
   try {
     const s = JSON.parse(localStorage.getItem(NK) || '{}');
-    return { read: +s.read || 0, clear: +s.clear || 0 };
+    return { read: +s.read || 0, clear: +s.clear || 0, on: s.on !== false };
   } catch {
-    return { read: 0, clear: 0 };
+    return { read: 0, clear: 0, on: true };
   }
 };
 const nsave = (s) => {
@@ -412,18 +412,37 @@ const nevents = () => {
     .map((e) => ({ ...e, ts: new Date(e.w).getTime() }));
 };
 /** Jumlah notifikasi yang belum dibaca (untuk lencana lonceng). | param: - | return: number */
+/** Sakelar notifikasi aktif/nonaktif (dipakai di halaman Notifikasi & Pengaturan). | param: id | return: string HTML */
+const notifSwitch = (id) =>
+  `<label class="sw"><input type="checkbox" id="${id}" ${nstate().on ? 'checked' : ''}><i></i><span>Notifikasi ${nstate().on ? 'aktif' : 'nonaktif'}</span></label>`;
+/** Pasang aksi pada sakelar notifikasi. | param: id | return: void */
+const bindSwitch = (id) => {
+  const e = $('#' + id);
+  if (e)
+    e.onchange = () => {
+      nsave({ ...nstate(), on: e.checked, read: e.checked ? Date.now() : nstate().read });
+      toast(e.checked ? 'Notifikasi diaktifkan' : 'Notifikasi dimatikan');
+      shellRef();
+    };
+};
 export const notifUnread = () => {
   const st = nstate();
+  if (!st.on) return 0;
   return nevents().filter((e) => e.ts > st.read).length;
 };
 
 /** Halaman Semua Notifikasi. | param: - | return: string HTML */
 export function notifikasi() {
+  if (!nstate().on) {
+    setTimeout(() => bindSwitch('nsw'));
+    return `<div class="card"><div class="ch"><h4>Notifikasi</h4>${notifSwitch('nsw')}</div>${empty('Notifikasi dimatikan', 'Aktifkan sakelar di atas untuk melihat aktivitas toko dan lencana pada lonceng.')}</div>`;
+  }
   const st = nstate(),
     ev = nevents(),
     list = ev.slice(0, 50),
     lowN = low().length;
   setTimeout(() => {
+    bindSwitch('nsw');
     const r = $('#nread'),
       d = $('#nclear');
     if (r)
@@ -435,11 +454,11 @@ export function notifikasi() {
     if (d)
       d.onclick = () =>
         ask('Hapus semua notifikasi? Riwayat transaksi dan stok tidak ikut terhapus.', () => {
-          nsave({ read: Date.now(), clear: Date.now() });
+          nsave({ ...nstate(), read: Date.now(), clear: Date.now() });
           shellRef();
         });
   });
-  return `<div class="card"><div class="ch"><h4>Semua Notifikasi (${ev.length})</h4><div class="nact"><button class="btn" id="nread" ${ev.some((e) => e.ts > st.read) ? '' : 'disabled'}>Tandai semua dibaca</button><button class="btn bd" id="nclear" ${ev.length ? '' : 'disabled'}>Hapus semua</button></div></div>
+  return `<div class="card"><div class="ch"><h4>Semua Notifikasi (${ev.length})</h4><div class="nact">${notifSwitch('nsw')}<button class="btn" id="nread" ${ev.some((e) => e.ts > st.read) ? '' : 'disabled'}>Tandai semua dibaca</button><button class="btn bd" id="nclear" ${ev.length ? '' : 'disabled'}>Hapus semua</button></div></div>
   ${lowN ? `<a class="nt nt-warn" href="#stok-menipis"><span class="nic r">${ico('alert')}</span><span class="ntx"><b>${lowN} produk stok menipis</b> perlu diisi ulang.</span><span class="ntm">Lihat</span></a>` : ''}
   ${
     list.length
@@ -680,6 +699,7 @@ export function transaksi() {
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function pengaturan() {
   setTimeout(() => {
+    bindSwitch('nsw2');
     $('#resetDB').onclick = () => {
       ask('Reset seluruh data ke awal (data contoh)? Data Anda akan terhapus.', () => {
         setDB(seed());
@@ -690,6 +710,7 @@ export function pengaturan() {
     };
   }, 0);
   return `<div class="card"><div class="ch"><h4>Profil Toko</h4></div><div class="cb"><p>Pengguna Aktif: <b>${esc(me.nama)}</b> (${esc(me.email)})</p></div></div>
+  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Tampilkan aktivitas toko (penjualan, stok, tutup buku) di halaman Notifikasi dan lencana angka pada lonceng.</p>${notifSwitch('nsw2')}</div></div>
   <div class="card"><div class="ch"><h4>Pembersihan Data</h4></div><div class="cb"><button class="btn bd" id="resetDB">Reset Basis Data ke Contoh</button></div></div>`;
 }
 
