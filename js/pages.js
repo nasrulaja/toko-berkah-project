@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261112a';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon, tip } from './ui.js?v=20261112a';
-import { barChart, donut, spark, short } from './charts.js?v=20261112a';
+import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261113a';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon, tip } from './ui.js?v=20261113a';
+import { barChart, donut, spark, short } from './charts.js?v=20261113a';
 
 let S = {};
 
@@ -322,11 +322,13 @@ export function produk() {
       c.oninput = () => {
         const q = c.value.trim().toLowerCase();
         let n = 0;
-        [...document.querySelectorAll('.pg table')[0].rows].slice(1).forEach((r) => {
+        const tb = document.querySelectorAll('.pg table')[0];
+        [...tb.rows].slice(1).forEach((r) => {
           const ok = !q || r.textContent.toLowerCase().includes(q);
-          r.hidden = !ok;
+          r.classList.toggle('nf', !ok);
           if (ok) n++;
         });
+        if (tb._pg) tb._pg(1);
         $('#fcount').textContent = q ? n + ' cocok' : '';
       };
   });
@@ -666,12 +668,12 @@ export function laporan() {
   return `<div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${db.transaksi.length}</h3></div></div>
   <div class="card"><div class="ch"><h4>Penjualan &amp; laba per tanggal</h4></div><div class="tw">${
     harian.length
-      ? `<table><tr><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th><th class="r">Laba kotor</th></tr>${harian.map(([k, x]) => `<tr><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td><td class="r"><span class="b ${x.l >= 0 ? 'g' : 'r'}">${rp(x.l)}</span></td></tr>`).join('')}</table>`
+      ? `<table data-size="5"><tr><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th><th class="r">Laba kotor</th></tr>${harian.map(([k, x]) => `<tr><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td><td class="r"><span class="b ${x.l >= 0 ? 'g' : 'r'}">${rp(x.l)}</span></td></tr>`).join('')}</table>`
       : empty('Belum ada penjualan', 'Laba per tanggal muncul setelah ada transaksi.')
   }</div></div>
   <div class="card"><div class="ch"><h4>Transaksi terbanyak per tanggal</h4></div><div class="tw">${
     ramai.length
-      ? `<table><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada transaksi', 'Daftar muncul setelah ada transaksi.')
   }</div></div>
   <div class="card"><div class="ch"><h4>Transaksi terbanyak per hari</h4>${hariTop && hariTop.c ? `<span class="b g">Tersibuk: ${hariTop.n} (${hariTop.c} transaksi)</span>` : ''}</div><div class="cb hr">${urutHari
@@ -679,12 +681,12 @@ export function laporan() {
     .join('')}</div></div>
   <div class="card"><div class="ch"><h4>Produk terlaris</h4></div><div class="tw">${
     best.length
-      ? `<table><tr><th>No</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      ? `<table data-size="5"><tr><th>No</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada penjualan', 'Produk terlaris muncul setelah ada transaksi.')
   }</div></div>
   <div class="card"><div class="ch"><h4>Belanja terbesar per pembeli</h4></div><div class="tw">${
     buyers.length
-      ? `<table><tr><th>No</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([, x], i) => `<tr><td>${i + 1}</td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      ? `<table data-size="5"><tr><th>No</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([, x], i) => `<tr><td>${i + 1}</td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada pembeli', 'Daftar muncul setelah ada transaksi.')
   }</div></div>`;
 }
