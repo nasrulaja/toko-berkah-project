@@ -649,3 +649,13 @@
 /* tooltip melayang (tidak terpotong kartu) */
 .tipx { position: fixed; z-index: 300; max-width: 240px; padding: 9px 12px; border-radius: 12px; background: var(--card); color: var(--tx); border: 1px solid var(--bd); box-shadow: 0 10px 28px rgba(0, 0, 0, .18); font-size: 12.5px; line-height: 1.45; pointer-events: none; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .tipx[hidden] { display: none; }
+
+/* --- Sakelar (toggle) --- */
+.sw { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; color: var(--hd); user-select: none; }
+.sw input { position: absolute; opacity: 0; width: 0; height: 0; }
+.sw i { position: relative; flex: none; width: 42px; height: 24px; border-radius: 99px; background: var(--bd); transition: background .2s; }
+.sw i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .2s; }
+.sw input:checked + i { background: var(--p); }
+.sw input:checked + i::after { transform: translateX(18px); }
+.sw input:focus-visible + i { outline: 2px solid var(--p); outline-offset: 2px; }
+.nact { align-items: center; }
