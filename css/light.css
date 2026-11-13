@@ -157,3 +157,15 @@
   color: #fff;
   text-shadow: 0 1px 2px rgba(9, 44, 76, 0.25);
 }
+
+/* --- Ringkasan periode di halaman Tutup Buku --- */
+.tbinfo { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tbinfo > div { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255, 255, 255, 0.85); }
+.tbinfo span:first-child { font-size: 12px; color: var(--tx); }
+.tbinfo b { color: var(--hd); font-size: 14px; }
+.tbinfo .b { align-self: flex-start; }
+@media (max-width: 640px) {
+  .tbinfo { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tbinfo > div { padding: 10px 12px; }
+  .tbinfo > div:nth-child(2) { grid-column: 1 / -1; order: 1; }
+}

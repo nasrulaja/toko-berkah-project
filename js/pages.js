@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114d';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114d';
-import { barChart, donut, spark, short } from './charts.js?v=20261114d';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114f';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114f';
+import { barChart, donut, spark, short } from './charts.js?v=20261114f';
 
 let S = {};
 
@@ -293,8 +293,8 @@ export function dashboard() {
     <div class="card"><div class="ch"><h4>Jam Tersibuk</h4></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p><div class="mini">${ringkasJam.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>${top3Jam.map(([h, c]) => `<div class="tp" style="margin-top:12px"><span class="rk">${String(h).padStart(2, '0')}</span><div class="tp-b"><div class="tp-h"><b>Pukul ${String(h).padStart(2, '0')}.00</b><span>${c} transaksi</span></div><div class="bar"><i style="width:${Math.round((c / maxJam) * 100)}%"></i></div></div></div>`).join('')}</div></div>
   </div>
 
-  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
-    rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
+  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
+    rec.slice(0, 5).map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
     `<tr><td colspan="6">${empty('Belum ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
   }</table></div></div>
   <div class="tip" id="tip" hidden></div></div>`;
@@ -643,16 +643,16 @@ export function hasilTutupBuku() {
   }, 0);
   return `<div class="card"><div class="cb"><b>Apa itu tutup buku?</b><p>Tutup buku adalah proses akhir periode (harian, bulanan, atau tahunan) untuk mengunci seluruh catatan transaksi, menghitung total pendapatan dan pengeluaran, serta merapikan pembukuan agar siap digunakan untuk periode berikutnya.</p></div></div>
   <div class="card"><div class="ch"><h4>Proses tutup buku</h4><div class="flt"><select id="tbjenis" aria-label="Jenis periode tutup buku">${Object.entries(jn).map(([k, v]) => `<option value="${k}"${k === jenis ? ' selected' : ''}>${v}</option>`).join('')}</select></div></div><div class="cb">
-    <div class="row"><div class="fg"><label>Periode</label><input value="${esc(ring.label)}" readonly></div><div class="fg"><label>Rentang</label><input value="${esc(ring.dari === ring.sampai ? ring.dari : ring.dari + ' s/d ' + ring.sampai)}" readonly></div></div>
-    <div class="row"><div class="fg"><label>Transaksi</label><input value="${ring.transaksi}" readonly></div><div class="fg"><label>Status</label><input value="${ring.bisaDitutup ? 'Siap ditutup' : ring.sudahDitutup ? 'Sudah ditutup' : 'Belum ada transaksi'}" readonly></div></div>
+    <div class="tbinfo"><div><span>Periode</span><b>${esc(ring.label)}</b></div><div><span>Rentang tanggal</span><b>${esc(ring.dari === ring.sampai ? tglId(ring.dari) : tglId(ring.dari) + ' – ' + tglId(ring.sampai))}</b></div><div><span>Jumlah transaksi</span><b>${ring.transaksi}</b></div><div><span>Status</span><span class="b ${ring.bisaDitutup ? 'g' : ring.sudahDitutup ? 'o' : 'r'}">${ring.bisaDitutup ? 'Siap ditutup' : ring.sudahDitutup ? 'Sudah ditutup' : 'Belum ada transaksi'}</span></div></div>
     <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Pendapatan</span><h3>${rp(ring.pendapatan)}</h3></div><div class="st" style="background:#B54708"><span>Pengeluaran (modal)</span><h3>${rp(ring.pengeluaran)}</h3></div><div class="st" style="background:#0E9384"><span>Laba</span><h3>${rp(ring.laba)}</h3></div></div>
     <div class="row"><div class="fg"><label for="tbfisik">Uang fisik di kasir (opsional)</label><input id="tbfisik" type="number" min="0" step="any" placeholder="Kosongkan bila tidak dihitung"></div><div class="fg"><label for="tbcat">Catatan</label><input id="tbcat" placeholder="Misal: uang kembalian salah hitung"></div></div>
+    <p class="note">Isi "Uang fisik" untuk membandingkan uang di laci dengan catatan sistem; selisihnya tercatat otomatis.</p>
     <form id="tbform"><button class="btn bp"${ring.bisaDitutup ? '' : ' disabled'}>${ring.bisaDitutup ? `Tutup buku ${jn[jenis].toLowerCase()} ini` : 'Tidak bisa ditutup'}</button></form>
   </div></div>
   <div class="stats"><div class="st" style="background:#092C4C"><span>Periode sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#B54708"><span>Periode ada selisih</span><h3>${selisihHari}</h3></div><div class="st" style="background:#0E9384"><span>Total pendapatan</span><h3>${rp(pendapatanAll)}</h3></div><div class="st" style="background:#475467"><span>Total pengeluaran</span><h3>${rp(pengeluaranAll)}</h3></div></div>
   <div class="card"><div class="ch"><h4>Riwayat tutup buku (${rec.length})</h4></div><div class="tw">${
     rec.length
-      ? `<table data-size="5"><tr><th>No</th><th>Periode</th><th>Pendapatan</th><th>Pengeluaran</th><th>Laba</th><th>Selisih</th></tr>${rec.map((x, i) => `<tr><td>${i + 1}</td><td><b>${esc(x.periode || tglId(x.tanggal))}</b><small class="note">${esc(jn[x.jenis] || 'Harian')}</small></td><td class="r">${rp(x.pendapatan ?? x.total_sistem ?? 0)}</td><td class="r">${rp(x.pengeluaran ?? 0)}</td><td class="r">${rp(x.laba ?? (x.total_sistem ?? 0) - (x.pengeluaran ?? 0))}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td></tr>`).join('')}</table>`
+      ? `<table data-size="5"><tr><th>No</th><th>Periode</th><th>Pendapatan</th><th>Pengeluaran</th><th>Laba</th><th>Selisih</th></tr>${rec.map((x, i) => `<tr><td>${i + 1}</td><td><b>${esc(x.periode || tglId(x.tanggal))}</b> <span class="b g">${esc(jn[x.jenis] || 'Harian')}</span></td><td class="r">${rp(x.pendapatan ?? x.total_sistem ?? 0)}</td><td class="r">${rp(x.pengeluaran ?? 0)}</td><td class="r">${rp(x.laba ?? (x.total_sistem ?? 0) - (x.pengeluaran ?? 0))}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td></tr>`).join('')}</table>`
       : empty('Belum ada hasil tutup buku', 'Pilih periode lalu tekan tombol tutup buku untuk mengunci catatan periode tersebut.')
   }</div></div>`;
 }
