@@ -99,6 +99,7 @@ function shell() {
 <main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main><footer class="ft">Dikembangkan oleh Ruelz</footer></div>${bottomNav(navK)}`;
   labelTables();
   paginate();
+  slideN();
 }
 
 /** Bar menu bawah khusus HP (rail kaca disembunyikan di layar kecil). | param: k (menu aktif) | return: string HTML */
@@ -150,6 +151,50 @@ function paginate() {
     bn.onclick = () => go(cur + 1);
     inp.onchange = () => go(+inp.value);
     t._pg = go;
+    go(1);
+  });
+}
+
+/** Beri daftar kartu (mis. notifikasi) geseran per halaman: "‹ [1] dari 2 ›". Ukuran halaman: data-size, bawaan 10.
+ *  Nomor tiap baris (.nno) menyesuaikan halaman: baris pertama halaman 2 bernomor 11. | param: - | return: void */
+function slideN() {
+  document.querySelectorAll('.pg [data-size][id]').forEach((box) => {
+    const size = +box.dataset.size || 10,
+      items = [...box.children];
+    if (items.length <= size) return;
+    const bar = document.createElement('div');
+    bar.className = 'pgn';
+    bar.innerHTML =
+      '<span class="pgn-i"></span><span class="pgn-c"><button type="button" class="pgn-b" data-d="-1" aria-label="Halaman sebelumnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><input class="pgn-n" type="number" min="1" inputmode="numeric" aria-label="Nomor halaman"><span class="pgn-o"></span><button type="button" class="pgn-b" data-d="1" aria-label="Halaman berikutnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></span>';
+    box.after(bar);
+    const inp = bar.querySelector('.pgn-n'),
+      info = bar.querySelector('.pgn-i'),
+      of = bar.querySelector('.pgn-o'),
+      [bp, bn] = bar.querySelectorAll('.pgn-b');
+    let cur = 1;
+    const go = (p) => {
+      const n = Math.max(1, Math.ceil(items.length / size));
+      cur = Math.min(n, Math.max(1, p || 1));
+      const from = (cur - 1) * size,
+        to = Math.min(from + size, items.length);
+      items.forEach((el, i) => {
+        const on = i >= from && i < to;
+        el.hidden = !on;
+        // nomor urut melanjutkan antar halaman
+        const no = el.querySelector('.nno');
+        if (no) no.textContent = i + 1;
+      });
+      inp.value = cur;
+      inp.max = n;
+      of.textContent = 'dari ' + n;
+      info.textContent = `${from + 1}–${to} dari ${items.length}`;
+      bp.disabled = cur <= 1;
+      bn.disabled = cur >= n;
+      bar.hidden = n <= 1;
+    };
+    bp.onclick = () => go(cur - 1);
+    bn.onclick = () => go(cur + 1);
+    inp.onchange = () => go(+inp.value);
     go(1);
   });
 }
