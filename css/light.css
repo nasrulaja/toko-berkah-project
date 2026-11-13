@@ -1,0 +1,159 @@
+/* ==========================================================================
+   TOKO BERKAH — light.css
+   Penyempurnaan TEMA TERANG. Dimuat paling akhir. Masalah sebelumnya: latar
+   hampir putih sehingga kaca tidak punya apa-apa untuk di-blur dan tampak
+   datar. Di sini latar diberi aurora berwarna + bola cahaya, lalu semua
+   permukaan (topbar, rail, kartu, tabel, modal, bar bawah) dibuat kaca
+   dengan pantulan tepi atas, garis tepi putih, dan bayangan berwarna.
+   Tema gelap tidak disentuh.
+   ========================================================================== */
+
+:root:not([data-theme='dark']) {
+  --lg-fill: rgba(255, 255, 255, 0.58);
+  --lg-fill-hi: rgba(255, 255, 255, 0.74);
+  --lg-edge: rgba(255, 255, 255, 0.85);
+  --lg-line: rgba(9, 44, 76, 0.09);
+  --lg-shadow: 0 10px 30px rgba(31, 94, 150, 0.13), 0 2px 6px rgba(31, 94, 150, 0.06);
+  --lg-spec: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(255, 255, 255, 0.35);
+  --gx-fill: var(--lg-fill);
+  --gx-fill-soft: rgba(255, 255, 255, 0.5);
+  --gx-stroke: var(--lg-edge);
+}
+
+/* --- Latar: gradasi lembut + aurora lebih pekat agar kaca terlihat --- */
+:root:not([data-theme='dark']) body {
+  background: linear-gradient(160deg, #dcefff 0%, #eef6ff 38%, #f3eefe 70%, #e3f6ef 100%) fixed;
+}
+:root:not([data-theme='dark']) body::before {
+  background:
+    radial-gradient(40% 48% at 10% 8%, rgba(61, 181, 255, 0.42), transparent 65%),
+    radial-gradient(34% 44% at 92% 12%, rgba(139, 92, 246, 0.3), transparent 65%),
+    radial-gradient(38% 50% at 84% 90%, rgba(62, 183, 128, 0.3), transparent 65%),
+    radial-gradient(30% 40% at 8% 92%, rgba(255, 152, 70, 0.24), transparent 65%),
+    radial-gradient(24% 30% at 50% 50%, rgba(255, 255, 255, 0.5), transparent 70%);
+}
+
+/* --- Permukaan kaca: topbar, rail, kartu, modal --- */
+:root:not([data-theme='dark']) .top,
+:root:not([data-theme='dark']) .card,
+:root:not([data-theme='dark']) .md,
+:root:not([data-theme='dark']) .kpi,
+:root:not([data-theme='dark']) .lg-card {
+  background: linear-gradient(145deg, var(--lg-fill-hi), var(--lg-fill));
+  -webkit-backdrop-filter: blur(20px) saturate(185%);
+  backdrop-filter: blur(20px) saturate(185%);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-spec), var(--lg-shadow);
+}
+:root:not([data-theme='dark']) .card:hover,
+:root:not([data-theme='dark']) .kpi:hover {
+  box-shadow: var(--lg-spec), 0 16px 40px rgba(31, 94, 150, 0.18);
+}
+:root:not([data-theme='dark']) .top {
+  border-radius: 18px;
+}
+:root:not([data-theme='dark']) .gx-rail {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.5));
+  -webkit-backdrop-filter: blur(22px) saturate(185%);
+  backdrop-filter: blur(22px) saturate(185%);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-spec), 0 18px 46px rgba(31, 94, 150, 0.2);
+}
+:root:not([data-theme='dark']) .ov {
+  background: rgba(30, 70, 110, 0.28);
+}
+
+/* --- Banner sambutan: kaca biru bergradasi --- */
+:root:not([data-theme='dark']) .ban {
+  background: linear-gradient(120deg, rgba(61, 181, 255, 0.3), rgba(139, 92, 246, 0.14) 60%, rgba(255, 255, 255, 0.4));
+  -webkit-backdrop-filter: blur(18px) saturate(190%);
+  backdrop-filter: blur(18px) saturate(190%);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-spec), 0 12px 32px rgba(61, 181, 255, 0.22);
+}
+
+/* --- Kartu di dalam kartu & ringkasan kecil --- */
+:root:not([data-theme='dark']) .mini,
+:root:not([data-theme='dark']) .nt,
+:root:not([data-theme='dark']) .gd,
+:root:not([data-theme='dark']) .tips > * {
+  background: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Tabel: header kaca tipis, garis halus, baris menyorot saat disentuh --- */
+:root:not([data-theme='dark']) th {
+  background: rgba(230, 246, 255, 0.55);
+  color: var(--hd);
+  border-bottom: 1px solid var(--lg-line);
+}
+:root:not([data-theme='dark']) td {
+  border-bottom: 1px solid var(--lg-line);
+}
+:root:not([data-theme='dark']) tr:hover > td {
+  background: rgba(61, 181, 255, 0.07);
+}
+:root:not([data-theme='dark']) .pgn {
+  border-top: 1px solid var(--lg-line);
+}
+:root:not([data-theme='dark']) .pgn-n {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* --- Kontrol: input, tombol sekunder --- */
+:root:not([data-theme='dark']) input,
+:root:not([data-theme='dark']) select,
+:root:not([data-theme='dark']) textarea {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(9, 44, 76, 0.12);
+  box-shadow: inset 0 1px 2px rgba(31, 94, 150, 0.06);
+}
+:root:not([data-theme='dark']) .btn:not(.bp):not(.bd) {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.5));
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-spec), 0 3px 10px rgba(31, 94, 150, 0.1);
+}
+:root:not([data-theme='dark']) .bp {
+  background: linear-gradient(160deg, #6fcbff, #2c9fe6);
+  color: #05263d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 8px 20px rgba(44, 159, 230, 0.35);
+}
+
+/* --- Bar menu bawah & lembar "Lainnya" di HP --- */
+@media (max-width: 991px) {
+  :root:not([data-theme='dark']) .bnav {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.55));
+    border: 1px solid var(--lg-edge);
+    box-shadow: var(--lg-spec), 0 14px 36px rgba(31, 94, 150, 0.25);
+  }
+  :root:not([data-theme='dark']) .tw tr {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid var(--lg-edge);
+    box-shadow: var(--lg-spec), 0 4px 14px rgba(31, 94, 150, 0.08);
+  }
+  :root:not([data-theme='dark']) .mlist a,
+  :root:not([data-theme='dark']) .mlist button {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: var(--lg-edge);
+  }
+}
+
+/* Tanpa dukungan blur: pakai warna solid agar tetap terbaca */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root:not([data-theme='dark']) .top,
+  :root:not([data-theme='dark']) .card,
+  :root:not([data-theme='dark']) .md,
+  :root:not([data-theme='dark']) .kpi,
+  :root:not([data-theme='dark']) .gx-rail,
+  :root:not([data-theme='dark']) .bnav {
+    background: rgba(255, 255, 255, 0.95);
+  }
+}
+
+/* --- Kartu statistik berwarna (Laporan): teks putih agar kontras --- */
+:root:not([data-theme='dark']) .st:not(.lt),
+:root:not([data-theme='dark']) .st:not(.lt) h3,
+:root:not([data-theme='dark']) .st:not(.lt) span {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(9, 44, 76, 0.25);
+}
