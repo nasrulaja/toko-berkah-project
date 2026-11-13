@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114f';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114f';
-import { barChart, donut, spark, short } from './charts.js?v=20261114f';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114g';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114g';
+import { barChart, donut, spark, short } from './charts.js?v=20261114g';
 
 let S = {};
 
@@ -477,7 +477,9 @@ export function panduan() {
     ['box', 'Isi data Produk', 'Daftarkan barang di Produk & Kategori: nama, harga jual, harga beli, stok, dan isi per pack bila dijual per dus/pack.', '#produk'],
     ['layers', 'Catat Stok', 'Di Manajemen Stok catat barang masuk, barang keluar, atau penyesuaian bila jumlah di rak berbeda dari catatan.', '#stok'],
     ['alert', 'Pantau Stok Menipis', 'Barang yang hampir habis dikumpulkan di satu halaman supaya tahu apa yang harus dibeli lagi.', '#stok-menipis'],
-    ['chart', 'Baca Laporan', 'Lihat laba per tanggal, produk terlaris, serta hari dan jam paling ramai.', '#laporan'],
+    ['recv', 'Lihat Riwayat Transaksi', 'Daftar semua penjualan beserta kode, waktu, dan total. Tekan tombol Detail untuk melihat barang yang dibeli. Status Terkunci berarti periodenya sudah ditutup buku.', '#transaksi'],
+    ['chart', 'Baca Laporan', 'Pilih periode di bagian atas (hari ini, 7 hari, 30 hari, bulan ini, tahun ini, atau semua data). Angka dan tabel di bawahnya ikut berubah: laba per tanggal, hari dan tanggal tersibuk, produk terlaris, dan belanja terbesar.', '#laporan'],
+    ['book', 'Tutup Buku', 'Di akhir hari (atau bulan/tahun) pilih periode, isi uang fisik di laci bila ingin dicek, lalu tekan tombol tutup buku. Transaksi periode itu terkunci dan selisih uang tercatat.', '#tutup-buku'],
     ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas.', '#notifikasi']
   ];
   const istilah = [
@@ -490,13 +492,26 @@ export function panduan() {
     ['Pack', 'Satu kemasan besar berisi beberapa pcs (misal 1 dus = 24 botol). Stok tampil "3 pack + 6 pcs".'],
     ['Mutasi stok', 'Setiap perubahan jumlah stok: terjual, barang masuk, barang keluar, atau penyesuaian.'],
     ['Penyesuaian', 'Mengoreksi stok agar sama dengan hitungan nyata di rak (misal hasil stok opname). Wajib diberi alasan.'],
-    ['Tutup buku', 'Pencocokan uang di laci dengan catatan penjualan sistem pada akhir hari. Selisih menunjukkan uang kurang atau lebih.']
+    ['Pendapatan', 'Total uang yang masuk dari penjualan pada periode itu (sama dengan omzet).'],
+    ['Pengeluaran (modal)', 'Harga beli barang yang sudah terjual pada periode itu. Bukan biaya listrik, gaji, atau sewa.'],
+    ['Penjualan hari ini', 'Jumlah transaksi (struk) hari ini, bukan jumlah rupiah. Rupiahnya ada di Pendapatan hari ini.'],
+    ['Total belanja terbesar', 'Nilai satu transaksi terbesar pada hari itu.'],
+    ['Perbandingan laba', 'Laba periode ini dibanding periode sebelumnya, dalam persen.'],
+    ['Tutup buku', 'Penutupan akhir periode (harian, bulanan, atau tahunan): menghitung pendapatan, pengeluaran, dan laba, lalu mengunci transaksi periode itu.'],
+    ['Transaksi terkunci', 'Transaksi dari periode yang sudah ditutup. Tidak bisa diubah lagi supaya pembukuan tetap konsisten.'],
+    ['Uang fisik', 'Uang nyata yang dihitung di laci kasir. Diisi saat tutup buku untuk dibandingkan dengan catatan sistem.'],
+    ['Selisih', 'Uang fisik dikurangi catatan sistem. "Kurang" berarti uang di laci lebih sedikit, "Lebih" berarti lebih banyak, "Sesuai" berarti cocok.']
   ];
   const tanya = [
     ['Jumlah stok di sistem berbeda dengan di rak. Bagaimana memperbaikinya?', 'Buka Manajemen Stok, pilih jenis Penyesuaian, isi stok sebenarnya di rak, dan tulis alasannya.'],
     ['Bagaimana menambah stok setelah belanja barang?', 'Di Manajemen Stok pilih jenis Barang masuk, isi jumlah dan harga beli. Stok bertambah otomatis.'],
     ['Kenapa angka laba terlihat lebih besar dari untung sebenarnya?', 'Laba kotor belum dikurangi biaya toko seperti listrik, gaji, dan sewa.'],
     ['Bagaimana mencari satu produk dengan cepat?', 'Di Produk & Kategori ketik nama atau barcode di kotak Cari, atau pilih kategori dari filter.'],
+    ['Bagaimana cara tutup buku?', 'Buka Tutup Buku, pilih Harian/Bulanan/Tahunan, cek ringkasan angkanya, isi Uang fisik di laci (boleh dikosongkan), lalu tekan tombol Tutup buku dan konfirmasi.'],
+    ['Uang di laci kurang dari catatan sistem, apa yang terjadi?', 'Isi Uang fisik saat tutup buku. Sistem mencatat selisihnya sebagai "Kurang" di Riwayat tutup buku dan memberi notifikasi, sehingga pemilik toko bisa menelusurinya.'],
+    ['Kenapa transaksi tidak bisa diubah?', 'Transaksi dari periode yang sudah ditutup dikunci. Ini disengaja agar angka pembukuan tidak berubah setelah dilaporkan.'],
+    ['Bagaimana melihat laporan untuk bulan ini saja?', 'Di Laporan pilih periode "Bulan ini" pada menu di bagian atas. Semua angka dan tabel menyesuaikan.'],
+    ['Tabel terlalu panjang, bagaimana melihat sisanya?', 'Gunakan tombol panah di bawah tabel, atau ketik nomor halaman langsung.'],
     ['Notifikasi saya terlalu banyak.', 'Di halaman Notifikasi tekan Tandai semua dibaca atau Hapus semua. Data transaksi dan stok tidak ikut terhapus.'],
     ['Apakah data saya aman bila browser ditutup?', 'Data tersimpan di browser ini. Jangan hapus data situs, dan jangan memakai tombol Reset di Pengaturan kecuali ingin kembali ke data contoh.']
   ];
@@ -507,7 +522,7 @@ export function panduan() {
   <div class="card"><div class="ch"><h4>Pertanyaan umum</h4></div><div class="cb">${tanya
     .map(([q, a]) => `<details class="fq"><summary>${q}</summary><p>${a}</p></details>`)
     .join('')}</div></div>
-  <div class="card"><div class="ch"><h4>Tips cepat</h4></div><div class="cb"><ul class="tips"><li>Tanda <span class="inf" style="position:static">?</span> kecil di samping judul angka berisi penjelasan singkat. Arahkan atau sentuh untuk membacanya.</li><li>Angka hijau dengan panah naik berarti lebih baik dari periode sebelumnya, merah berarti turun.</li><li>Di HP gunakan menu bawah. Menu lain ada di tombol <b>Lainnya</b>.</li><li>Tombol bulan/matahari di kanan atas mengganti tema terang dan gelap.</li></ul></div></div>`;
+  <div class="card"><div class="ch"><h4>Tips cepat</h4></div><div class="cb"><ul class="tips"><li>Tanda <span class="inf" style="position:static">?</span> kecil di samping judul angka berisi penjelasan singkat. Arahkan atau sentuh untuk membacanya.</li><li>Angka hijau dengan panah naik berarti lebih baik dari periode sebelumnya, merah berarti turun.</li><li>Di HP gunakan menu bawah. Menu lain ada di tombol <b>Lainnya</b>.</li></ul></div></div>`;
 }
 
 /** Halaman stok menipis: hanya produk dengan stok <= stok minimum. | param: - | return: string HTML */
