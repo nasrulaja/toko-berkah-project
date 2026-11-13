@@ -659,3 +659,6 @@
 .sw input:checked + i::after { transform: translateX(18px); }
 .sw input:focus-visible + i { outline: 2px solid var(--p); outline-offset: 2px; }
 .nact { align-items: center; }
+
+/* kolom terkunci */
+input.ro { background: var(--soft); color: var(--mt, #6b7a90); cursor: not-allowed; }
