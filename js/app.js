@@ -18,8 +18,8 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261112a';
-import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js?v=20261112a';
+import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261113a';
+import { $, esc, rp, dt, ico, toast, modal, ask, themeIcon } from './ui.js?v=20261113a';
 import {
   dashboard,
   produk,
@@ -37,7 +37,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261112a';
+} from './pages.js?v=20261113a';
 
 const PG = {
   dashboard: { t: 'Dasbor', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -98,6 +98,7 @@ function shell() {
 <div class="main"><header class="top"><span class="brand"><i>B</i><b>${p.t}</b></span><span class="tdate">${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span><span class="sp"></span><a class="ic bell" href="#notifikasi" title="Notifikasi" aria-label="Notifikasi">${ico('bell')}${notifUnread() ? `<em>${notifUnread() > 99 ? '99+' : notifUnread()}</em>` : ''}</a><button class="ic" data-act="theme" aria-label="Ganti tema">${themeIcon()}</button><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
 <main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main><footer class="ft">Dikembangkan oleh Ruelz</footer></div>${bottomNav(navK)}`;
   labelTables();
+  paginate();
 }
 
 /** Bar menu bawah khusus HP (rail kaca disembunyikan di layar kecil). | param: k (menu aktif) | return: string HTML */
@@ -115,6 +116,44 @@ function bottomNav(k) {
 }
 
 /** Beri atribut data-label pada sel tabel agar bisa ditampilkan sebagai kartu di HP. | param: - | return: void */
+/** Beri tiap tabel di halaman penomoran: "‹ [2] dari 9 ›". Baris dengan kelas "nf" (tersaring) dilewati. Ukuran halaman: data-size, bawaan 10. | param: - | return: void */
+function paginate() {
+  document.querySelectorAll('.pg .tw table').forEach((t) => {
+    const size = +t.dataset.size || 10,
+      rows = [...t.rows].filter((r) => !r.querySelector('th'));
+    if (rows.length <= size) return;
+    const bar = document.createElement('div');
+    bar.className = 'pgn';
+    bar.innerHTML =
+      '<span class="pgn-i"></span><span class="pgn-c"><button type="button" class="pgn-b" data-d="-1" aria-label="Halaman sebelumnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button><input class="pgn-n" type="number" min="1" inputmode="numeric" aria-label="Nomor halaman"><span class="pgn-o"></span><button type="button" class="pgn-b" data-d="1" aria-label="Halaman berikutnya"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></span>';
+    t.closest('.tw').after(bar);
+    const inp = bar.querySelector('.pgn-n'),
+      info = bar.querySelector('.pgn-i'),
+      of = bar.querySelector('.pgn-o'),
+      [bp, bn] = bar.querySelectorAll('.pgn-b');
+    let cur = 1;
+    const go = (p) => {
+      const vis = rows.filter((r) => !r.classList.contains('nf')),
+        n = Math.max(1, Math.ceil(vis.length / size));
+      cur = Math.min(n, Math.max(1, p || 1));
+      rows.forEach((r) => r.classList.add('pg-h'));
+      vis.slice((cur - 1) * size, cur * size).forEach((r) => r.classList.remove('pg-h'));
+      inp.value = cur;
+      inp.max = n;
+      of.textContent = 'dari ' + n;
+      info.textContent = vis.length ? `${(cur - 1) * size + 1}–${Math.min(cur * size, vis.length)} dari ${vis.length}` : '';
+      bp.disabled = cur <= 1;
+      bn.disabled = cur >= n;
+      bar.hidden = n <= 1;
+    };
+    bp.onclick = () => go(cur - 1);
+    bn.onclick = () => go(cur + 1);
+    inp.onchange = () => go(+inp.value);
+    t._pg = go;
+    go(1);
+  });
+}
+
 function labelTables() {
   document.querySelectorAll('.tw table').forEach((t) => {
     const rows = [...t.rows],

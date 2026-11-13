@@ -662,3 +662,17 @@
 
 /* kolom terkunci */
 input.ro { background: var(--soft); color: var(--mt, #6b7a90); cursor: not-allowed; }
+
+/* --- Penomoran tabel --- */
+.pg-h { display: none !important; }
+.pgn { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 18px; border-top: 1px solid var(--bd); }
+.pgn[hidden] { display: none; }
+.pgn-i { font-size: 12.5px; color: var(--mt, #6b7a90); }
+.pgn-c { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; color: var(--mt, #6b7a90); }
+.pgn-b { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 10px; background: none; color: var(--tx); cursor: pointer; }
+.pgn-b:hover:not(:disabled) { background: var(--soft); }
+.pgn-b:disabled { opacity: .35; cursor: not-allowed; }
+.pgn-b svg { width: 18px; height: 18px; }
+.pgn-n { width: 56px; min-height: 36px !important; padding: 0 6px; text-align: center; border: 1px solid var(--bd); border-radius: 10px; background: var(--card); color: var(--hd); font-weight: 600; -moz-appearance: textfield; }
+.pgn-n::-webkit-outer-spin-button, .pgn-n::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+@media (max-width: 640px) { .pgn { justify-content: center; } .pgn-i { width: 100%; text-align: center; } .pgn-c { margin: 0 auto; } }
