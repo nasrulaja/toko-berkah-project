@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114c';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114c';
-import { barChart, donut, spark, short } from './charts.js?v=20261114c';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114d';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114d';
+import { barChart, donut, spark, short } from './charts.js?v=20261114d';
 
 let S = {};
 
@@ -104,19 +104,10 @@ export function dashboard() {
     w7 = lastDays(m, 7),
     w7p = lastDays(m, 7, 7);
   const sum = (a, k) => a.reduce((x, y) => x + y[k], 0);
-  // pembeli dengan total belanja terbesar HARI INI (bukan seluruh data)
+  // transaksi dengan total belanja terbesar HARI INI (per hari, bukan per pembeli)
   const hariIni = lastDays(m, 1)[0].k,
-    byr = new Map();
-  db.transaksi
-    .filter((t) => dk(t.waktu) === hariIni)
-    .forEach((t) => {
-      const k = t.pembeli || 'Umum',
-        x = byr.get(k) || { c: 0, v: 0 };
-      x.c++;
-      x.v += t.total;
-      byr.set(k, x);
-    });
-  const tb = [...byr.entries()].sort((a, b) => b[1].v - a[1].v)[0];
+    trxHariIni = db.transaksi.filter((t) => dk(t.waktu) === hariIni),
+    belanjaMax = trxHariIni.reduce((a, t) => (t.total > a ? t.total : a), 0);
 
   /* --- KPI --- */
   const stokBeli = db.produk.reduce((a, p) => a + p.stok * p.harga_beli, 0),
@@ -132,7 +123,7 @@ export function dashboard() {
     kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
     kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
     kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
-    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Total belanja terbesar dari satu pembeli pada hari ini. Bukan total seluruh data.', v: tb ? rp(tb[1].v) : 'Rp0', f: `<small>${tb ? `Dari ${esc(tb[0])}` : 'Belum ada transaksi hari ini'}</small>` })
+    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Nilai satu transaksi paling besar pada hari ini. Dihitung per hari, bukan per pembeli.', v: rp(belanjaMax), f: `<small>${trxHariIni.length ? `Dari ${trxHariIni.length} transaksi hari ini` : 'Belum ada transaksi hari ini'}</small>` })
   ].join('');
   const kpis2 = [
     kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
