@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261113c';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon, tip } from './ui.js?v=20261113c';
-import { barChart, donut, spark, short } from './charts.js?v=20261113c';
+import { db, me, save, mut, KS, setMe, setDB, seed } from './db.js?v=20261113d';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, themeIcon, tip } from './ui.js?v=20261113d';
+import { barChart, donut, spark, short } from './charts.js?v=20261113d';
 
 let S = {};
 
@@ -264,7 +264,7 @@ export function dashboard() {
     first
       ? `Stok <b>${esc(first.nama)}</b> tersisa ${first.stok}${L.length > 1 ? ` dan ${L.length - 1} produk lain perlu dibeli ulang` : ''}.`
       : 'Semua stok barang masih aman.'
-  }</span><span class="ban-c"><span><i>Penjualan hari ini</i><b>${rp(td.sales)}</b></span><span><i>Transaksi</i><b>${td.count}</b></span><span><i>Laba kotor</i><b>${rp(td.profit)}</b></span><span><i>Stok menipis</i><b>${L.length}</b></span></span></span><span class="ban-a"><a class="btn bp" href="#barang-masuk">Tambah stok</a><a class="btn" href="#laporan">Lihat laporan</a></span></div>
+  }</span></span><span class="ban-a"><a class="btn bp" href="#barang-masuk">Tambah stok</a><a class="btn" href="#laporan">Lihat laporan</a></span></div>
   <div class="kpis">${kpis1}</div><div class="kpis">${kpis2}</div>
 
   <div class="dgrid">
