@@ -133,7 +133,7 @@ setShellRef(shell);
 /* ==========================================================================
    BAGIAN 3 — PENANGANAN KLIK (data-act)
    Satu listener global di document menangani semua tombol: menu, tema, logout,
-   tambah/ubah/hapus produk & kategori, dan detail transaksi.
+   tambah/ubah produk, tambah/ubah/hapus kategori, dan detail transaksi.
    ========================================================================== */
 
 function onClick(e) {
@@ -192,14 +192,6 @@ function onClick(e) {
     else if (a === 'editp') {
       const p = prod(id);
       modal('Ubah produk', pform(p), 'Simpan', (d) => saveP(d, p));
-    } else if (a === 'delp') {
-      const p = prod(id);
-      ask(`Hapus produk <b>${esc(p.nama)}</b>? Riwayat transaksi tetap tersimpan.`, () => {
-        db.produk = db.produk.filter((x) => x.id !== id);
-        save();
-        toast('Produk dihapus');
-        shell();
-      });
     } else if (a === 'addk') kform();
     else if (a === 'editk') kform(kat(id));
     else if (a === 'delk') {

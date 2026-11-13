@@ -336,7 +336,7 @@ export function produk() {
     list
       .map((p) => {
         const k = kat(p.kategori_id);
-        return `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(k?.nama || '-')}</td><td><code>${esc(p.barcode || '-')}</code></td><td class="r">${rp(p.harga)}</td><td class="r">${rp(p.harga_beli)}</td><td class="r"><span class="b ${p.stok <= p.stok_minimum ? 'r' : 'g'}">${p.stok}</span>${(p.isi_pack || 1) > 1 ? `<small class="pk">${packTxt(p)}</small>` : ''}</td><td class="r">${p.stok_minimum}</td><td class="r"><button class="btn sm" data-act="editp" data-id="${p.id}">Ubah</button> <button class="btn sm bd" data-act="delp" data-id="${p.id}">Hapus</button></td></tr>`;
+        return `<tr><td><b>${esc(p.nama)}</b></td><td>${esc(k?.nama || '-')}</td><td><code>${esc(p.barcode || '-')}</code></td><td class="r">${rp(p.harga)}</td><td class="r">${rp(p.harga_beli)}</td><td class="r"><span class="b ${p.stok <= p.stok_minimum ? 'r' : 'g'}">${p.stok}</span>${(p.isi_pack || 1) > 1 ? `<small class="pk">${packTxt(p)}</small>` : ''}</td><td class="r">${p.stok_minimum}</td><td class="r"><button class="btn sm" data-act="editp" data-id="${p.id}">Ubah</button></td></tr>`;
       })
       .join('') || `<tr><td colspan="8">${fk ? 'Tidak ada produk di kategori ini.' : 'Belum ada produk.'}</td></tr>`
   }</table></div></div>
@@ -671,7 +671,7 @@ export function laporan() {
   }</div></div>
   <div class="card"><div class="ch"><h4>Transaksi terbanyak per tanggal</h4></div><div class="tw">${
     ramai.length
-      ? `<table><tr><th>#</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      ? `<table><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada transaksi', 'Daftar muncul setelah ada transaksi.')
   }</div></div>
   <div class="card"><div class="ch"><h4>Transaksi terbanyak per hari</h4>${hariTop && hariTop.c ? `<span class="b g">Tersibuk: ${hariTop.n} (${hariTop.c} transaksi)</span>` : ''}</div><div class="cb hr">${urutHari
@@ -679,12 +679,12 @@ export function laporan() {
     .join('')}</div></div>
   <div class="card"><div class="ch"><h4>Produk terlaris</h4></div><div class="tw">${
     best.length
-      ? `<table><tr><th>#</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      ? `<table><tr><th>No</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada penjualan', 'Produk terlaris muncul setelah ada transaksi.')
   }</div></div>
   <div class="card"><div class="ch"><h4>Belanja terbesar per pembeli</h4></div><div class="tw">${
     buyers.length
-      ? `<table><tr><th>#</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([, x], i) => `<tr><td>${i + 1}</td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
+      ? `<table><tr><th>No</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([, x], i) => `<tr><td>${i + 1}</td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada pembeli', 'Daftar muncul setelah ada transaksi.')
   }</div></div>`;
 }
@@ -723,10 +723,12 @@ export function pengaturan() {
    ========================================================================== */
 
 export function pform(p = {}) {
-  return `<div class="fg"><label>Nama produk</label><input name="nama" required value="${esc(p.nama)}"></div><div class="row"><div class="fg"><label>Barcode</label><input name="barcode" value="${esc(p.barcode)}"></div><div class="fg"><label>Kategori</label><select name="kategori_id"><option value="">Tanpa Kategori</option>${opts(db.kategori, p.kategori_id)}</select></div></div><div class="row"><div class="fg"><label>Harga jual</label><input name="harga" type="number" min="0" required value="${p.harga ?? ''}"></div><div class="fg"><label>Harga beli</label><input name="harga_beli" type="number" min="0" required value="${p.harga_beli ?? ''}"></div></div><div class="row"><div class="fg"><label>${p.id ? 'Stok saat ini' : 'Stok awal'}</label><input name="stok" type="number" min="0" step="1" inputmode="numeric" required value="${p.id ? p.stok : 0}"></div><div class="fg"><label>Stok minimum</label><input name="stok_minimum" type="number" min="0" step="1" inputmode="numeric" required value="${p.stok_minimum ?? 5}"></div></div><div class="fg"><label>Isi per pack (pcs)</label><input name="isi_pack" type="number" min="1" step="1" inputmode="numeric" value="${p.isi_pack ?? 1}"><small>Isi 1 bila tidak dijual per pack. Stok di tabel tampil sebagai pack + pcs.</small></div>`;
+  return `${p.id ? '<p class="note" style="margin:0 0 10px">Nama dan barcode produk tidak dapat diubah.</p>' : ''}<div class="fg"><label>Nama produk</label><input name="nama" required value="${esc(p.nama)}"${p.id ? ' readonly class="ro"' : ''}></div><div class="row"><div class="fg"><label>Barcode</label><input name="barcode" value="${esc(p.barcode)}"${p.id ? ' readonly class="ro"' : ''}></div><div class="fg"><label>Kategori</label><select name="kategori_id"><option value="">Tanpa Kategori</option>${opts(db.kategori, p.kategori_id)}</select></div></div><div class="row"><div class="fg"><label>Harga jual</label><input name="harga" type="number" min="0" required value="${p.harga ?? ''}"></div><div class="fg"><label>Harga beli</label><input name="harga_beli" type="number" min="0" required value="${p.harga_beli ?? ''}"></div></div><div class="row"><div class="fg"><label>${p.id ? 'Stok saat ini' : 'Stok awal'}</label><input name="stok" type="number" min="0" step="1" inputmode="numeric" required value="${p.id ? p.stok : 0}"></div><div class="fg"><label>Stok minimum</label><input name="stok_minimum" type="number" min="0" step="1" inputmode="numeric" required value="${p.stok_minimum ?? 5}"></div></div><div class="fg"><label>Isi per pack (pcs)</label><input name="isi_pack" type="number" min="1" step="1" inputmode="numeric" value="${p.isi_pack ?? 1}"><small>Isi 1 bila tidak dijual per pack. Stok di tabel tampil sebagai pack + pcs.</small></div>`;
 }
 
 export function saveP(d, p) {
+  // nama & barcode produk yang sudah ada tidak boleh diubah
+  if (p) d = { ...d, nama: p.nama, barcode: p.barcode || '' };
   // barcode opsional: yang kosong tidak dicek keunikannya
   if (d.barcode.trim() && db.produk.some((x) => x.barcode === d.barcode.trim() && x.id !== p?.id)) {
     toast('Barcode sudah dipakai produk lain');
