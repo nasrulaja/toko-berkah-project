@@ -248,6 +248,60 @@ function route() {
   tour();
 }
 
+/** Tooltip melayang untuk tanda "?" (hover, fokus, atau sentuh). | param: - | return: void */
+(function () {
+  let box = null,
+    cur = null,
+    last = 0,
+    touch = 0;
+  const hide = () => {
+    if (box) box.hidden = true;
+    cur = null;
+  };
+  const show = (el) => {
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'tipx';
+      document.body.appendChild(box);
+    }
+    cur = el;
+    last = Date.now();
+    box.textContent = el.dataset.info || '';
+    box.hidden = false;
+    const r = el.getBoundingClientRect(),
+      w = box.offsetWidth,
+      h = box.offsetHeight;
+    let x = r.left + r.width / 2 - w / 2,
+      y = r.top - h - 8;
+    x = Math.max(8, Math.min(x, innerWidth - w - 8));
+    if (y < 8) y = r.bottom + 8;
+    box.style.left = x + 'px';
+    box.style.top = y + 'px';
+  };
+  const inf = (e) => (e.target.closest ? e.target.closest('.inf') : null);
+  document.addEventListener('mouseover', (e) => {
+    const t = inf(e);
+    if (t) show(t);
+  });
+  // pada layar sentuh, browser mengirim mouseout susulan; abaikan agar tooltip tidak langsung hilang
+  document.addEventListener('touchstart', () => (touch = Date.now()), true);
+  document.addEventListener('mouseout', (e) => {
+    if (inf(e) && Date.now() - touch > 1000) hide();
+  });
+  document.addEventListener('focusin', (e) => {
+    const t = inf(e);
+    if (t) show(t);
+  });
+  document.addEventListener('focusout', hide);
+  document.addEventListener('click', (e) => {
+    const t = inf(e);
+    if (t && (cur !== t || Date.now() - last < 400)) show(t);
+    else hide();
+  });
+  window.addEventListener('scroll', hide, true);
+  window.addEventListener('hashchange', hide);
+})();
+
 /** Sambutan singkat sekali saja bagi pengguna baru. | param: - | return: void */
 function tour() {
   let seen = '1';
