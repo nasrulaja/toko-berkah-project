@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114i';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114i';
-import { barChart, donut, spark, short } from './charts.js?v=20261114i';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114j';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114j';
+import { barChart, donut, spark, short } from './charts.js?v=20261114j';
 
 let S = {};
 
@@ -397,7 +397,7 @@ const nevents = () => {
       ic: 'book',
       c: x.selisih === 0 ? 'g' : 'r',
       to: '#tutup-buku',
-      a: 'Tutup buku ' + x.tanggal,
+      a: 'Tutup buku ' + new Date(x.tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
       b: x.selisih === 0 ? 'uang sesuai catatan.' : (x.selisih < 0 ? 'uang kurang ' : 'uang lebih ') + rp(Math.abs(x.selisih)) + '.'
     })
   );
