@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114h';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114h';
-import { barChart, donut, spark, short } from './charts.js?v=20261114h';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114i';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114i';
+import { barChart, donut, spark, short } from './charts.js?v=20261114i';
 
 let S = {};
 
@@ -120,14 +120,14 @@ export function dashboard() {
   });
   const stokBeli7 = db.produk.reduce((a, p) => a + (p.stok - (ubah.get(p.id) || 0)) * p.harga_beli, 0);
   const kpis1 = [
-    kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'vs kemarin'), sp: spark(w7.map((x) => x.sales)) }),
-    kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'vs kemarin'), sp: spark(w7.map((x) => x.count)) }),
-    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'vs kemarin'), sp: spark(w7.map((x) => x.profit)) }),
+    kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'dibanding kemarin'), sp: spark(w7.map((x) => x.sales)) }),
+    kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'dibanding kemarin'), sp: spark(w7.map((x) => x.count)) }),
+    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'dibanding kemarin'), sp: spark(w7.map((x) => x.profit)) }),
     kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Nilai satu transaksi paling besar pada hari ini. Dihitung per hari, bukan per pembeli.', v: rp(belanjaMax), f: `<small>${trxHariIni.length ? `Dari ${trxHariIni.length} transaksi hari ini` : 'Belum ada transaksi hari ini'}</small>` })
   ].join('');
   const kpis2 = [
-    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'vs 7 hari lalu') }),
-    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', h: 'Harga beli dikali stok semua barang yang masih ada. Artinya uang modal yang tertanam di barang.', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'vs 7 hari lalu') + `<small class="blk"><span>Potensi jual${tip('Perkiraan uang yang didapat bila semua stok yang ada terjual habis dengan harga jual sekarang.')}</span><b>${rp(stokJual)}</b></small>` }),
+    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'dibanding 7 hari lalu') }),
+    kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', h: 'Harga beli dikali stok semua barang yang masih ada. Artinya uang modal yang tertanam di barang.', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'dibanding 7 hari lalu') + `<small class="blk"><span>Potensi jual${tip('Perkiraan uang yang didapat bila semua stok yang ada terjual habis dengan harga jual sekarang.')}</span><b>${rp(stokJual)}</b></small>` }),
     kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', h: 'Banyaknya jenis barang yang terdaftar.', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>` }),
     kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', h: 'Barang yang stoknya sudah sama dengan atau di bawah batas minimum. Segera isi ulang.', v: L.length, f: `<a href="#stok-menipis" class="lk">Lihat semua</a>` })
   ].join('');
@@ -249,7 +249,7 @@ export function dashboard() {
     ringkasJam = [
       ['Jam tersibuk', tj ? String(tj[0]).padStart(2, '0') + '.00' : '-'],
       ['Hari tersibuk', th ? nmHari[th[0]] : '-'],
-      ['Rata-rata / hari', tglSet.size ? (db.transaksi.length / tglSet.size).toFixed(1).replace('.', ',') + ' trx' : '-']
+      ['Rata-rata / hari', tglSet.size ? (db.transaksi.length / tglSet.size).toFixed(1).replace('.', ',') + ' transaksi' : '-']
     ];
   // kartu stok: bila tidak ada yang menipis, tampilkan 5 produk dengan stok paling sedikit
   const sedikit = L.length ? L : [...db.produk].sort((a, b) => a.stok / Math.max(a.stok_minimum, 1) - b.stok / Math.max(b.stok_minimum, 1)).slice(0, 5);
