@@ -11,6 +11,9 @@ public class MainForm : Form
     ListView lv;
     Label lblTotal, lblKembali;
 
+    LoginPanel login; // menutupi seluruh jendela selama belum login
+    string pengguna = "";
+
     static readonly Color Biru = Color.FromArgb(0x3F, 0xB8, 0xFF);
 
     public MainForm()
@@ -18,15 +21,17 @@ public class MainForm : Form
         Ui.Dpi(this);
         Text = "Kasir - " + Db.NamaToko;
         ClientSize = new Size(1000, 620);
-        MinimumSize = new Size(900, 560);
+        MinimumSize = new Size(960, 560);
         StartPosition = FormStartPosition.CenterScreen;
         Font = new Font("Segoe UI", 10.5f);
         KeyPreview = true;
 
         BuildUi();
+        BuatLogin();
 
         KeyDown += (s, e) =>
         {
+            if (login.Visible) return; // belum login: pintasan F2/F3/F9/F12 tidak aktif
             switch (e.KeyCode)
             {
                 case Keys.F2: e.Handled = true; KelolaProduk(); break;
@@ -35,7 +40,37 @@ public class MainForm : Form
                 case Keys.F12: e.Handled = true; Bayar(); break;
             }
         };
-        Shown += (s, e) => { Ui.FitColumn(lv, 1); entKode.Focus(); };
+        Shown += (s, e) => { Ui.FitColumn(lv, 1); login.Reset(); };
+    }
+
+    // ------------------------------------------------------------ login / logout (satu jendela)
+    void BuatLogin()
+    {
+        login = new LoginPanel(this) { Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
+        login.Bounds = ClientRectangle;
+        login.Berhasil += nama =>
+        {
+            pengguna = nama;
+            Text = "Kasir - " + Db.NamaToko + "  |  Pengguna: " + pengguna;
+            login.Visible = false;
+            entKode.Focus();
+        };
+        Controls.Add(login);
+        login.BringToFront();
+    }
+
+    void Logout()
+    {
+        if (keranjang.Count > 0)
+        {
+            MessageBox.Show("Keranjang masih berisi barang. Selesaikan pembayaran atau batalkan transaksi dulu.",
+                "Belum bisa logout", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+        pengguna = "";
+        Text = "Kasir - " + Db.NamaToko;
+        login.Visible = true;
+        login.BringToFront();
     }
 
     // ------------------------------------------------------------ tampilan
@@ -50,7 +85,7 @@ public class MainForm : Form
         // ---- input barang (atas)
         var atas = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 44, WrapContents = false };
         atas.Controls.Add(new Label { Text = "Kode / Barcode / Nama:", AutoSize = true, Margin = new Padding(0, 10, 4, 0) });
-        entKode = new TextBox { Font = new Font("Segoe UI", 14f), Width = 240 };
+        entKode = new TextBox { Font = new Font("Segoe UI", 14f), Width = 170 };
         entKode.KeyDown += (s, e) =>
         {
             if (e.KeyCode == Keys.Enter) { e.SuppressKeyPress = true; Tambah(); }
@@ -59,6 +94,19 @@ public class MainForm : Form
         atas.Controls.Add(new Label { Text = "Qty:", AutoSize = true, Margin = new Padding(8, 10, 4, 0) });
         entQty = new TextBox { Font = new Font("Segoe UI", 14f), Width = 55, Text = "1" };
         atas.Controls.Add(entQty);
+
+        // tombol kurang / tambah jumlah (minimal 1); panah atas/bawah di kolom Qty juga bisa
+        var btnKurang = new Button { Text = "-", Width = 32, Height = 34, Font = new Font("Segoe UI", 12f, FontStyle.Bold), Margin = new Padding(4, 2, 0, 0) };
+        var btnPlus = new Button { Text = "+", Width = 32, Height = 34, Font = new Font("Segoe UI", 12f, FontStyle.Bold), Margin = new Padding(2, 2, 0, 0) };
+        btnKurang.Click += (s, e) => { GeserQty(-1); entKode.Focus(); };
+        btnPlus.Click += (s, e) => { GeserQty(1); entKode.Focus(); };
+        entQty.KeyDown += (s, e) =>
+        {
+            if (e.KeyCode == Keys.Up) { e.Handled = true; e.SuppressKeyPress = true; GeserQty(1); }
+            else if (e.KeyCode == Keys.Down) { e.Handled = true; e.SuppressKeyPress = true; GeserQty(-1); }
+        };
+        atas.Controls.Add(btnKurang);
+        atas.Controls.Add(btnPlus);
         var btnTambah = new Button { Text = "Tambah", AutoSize = true, Margin = new Padding(8, 4, 0, 0) };
         btnTambah.Click += (s, e) => Tambah();
         atas.Controls.Add(btnTambah);
@@ -182,9 +230,12 @@ public class MainForm : Form
         var btnProduk = new Button { Text = "Kelola Produk (F2)", Width = w, Height = 36 };
         btnProduk.Click += (s, e) => KelolaProduk();
         stack.Controls.Add(btnProduk);
-        var btnLap = new Button { Text = "Laporan Hari Ini (F3)", Width = w, Height = 36 };
+        var btnLap = new Button { Text = "Laporan Penjualan (F3)", Width = w, Height = 36 };
         btnLap.Click += (s, e) => Laporan();
         stack.Controls.Add(btnLap);
+        var btnKeluar = new Button { Text = "Logout", Width = w, Height = 36 };
+        btnKeluar.Click += (s, e) => Logout();
+        stack.Controls.Add(btnKeluar);
     }
 
     static Button BtnBiru(string teks, float ukuran, int tinggi, int lebar) => new()
@@ -218,6 +269,13 @@ public class MainForm : Form
         lv.EndUpdate();
         lblTotal.Text = Db.Rp(Total());
         HitungKembali();
+    }
+
+    // Tambah/kurangi jumlah pada kolom Qty di atas (minimal 1).
+    void GeserQty(int delta)
+    {
+        long q = Math.Max(1, Db.ToInt(entQty.Text)) + delta;
+        entQty.Text = Math.Max(1, q).ToString();
     }
 
     void SetBayar(long n)
@@ -364,7 +422,7 @@ public class MainForm : Form
 
     void Laporan()
     {
-        using var dlg = new LaporanForm(); // laporan tampil dalam bentuk struk
+        using var dlg = new LaporanForm(); // jendela laporan harian/bulanan
         dlg.ShowDialog(this);
         entKode.Focus();
     }

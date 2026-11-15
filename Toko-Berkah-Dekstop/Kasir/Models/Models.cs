@@ -18,12 +18,13 @@ public class ItemKeranjang
     public long Qty { get; set; }
 }
 
-// Data laporan harian, dipakai untuk menampilkan struk laporan.
+// Data laporan (harian atau bulanan), dipakai untuk jendela Laporan Penjualan.
 public class DataLaporan
 {
-    public string Hari = "";
+    public string Periode = "";
     public long Jumlah;
     public long Total;
-    public List<(string Nama, long Qty)> Terlaris = new();
+    public List<(string Nama, long Qty, long Omzet)> Terlaris = new();
+    public List<(string Tanggal, long Jumlah, long Total)> PerHari = new();
     public List<(string Nama, long Stok)> Menipis = new();
 }

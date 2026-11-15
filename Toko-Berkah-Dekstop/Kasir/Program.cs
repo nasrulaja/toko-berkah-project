@@ -7,6 +7,6 @@ static class Program
     {
         ApplicationConfiguration.Initialize();
         Db.Init();
-        Application.Run(new MainForm());
+        Application.Run(new MainForm()); // login ada di dalam MainForm
     }
 }

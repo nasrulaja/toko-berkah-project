@@ -43,9 +43,12 @@ CREATE TABLE IF NOT EXISTS transaksi(
     total INTEGER, bayar INTEGER, kembali INTEGER);
 CREATE TABLE IF NOT EXISTS detail(
     id INTEGER PRIMARY KEY AUTOINCREMENT, trx_id INTEGER,
-    kode TEXT, nama TEXT, harga INTEGER, qty INTEGER);";
+    kode TEXT, nama TEXT, harga INTEGER, qty INTEGER);
+CREATE TABLE IF NOT EXISTS pengguna(
+    username TEXT PRIMARY KEY, nama TEXT NOT NULL, sandi TEXT NOT NULL);";
             cmd.ExecuteNonQuery();
         }
+        SeedPengguna(c);
 
         // Database lama (sebelum ada kategori) belum punya kolom kategori: tambahkan otomatis.
         bool adaKategori = false;
@@ -247,15 +250,16 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
         return (trxId, waktu);
     }
 
-    public static DataLaporan LaporanData()
+    // kunci = "2026-11-13" (harian) atau "2026-11" (bulanan); dicocokkan dengan awal kolom waktu.
+    public static DataLaporan LaporanData(string kunci)
     {
-        var d = new DataLaporan { Hari = DateTime.Now.ToString("yyyy-MM-dd") };
+        var d = new DataLaporan { Periode = kunci };
         using var c = Open();
 
         using (var cmd = c.CreateCommand())
         {
             cmd.CommandText = "SELECT COUNT(*), COALESCE(SUM(total),0) FROM transaksi WHERE waktu LIKE $h";
-            cmd.Parameters.AddWithValue("$h", d.Hari + "%");
+            cmd.Parameters.AddWithValue("$h", kunci + "%");
             using var r = cmd.ExecuteReader();
             r.Read();
             d.Jumlah = r.GetInt64(0);
@@ -264,13 +268,22 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
 
         using (var cmd = c.CreateCommand())
         {
-            cmd.CommandText = @"SELECT d.nama, SUM(d.qty) q FROM detail d
+            cmd.CommandText = @"SELECT d.nama, SUM(d.qty) q, SUM(d.qty * d.harga) FROM detail d
                                 JOIN transaksi t ON t.id=d.trx_id
                                 WHERE t.waktu LIKE $h GROUP BY d.nama
-                                ORDER BY q DESC LIMIT 5";
-            cmd.Parameters.AddWithValue("$h", d.Hari + "%");
+                                ORDER BY q DESC LIMIT 10";
+            cmd.Parameters.AddWithValue("$h", kunci + "%");
             using var r = cmd.ExecuteReader();
-            while (r.Read()) d.Terlaris.Add((r.GetString(0), r.GetInt64(1)));
+            while (r.Read()) d.Terlaris.Add((r.GetString(0), r.GetInt64(1), r.GetInt64(2)));
+        }
+
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = @"SELECT substr(waktu,1,10) tgl, COUNT(*), COALESCE(SUM(total),0)
+                                FROM transaksi WHERE waktu LIKE $h GROUP BY tgl ORDER BY tgl";
+            cmd.Parameters.AddWithValue("$h", kunci + "%");
+            using var r = cmd.ExecuteReader();
+            while (r.Read()) d.PerHari.Add((r.GetString(0), r.GetInt64(1), r.GetInt64(2)));
         }
 
         using (var cmd = c.CreateCommand())
@@ -321,5 +334,76 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
         return $"Laporan {hari}\n\nJumlah transaksi : {n}\nTotal penjualan  : {Rp(tot)}\n\n"
              + "Barang terlaris:\n" + (top.Count > 0 ? string.Join("\n", top) : "  -")
              + "\n\nStok menipis (<=5):\n" + (habis.Count > 0 ? string.Join("\n", habis) : "  -");
+    }
+
+    // ------------------------------------------------------------ login
+    // Akun awal (dibuat sekali saat tabel pengguna masih kosong). Ganti sandinya sebelum dipakai sungguhan.
+    static void SeedPengguna(SqliteConnection c)
+    {
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "SELECT COUNT(*) FROM pengguna";
+            if ((long)cmd.ExecuteScalar()! > 0) return;
+        }
+        var awal = new[] { ("admin", "Admin", "admin123"), ("kasir", "Kasir", "kasir123") };
+        foreach (var (user, nama, sandi) in awal)
+        {
+            using var cmd = c.CreateCommand();
+            cmd.CommandText = "INSERT INTO pengguna(username,nama,sandi) VALUES($u,$n,$s)";
+            cmd.Parameters.AddWithValue("$u", user);
+            cmd.Parameters.AddWithValue("$n", nama);
+            cmd.Parameters.AddWithValue("$s", BuatHash(sandi));
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    // Sandi tidak disimpan polos: disimpan sebagai "garam:hash" (PBKDF2-SHA256).
+    static string BuatHash(string sandi)
+    {
+        var garam = RandomNumberGenerator.GetBytes(16);
+        var hash = Rfc2898DeriveBytes.Pbkdf2(sandi, garam, 100_000, HashAlgorithmName.SHA256, 32);
+        return Convert.ToBase64String(garam) + ":" + Convert.ToBase64String(hash);
+    }
+
+    // Kembalikan nama pengguna kalau username dan sandi cocok, selain itu null.
+    public static string? Login(string username, string sandi)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT nama, sandi FROM pengguna WHERE username=$u COLLATE NOCASE";
+        cmd.Parameters.AddWithValue("$u", username.Trim());
+        using var r = cmd.ExecuteReader();
+        if (!r.Read()) return null;
+        var bagian = r.GetString(1).Split(':');
+        if (bagian.Length != 2) return null;
+        var garam = Convert.FromBase64String(bagian[0]);
+        var benar = Convert.FromBase64String(bagian[1]);
+        var coba = Rfc2898DeriveBytes.Pbkdf2(sandi, garam, 100_000, HashAlgorithmName.SHA256, 32);
+        return CryptographicOperations.FixedTimeEquals(coba, benar) ? r.GetString(0) : null;
+    }
+
+    // Buat akun baru. Kembalikan pesan kesalahan, atau null kalau berhasil.
+    public static string? Daftar(string username, string nama, string sandi)
+    {
+        username = username.Trim();
+        nama = nama.Trim();
+        if (nama.Length == 0) return "Nama lengkap wajib diisi.";
+        if (username.Length < 3 || username.Contains(' ')) return "Username minimal 3 karakter, tanpa spasi.";
+        if (sandi.Length < 6) return "Password minimal 6 karakter.";
+
+        using var c = Open();
+        using (var cek = c.CreateCommand())
+        {
+            cek.CommandText = "SELECT COUNT(*) FROM pengguna WHERE username=$u COLLATE NOCASE";
+            cek.Parameters.AddWithValue("$u", username);
+            if ((long)cek.ExecuteScalar()! > 0) return "Username sudah dipakai.";
+        }
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "INSERT INTO pengguna(username,nama,sandi) VALUES($u,$n,$s)";
+        cmd.Parameters.AddWithValue("$u", username);
+        cmd.Parameters.AddWithValue("$n", nama);
+        cmd.Parameters.AddWithValue("$s", BuatHash(sandi));
+        cmd.ExecuteNonQuery();
+        return null;
     }
 }

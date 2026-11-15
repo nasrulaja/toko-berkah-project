@@ -9,8 +9,9 @@ Aplikasi kasir desktop sederhana untuk toko kelontong, dibuat dengan **C# WinFor
 - Keranjang belanja: ubah jumlah (qty) dan hapus item
 - Pembayaran dengan hitung kembalian otomatis dan tombol uang cepat (Uang Pas, 50rb, 100rb)
 - Struk pembayaran, stok barang berkurang otomatis setelah transaksi
-- Kelola produk: tambah, ubah, dan hapus produk, dilengkapi filter cari
-- Laporan hari ini dalam bentuk struk: jumlah transaksi, total penjualan, barang terlaris, dan stok menipis
+- Kelola produk: melihat dan mencari daftar produk (hanya baca, kasir tidak bisa menambah, mengedit, atau menghapus produk dan stok)
+- Halaman login (akun awal: admin / admin123 dan kasir / kasir123, sandi disimpan ter-hash), opsi tampilkan password, dan tombol Logout (semuanya di dalam satu jendela)
+- Laporan penjualan harian dan bulanan (pilih tanggal atau bulan, bisa di-download ke Excel): jumlah transaksi, total penjualan, rata-rata per transaksi, barang terlaris, rincian per hari (bulanan), dan stok menipis
 
 ## Pintasan keyboard
 
@@ -18,7 +19,7 @@ Aplikasi kasir desktop sederhana untuk toko kelontong, dibuat dengan **C# WinFor
 |---|---|
 | Enter (kolom kode) | Tambah barang ke keranjang |
 | F2 | Kelola produk |
-| F3 | Laporan hari ini |
+| F3 | Laporan penjualan |
 | F9 | Batalkan transaksi |
 | F12 | Bayar |
 | Delete | Hapus item terpilih di keranjang |
@@ -26,6 +27,7 @@ Aplikasi kasir desktop sederhana untuk toko kelontong, dibuat dengan **C# WinFor
 ## Teknologi
 
 - C# dan .NET 8 (Windows Forms)
+- ClosedXML (ekspor laporan ke Excel)
 - SQLite (paket `Microsoft.Data.Sqlite`)
 
 ## Cara menjalankan
@@ -65,8 +67,9 @@ kasir-winforms/
         ├── CariForm.cs       Dialog cari barang
         ├── QtyForm.cs        Dialog ubah qty
         ├── StrukForm.cs      Struk pembayaran
-        ├── LaporanForm.cs    Struk laporan harian
-        └── ProdukForm.cs     Kelola produk
+        ├── LaporanForm.cs    Laporan penjualan harian dan bulanan
+        ├── ProdukForm.cs     Kelola produk
+        └── LoginPanel.cs     Halaman login (di dalam jendela utama)
 ```
 
 ## Pengaturan toko

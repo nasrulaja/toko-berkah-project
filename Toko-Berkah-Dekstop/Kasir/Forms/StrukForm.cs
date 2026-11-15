@@ -9,10 +9,16 @@ public class StrukForm : Form
         const int w = 34;
         string Tengah(string s) => s.Length >= w ? s : new string(' ', (w - s.Length) / 2) + s;
 
+        // waktu di database "2026-11-13 13:35:12" -> tampil "13/11/2026" + jam
+        var wkt = DateTime.ParseExact(waktu, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+
         var baris = new List<string>
         {
             Tengah(Db.NamaToko), Tengah(Db.AlamatToko), new string('-', w),
-            $"No : {trxId:000000}", $"Tgl: {waktu}", new string('-', w),
+            $"No : {trxId:000000}",
+            "Tgl: " + wkt.ToString("dd/MM/yyyy"),
+            "Jam: " + wkt.ToString("HH:mm:ss"),
+            new string('-', w),
         };
         foreach (var i in items)
         {
