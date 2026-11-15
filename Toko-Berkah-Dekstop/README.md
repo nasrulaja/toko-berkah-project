@@ -78,6 +78,5 @@ Nama dan alamat toko di struk bisa diubah di `Kasir/Data/Db.cs` (`NamaToko` dan 
 
 ## Tim
 
-- [Nama anggota 1]
-- [Nama anggota 2]
-- [Nama anggota 3]
+- [M.Dzimar Azka / 26]
+- 
