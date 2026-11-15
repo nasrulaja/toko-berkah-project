@@ -80,3 +80,4 @@ Nama dan alamat toko di struk bisa diubah di `Kasir/Data/Db.cs` (`NamaToko` dan 
 
 - [M.Dzimar Azka / 26]
 - 
+-
