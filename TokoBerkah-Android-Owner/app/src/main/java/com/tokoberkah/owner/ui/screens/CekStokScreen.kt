@@ -38,6 +38,7 @@ import com.tokoberkah.owner.ui.components.StockBadge
 import com.tokoberkah.owner.ui.theme.AppColors
 import com.tokoberkah.owner.ui.theme.AppTypography
 import com.tokoberkah.owner.viewmodel.ProductsViewModel
+import com.tokoberkah.owner.viewmodel.StockListUi
 import com.tokoberkah.owner.viewmodel.StockViewModel
 
 /**
@@ -53,7 +54,16 @@ fun CekStokScreen(
     onProductClick: (Produk) -> Unit
 ) {
     val ui by vm.list.collectAsState()
+    CekStokContent(ui = ui, onScan = onScan, onProductClick = onProductClick)
+}
 
+/** Versi tanpa ViewModel — dipakai untuk pratinjau & tangkapan layar dokumentasi. */
+@Composable
+fun CekStokContent(
+    ui: StockListUi,
+    onScan: () -> Unit,
+    onProductClick: (Produk) -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -182,7 +192,7 @@ private fun StockProductCard(produk: Produk, onClick: () -> Unit) {
                 modifier = Modifier.weight(1f)
             )
             LabeledBox(
-                label = "Gudang Belakang",
+                label = "Gudang",
                 value = "${produk.stokGudang} ${produk.satuan}",
                 leadingIcon = "📦",
                 modifier = Modifier.weight(1f)

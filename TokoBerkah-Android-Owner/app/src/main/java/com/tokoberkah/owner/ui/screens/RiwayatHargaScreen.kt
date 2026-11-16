@@ -32,6 +32,7 @@ import com.tokoberkah.owner.ui.components.NoteBox
 import com.tokoberkah.owner.ui.components.SoftCard
 import com.tokoberkah.owner.ui.theme.AppColors
 import com.tokoberkah.owner.ui.theme.AppTypography
+import com.tokoberkah.owner.viewmodel.HistoryUi
 import com.tokoberkah.owner.viewmodel.PricingViewModel
 
 /**
@@ -49,6 +50,17 @@ fun RiwayatHargaScreen(
 
     LaunchedEffect(produk.id) { vm.loadHistory(produk) }
 
+    RiwayatHargaContent(ui = ui, produk = produk, onBack = onBack, onUbahHarga = onUbahHarga)
+}
+
+/** Versi tanpa ViewModel — dipakai untuk pratinjau & tangkapan layar dokumentasi. */
+@Composable
+fun RiwayatHargaContent(
+    ui: HistoryUi,
+    produk: Produk,
+    onBack: () -> Unit,
+    onUbahHarga: () -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()

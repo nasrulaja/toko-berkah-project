@@ -47,6 +47,7 @@ import com.tokoberkah.owner.ui.components.SoftCard
 import com.tokoberkah.owner.ui.components.StockBadge
 import com.tokoberkah.owner.ui.theme.AppColors
 import com.tokoberkah.owner.ui.theme.AppTypography
+import com.tokoberkah.owner.viewmodel.ChangePriceUi
 import com.tokoberkah.owner.viewmodel.PricingViewModel
 
 /**
@@ -62,7 +63,6 @@ fun UbahHargaScreen(
     onSaved: (String) -> Unit
 ) {
     val ui by vm.change.collectAsState()
-    var showConfirm by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(produk.id) { vm.startChange(produk) }
 
@@ -71,6 +71,28 @@ fun UbahHargaScreen(
             onSaved("Harga berhasil diperbarui menjadi ${formatRupiah(ui.hargaBaru ?: produk.hargaJual)}.")
         }
     }
+
+    UbahHargaContent(
+        ui = ui,
+        produk = produk,
+        onBack = onBack,
+        onInputHarga = { vm.setInputHarga(it) },
+        onAlasan = { vm.setAlasan(it) },
+        onSave = { vm.save { } }
+    )
+}
+
+/** Versi tanpa ViewModel — dipakai untuk pratinjau & tangkapan layar dokumentasi. */
+@Composable
+fun UbahHargaContent(
+    ui: ChangePriceUi,
+    produk: Produk,
+    onBack: () -> Unit,
+    onInputHarga: (String) -> Unit,
+    onAlasan: (String) -> Unit,
+    onSave: () -> Unit
+) {
+    var showConfirm by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -133,7 +155,7 @@ fun UbahHargaScreen(
         Spacer(Modifier.height(6.dp))
         PriceInputField(
             value = ui.inputHarga,
-            onValueChange = { vm.setInputHarga(it) }
+            onValueChange = onInputHarga
         )
         Spacer(Modifier.height(6.dp))
         PriceDeltaText(delta = ui.selisih, percent = ui.selisihPersen)
@@ -141,7 +163,7 @@ fun UbahHargaScreen(
         Spacer(Modifier.height(14.dp))
         Text("Alasan perubahan", style = AppTypography.bodySmall, color = AppColors.TextSecondary)
         Spacer(Modifier.height(6.dp))
-        AlasanField(value = ui.alasan, onValueChange = { vm.setAlasan(it) })
+        AlasanField(value = ui.alasan, onValueChange = onAlasan)
         Spacer(Modifier.height(4.dp))
         Text(
             "Alasan akan dicatat dalam riwayat harga.",
@@ -182,7 +204,7 @@ fun UbahHargaScreen(
             onDismiss = { showConfirm = false },
             onConfirm = {
                 showConfirm = false
-                vm.save { }
+                onSave()
             }
         )
     }

@@ -50,6 +50,7 @@ import com.tokoberkah.owner.ui.components.SoftCard
 import com.tokoberkah.owner.ui.components.StockBadge
 import com.tokoberkah.owner.ui.theme.AppColors
 import com.tokoberkah.owner.ui.theme.AppTypography
+import com.tokoberkah.owner.viewmodel.BarangMasukUi
 import com.tokoberkah.owner.viewmodel.StockViewModel
 
 /**
@@ -64,6 +65,28 @@ fun BarangMasukScreen(
     onScan: () -> Unit
 ) {
     val ui by vm.form.collectAsState()
+    BarangMasukContent(
+        ui = ui,
+        onScan = onScan,
+        onSetJumlah = { vm.setJumlah(it) },
+        onAddJumlah = { vm.addJumlah(it) },
+        onHargaBeli = { vm.setHargaBeli(it) },
+        onSimpan = { vm.simpan { _, _ -> } },
+        onBatal = { vm.startFor(null) }
+    )
+}
+
+/** Versi tanpa ViewModel — dipakai untuk pratinjau & tangkapan layar dokumentasi. */
+@Composable
+fun BarangMasukContent(
+    ui: BarangMasukUi,
+    onScan: () -> Unit,
+    onSetJumlah: (Int) -> Unit,
+    onAddJumlah: (Int) -> Unit,
+    onHargaBeli: (String) -> Unit,
+    onSimpan: () -> Unit,
+    onBatal: () -> Unit
+) {
     val produk = ui.produk
 
     Column(
@@ -89,7 +112,15 @@ fun BarangMasukScreen(
             NewProductWarning()
         } else {
             Spacer(Modifier.height(12.dp))
-            MasukForm(vm = vm, ui = ui, produk = produk)
+            MasukForm(
+                ui = ui,
+                produk = produk,
+                onSetJumlah = onSetJumlah,
+                onAddJumlah = onAddJumlah,
+                onHargaBeli = onHargaBeli,
+                onSimpan = onSimpan,
+                onBatal = onBatal
+            )
         }
         Spacer(Modifier.height(18.dp))
     }
@@ -130,9 +161,13 @@ fun NewProductWarning(modifier: Modifier = Modifier) {
 /** Formulir barang masuk lengkap. */
 @Composable
 private fun MasukForm(
-    vm: StockViewModel,
-    ui: com.tokoberkah.owner.viewmodel.BarangMasukUi,
-    produk: Produk
+    ui: BarangMasukUi,
+    produk: Produk,
+    onSetJumlah: (Int) -> Unit,
+    onAddJumlah: (Int) -> Unit,
+    onHargaBeli: (String) -> Unit,
+    onSimpan: () -> Unit,
+    onBatal: () -> Unit
 ) {
     SoftCard(corner = 14) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -182,13 +217,13 @@ private fun MasukForm(
         Spacer(Modifier.height(8.dp))
         QtyStepper(
             jumlah = ui.jumlah,
-            onMinus = { vm.addJumlah(-1) },
-            onPlus = { vm.addJumlah(1) }
+            onMinus = { onAddJumlah(-1) },
+            onPlus = { onAddJumlah(1) }
         )
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             listOf(5, 10, 20, 50).forEach { n ->
-                QuickAddChip(text = "+$n", onClick = { vm.addJumlah(n) })
+                QuickAddChip(text = "+$n", onClick = { onAddJumlah(n) })
             }
         }
 
@@ -202,7 +237,7 @@ private fun MasukForm(
         Spacer(Modifier.height(6.dp))
         HargaBeliField(
             value = ui.hargaBeli,
-            onValueChange = { vm.setHargaBeli(it) }
+            onValueChange = onHargaBeli
         )
         Text(
             "Opsional. Harga beli tidak mengubah harga jual produk.",
@@ -247,7 +282,7 @@ private fun MasukForm(
                             Brush.horizontalGradient(listOf(AppColors.Primary.copy(alpha = 0.45f), AppColors.Primary.copy(alpha = 0.45f)))
                     )
                     .clickable(enabled = ui.valid && !ui.saving) {
-                        vm.simpan { _, _ -> }
+                        onSimpan()
                     },
                 contentAlignment = Alignment.Center
             ) {
@@ -267,7 +302,7 @@ private fun MasukForm(
                     .height(46.dp)
                     .clip(RoundedCornerShape(50))
                     .background(AppColors.Primary)
-                    .clickable { vm.startFor(null) },
+                    .clickable { onBatal() },
                 contentAlignment = Alignment.Center
             ) {
                 Text("Batalkan", style = AppTypography.titleSmall, color = Color.White, fontWeight = FontWeight.Bold)

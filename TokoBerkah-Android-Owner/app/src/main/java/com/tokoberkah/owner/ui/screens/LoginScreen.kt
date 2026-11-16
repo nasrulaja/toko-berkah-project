@@ -64,8 +64,28 @@ fun LoginScreen(vm: AuthViewModel) {
     val error by vm.error.collectAsState()
     val lastEmail by vm.lastEmail.collectAsState()
 
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    LoginContent(
+        loading = loading,
+        error = error,
+        lastEmail = lastEmail,
+        onLogin = { e, p -> vm.login(e, p) },
+        onClearError = { vm.clearError() }
+    )
+}
+
+/** Versi tanpa ViewModel — dipakai untuk pratinjau & tangkapan layar dokumentasi. */
+@Composable
+fun LoginContent(
+    loading: Boolean,
+    error: String?,
+    lastEmail: String,
+    initialEmail: String = "",
+    initialPassword: String = "",
+    onLogin: (String, String) -> Unit,
+    onClearError: () -> Unit
+) {
+    var email by rememberSaveable { mutableStateOf(initialEmail) }
+    var password by rememberSaveable { mutableStateOf(initialPassword) }
     var showPassword by rememberSaveable { mutableStateOf(false) }
     var localError by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -79,7 +99,7 @@ fun LoginScreen(vm: AuthViewModel) {
             !AuthRepository.isValidEmail(email.trim()) ->
                 localError = "Masukkan email pemilik dengan format yang benar."
             password.length < 6 -> localError = "Kata sandi minimal 6 karakter."
-            else -> vm.login(email.trim(), password)
+            else -> onLogin(email.trim(), password)
         }
     }
 
@@ -161,7 +181,7 @@ fun LoginScreen(vm: AuthViewModel) {
                         "✕",
                         style = AppTypography.bodySmall,
                         color = AppColors.Danger,
-                        modifier = Modifier.clickable { localError = null; vm.clearError() }
+                        modifier = Modifier.clickable { localError = null; onClearError() }
                     )
                 }
             }

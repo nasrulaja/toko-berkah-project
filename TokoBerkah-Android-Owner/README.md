@@ -172,7 +172,7 @@ barang masuk (perhitungan & simpan) · sinkronisasi stok ke Web Admin · koneksi
 |---|---|
 | `gradlew assembleDebug` | ✅ BUILD SUCCESSFUL |
 | `gradlew assembleRelease` | ✅ BUILD SUCCESSFUL (tidak ter-sign, lihat bagian release) |
-| `gradlew testDebugUnitTest` | ✅ 10 test lulus, 0 gagal |
+| `gradlew testDebugUnitTest` | ✅ 17 test lulus, 0 gagal (10 logika + 7 render layar) |
 
 Unit test (`app/src/test/.../CoreLogicTest.kt`) menguji logika yang paling rawan:
 aturan status stok, invarian **stok rak depan + gudang = stok total**,
@@ -180,10 +180,33 @@ format Rupiah, normalisasi barcode & UPC-A↔EAN-13, estimasi stok barang masuk,
 penolakan jumlah ≤ 0, selisih harga naik/turun, validasi email, dan konversi
 galat jaringan menjadi pesan yang aman.
 
+**Tes render layar** (`app/src/test/.../ScreenshotTest.kt`) menjalankan setiap
+layar utama di JVM lewat Robolectric dan menyimpannya sebagai PNG ke
+`docs/screenshots/`. Tes ini menangkap kesalahan yang tidak terlihat oleh unit
+test biasa — misalnya `LazyColumn` dengan `key` duplikat yang membuat layar Cek
+Harga crash saat produk yang sama muncul di "Hasil Pindai" sekaligus "Daftar
+Produk". Jalankan dengan:
+
+```bash
+./gradlew testDebugUnitTest --tests "*ScreenshotTest*"
+```
+
+Hasil tangkapan layar dapat dilihat di
+[`docs/DEMO-ANDROID.md`](../docs/DEMO-ANDROID.md).
+
 > **Catatan pengujian perangkat:** lingkungan build ini **tidak memiliki
 > akselerasi perangkat keras** (Android Emulator hypervisor tidak terpasang),
-> sehingga emulator tidak dapat booting. APK telah diverifikasi berisi native
-> library untuk **arm64-v8a, armeabi-v7a, x86, x86_64** sehingga siap dipasang di
-> HP fisik Android 7–14+ maupun emulator yang mendukung akselerasi.
+> sehingga emulator tidak dapat booting. Dua hal sudah dilakukan sebagai
+> penggantinya:
+>
+> 1. **Render layar diverifikasi** — ketujuh layar utama benar-benar dijalankan
+>    dan digambar menjadi PNG lewat Robolectric (lihat `ScreenshotTest.kt`),
+>    jadi tata letak, teks, dan navigasi tidak error saat dirender.
+> 2. **APK diverifikasi** berisi native library untuk **arm64-v8a, armeabi-v7a,
+>    x86, x86_64** sehingga siap dipasang di HP fisik Android 7–14+.
+>
+> Yang **belum** terverifikasi adalah perilaku saat runtime di perangkat:
+> pembacaan kamera/barcode sungguhan, panggilan jaringan ke Supabase, dan
+> penyimpanan Room. Ketiganya perlu dicoba pada HP fisik.
 
 

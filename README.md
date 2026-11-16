@@ -38,6 +38,31 @@ terkirim sendiri saat online kembali.
 
 ---
 
+## 📱 Demo Aplikasi Android — lihat tampilannya
+
+Aplikasi Android khusus **pemilik toko**: cek harga lewat barcode, cek stok,
+catat barang masuk, ubah harga, dan riwayat harga.
+
+**👉 [`docs/DEMO-ANDROID.md`](docs/DEMO-ANDROID.md)** — 7 tangkapan layar asli aplikasi.
+
+Demo ↓
+
+| Halaman | Tangkapan layar |
+|---|---|
+| Login | ![Login](docs/screenshots/01-login.png) |
+| Cek Harga | ![Cek Harga](docs/screenshots/02-cek-harga.png) |
+| Cek Stok | ![Cek Stok](docs/screenshots/06-cek-stok.png) |
+
+Untuk mencoba di HP: unduh
+[`apk/TokoBerkah-Owner-debug.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-debug.apk),
+lalu instal (izinkan "sumber tidak dikenal"). Login memakai akun pemilik yang
+sama dengan Web Admin.
+
+> Berbeda dengan versi Desktop, aplikasi Android tidak bisa dijalankan langsung
+> dari browser — harus dipasang di perangkat Android.
+
+---
+
 ## 🌐 Versi Web
 
 Prototipe web sesuai PRD (bagian Web 4.1). Fitur kasir/POS tidak disertakan karena

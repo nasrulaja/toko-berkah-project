@@ -34,7 +34,9 @@ import com.tokoberkah.owner.ui.components.ScanBarcodeButton
 import com.tokoberkah.owner.ui.components.SectionHeader
 import com.tokoberkah.owner.ui.theme.AppColors
 import com.tokoberkah.owner.ui.theme.AppTypography
+import com.tokoberkah.owner.viewmodel.ProductListUi
 import com.tokoberkah.owner.viewmodel.ProductsViewModel
+import com.tokoberkah.owner.viewmodel.ScanLine
 import com.tokoberkah.owner.viewmodel.SharedUiViewModel
 
 /**
@@ -52,6 +54,28 @@ fun CekHargaScreen(
     val ui by vm.ui.collectAsState()
     val scans by shared.recentScans.collectAsState()
 
+    CekHargaContent(
+        ui = ui,
+        scans = scans,
+        onScan = onScan,
+        onManual = onManual,
+        onClearScans = { shared.clearScans() },
+        onChangeQty = { id, delta -> shared.changeQty(id, delta) },
+        onProductClick = onProductClick
+    )
+}
+
+/** Versi tanpa ViewModel — dipakai untuk pratinjau & tangkapan layar dokumentasi. */
+@Composable
+fun CekHargaContent(
+    ui: ProductListUi,
+    scans: List<ScanLine>,
+    onScan: () -> Unit,
+    onManual: () -> Unit,
+    onClearScans: () -> Unit,
+    onChangeQty: (Int, Int) -> Unit,
+    onProductClick: (Produk) -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -113,22 +137,22 @@ fun CekHargaScreen(
                 SectionHeader(
                     title = "Hasil Pindai",
                     actionText = "Bersihkan",
-                    onAction = { shared.clearScans() }
+                    onAction = onClearScans
                 )
             }
-            items(scans, key = { it.produk.id }) { line ->
+            items(scans, key = { "scan-${it.produk.id}" }) { line ->
                 RecentScanCard(
                     produk = line.produk,
                     jumlah = line.jumlah,
-                    onMinus = { shared.changeQty(line.produk.id, -1) },
-                    onPlus = { shared.changeQty(line.produk.id, +1) }
+                    onMinus = { onChangeQty(line.produk.id, -1) },
+                    onPlus = { onChangeQty(line.produk.id, +1) }
                 )
             }
         }
 
         if (ui.produk.isNotEmpty()) {
             item { SectionHeader(title = "Daftar Produk", actionText = "${ui.produk.size} item") }
-            items(ui.filtered, key = { it.id }) { p ->
+            items(ui.filtered, key = { "produk-${it.id}" }) { p ->
                 ProductListRow(
                     produk = p,
                     onClick = { onProductClick(p) }

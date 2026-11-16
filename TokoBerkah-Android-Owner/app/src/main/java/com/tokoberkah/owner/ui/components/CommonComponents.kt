@@ -191,6 +191,7 @@ fun LabeledBox(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
+        Spacer(Modifier.width(6.dp))
         Text(
             text = value,
             style = AppTypography.bodySmall,
