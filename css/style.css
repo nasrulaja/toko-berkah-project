@@ -336,7 +336,7 @@ table {
 th {
   background: var(--th);
   color: var(--hd);
-  text-align: left;
+  text-align: center;
   font-weight: 700;
   padding: 12px 16px;
   white-space: nowrap;
@@ -345,10 +345,11 @@ td {
   padding: 12px 16px;
   border-top: 1px solid var(--bd);
   vertical-align: middle;
+  text-align: center;
 }
 td.r,
 th.r {
-  text-align: right;
+  text-align: center;
 }
 .b {
   display: inline-block;

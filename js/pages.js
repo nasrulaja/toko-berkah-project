@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116k';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116k';
-import { barChart, donut, spark, short } from './charts.js?v=20261116k';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116m';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116m';
+import { barChart, donut, spark, short } from './charts.js?v=20261116m';
 
 let S = {};
 
@@ -408,7 +408,7 @@ const nevents = () => {
     .map((e) => ({ ...e, ts: new Date(e.w).getTime(), id: e.to + '|' + e.w + '|' + e.a }));
 };
 /** Jumlah notifikasi yang belum dibaca (untuk lencana lonceng). | param: - | return: number */
-/** Sakelar notifikasi aktif/nonaktif (dipakai di halaman Notifikasi & Pengaturan). | param: id | return: string HTML */
+/** Sakelar notifikasi aktif/nonaktif (hanya di halaman Pengaturan). | param: id | return: string HTML */
 const notifSwitch = (id) =>
   `<label class="sw"><input type="checkbox" id="${id}" ${nstate().on ? 'checked' : ''}><i></i><span>Notifikasi ${nstate().on ? 'aktif' : 'nonaktif'}</span></label>`;
 /** Pasang aksi pada sakelar notifikasi. | param: id | return: void */
@@ -427,18 +427,38 @@ export const notifUnread = () => {
   return nevents().filter((e) => e.ts > st.read && !st.seen.includes(e.id)).length;
 };
 
-/** Halaman Semua Notifikasi. | param: - | return: string HTML */
+/** Halaman Semua Notifikasi (sakelar aktif/nonaktif hanya ada di Pengaturan). | param: - | return: string HTML */
 export function notifikasi() {
   if (!nstate().on) {
-    setTimeout(() => bindSwitch('nsw'));
-    return `<div class="card"><div class="ch"><h4>Notifikasi</h4>${notifSwitch('nsw')}</div>${empty('Notifikasi dimatikan', 'Aktifkan sakelar di atas untuk melihat aktivitas toko dan lencana pada lonceng.')}</div>`;
+    return `<div class="card"><div class="ch"><h4>Notifikasi</h4></div>${empty('Notifikasi dimatikan', 'Aktifkan sakelar Notifikasi di halaman Pengaturan untuk melihat aktivitas toko dan lencana pada lonceng.')}</div>`;
   }
   const st = nstate(),
     ev = nevents(),
-    list = ev, // semua notifikasi; daftar dipotong per halaman (10) oleh slideN()
     lowN = low().length;
+  // filter: semua / belum dibaca / penjualan / stok / tutup buku
+  const fk = ['semua', 'baru', 'jual', 'stok', 'tutup'].includes(S.nf) ? S.nf : 'semua';
+  const jenis = (e) => (e.to === '#transaksi' ? 'jual' : e.to === '#tutup-buku' ? 'tutup' : 'stok');
+  const baru = (e) => e.ts > st.read && !st.seen.includes(e.id);
+  const list = ev.filter((e) => (fk === 'semua' ? true : fk === 'baru' ? baru(e) : jenis(e) === fk));
   setTimeout(() => {
-    bindSwitch('nsw');
+    const f = $('#nf');
+    if (f)
+      f.onchange = () => {
+        S.nf = f.value;
+        shellRef();
+      };
+    const c = $('#ncari');
+    if (c)
+      c.oninput = () => {
+        const q = c.value.trim().toLowerCase();
+        let n = 0;
+        document.querySelectorAll('#nlist .nt').forEach((a) => {
+          const ok = !q || a.textContent.toLowerCase().includes(q);
+          a.hidden = !ok;
+          if (ok) n++;
+        });
+        $('#ncount').textContent = q ? n + ' cocok' : '';
+      };
     document.querySelectorAll('.nt[data-nid]').forEach((a) => {
       a.addEventListener('click', () => {
         const n = nstate();
@@ -461,12 +481,35 @@ export function notifikasi() {
           shellRef();
         });
   });
-  return `<div class="card"><div class="ch"><h4>Semua Notifikasi (${ev.length})</h4><div class="nact">${notifSwitch('nsw')}<button class="btn" id="nread" ${ev.some((e) => e.ts > st.read && !st.seen.includes(e.id)) ? '' : 'disabled'}>Tandai semua dibaca</button><button class="btn bd" id="nclear" ${ev.length ? '' : 'disabled'}>Hapus semua</button></div></div>
+  const opsi = [
+    ['semua', `Semua (${ev.length})`],
+    ['baru', `Belum dibaca (${ev.filter(baru).length})`],
+    ['jual', 'Penjualan'],
+    ['stok', 'Stok'],
+    ['tutup', 'Tutup buku']
+  ];
+  return `<div class="card"><div class="ch"><h4>Semua Notifikasi (${list.length}) <small id="ncount" class="note"></small></h4><div class="nact"><div class="flt"><input id="ncari" type="search" placeholder="Cari notifikasi…" aria-label="Cari notifikasi" autocomplete="off"><select id="nf" aria-label="Filter jenis notifikasi">${opsi
+    .map(([k, v]) => `<option value="${k}"${k === fk ? ' selected' : ''}>${esc(v)}</option>`)
+    .join('')}</select></div><button class="btn" id="nread" ${
+    ev.some((e) => baru(e)) ? '' : 'disabled'
+  }>Tandai semua dibaca</button><button class="btn bd" id="nclear" ${ev.length ? '' : 'disabled'}>Hapus semua</button></div></div>
   ${lowN ? `<a class="nt nt-warn" href="#stok-menipis"><span class="nic r">${ico('alert')}</span><span class="ntx"><b>${lowN} produk stok menipis</b> perlu diisi ulang.</span><span class="ntm">Lihat</span></a>` : ''}
   ${
     list.length
-      ? `<div class="nlist" id="nlist" data-size="10">${list.map((e, i) => `<a class="nt${e.ts > st.read && !st.seen.includes(e.id) ? ' nw' : ''}" data-nid="${esc(e.id)}" data-i="${i + 1}" href="${e.to}"><span class="nno">${i + 1}</span><span class="nic ${e.c}">${ico(e.ic)}</span><span class="ntx"><b>${esc(e.a)}</b> ${esc(e.b)}</span><span class="ntm">${ago(e.w)}</span></a>`).join('')}</div>`
-      : empty('Belum ada notifikasi', 'Aktivitas toko akan muncul di sini.')
+      ? `<div class="nlist" id="nlist" data-size="10">${list
+          .map(
+            (e, i) =>
+              `<a class="nt${baru(e) ? ' nw' : ''}" data-nid="${esc(e.id)}" data-i="${i + 1}" href="${e.to}"><span class="nno">${
+                i + 1
+              }</span><span class="nic ${e.c}">${ico(e.ic)}</span><span class="ntx"><b>${esc(e.a)}</b> ${esc(
+                e.b
+              )}</span><span class="ntm">${ago(e.w)}</span></a>`
+          )
+          .join('')}</div>`
+      : empty(
+          fk === 'semua' ? 'Belum ada notifikasi' : 'Tidak ada notifikasi untuk filter ini',
+          fk === 'semua' ? 'Aktivitas toko akan muncul di sini.' : 'Coba pilih filter lain atau kata kunci yang berbeda.'
+        )
   }</div>`;
 }
 
@@ -480,7 +523,7 @@ export function panduan() {
     ['recv', 'Lihat Riwayat Transaksi', 'Daftar semua penjualan beserta kode, waktu, dan total. Tekan tombol Detail untuk melihat barang yang dibeli. Status Terkunci berarti periodenya sudah ditutup buku.', '#transaksi'],
     ['chart', 'Baca Laporan', 'Pilih periode di bagian atas (hari ini, 7 hari, 30 hari, bulan ini, tahun ini, atau semua data). Angka dan tabel di bawahnya ikut berubah: laba per tanggal, hari dan tanggal tersibuk, produk terlaris, dan belanja terbesar.', '#laporan'],
     ['book', 'Tutup Buku', 'Di akhir hari (atau bulan/tahun) pilih periode, isi uang fisik di laci bila ingin dicek, lalu tekan tombol tutup buku. Transaksi periode itu terkunci. Kotak Selisih menunjukkan untung atau rugi periode itu, dan selisih uang di laci tercatat.', '#tutup-buku'],
-    ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas. Klik satu notifikasi untuk membukanya; statusnya langsung jadi dibaca dan angka di lonceng berkurang.', '#notifikasi']
+    ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas. Gunakan filter (Semua, Belum dibaca, Penjualan, Stok, Tutup buku) atau kotak Cari untuk memilih notifikasi. Klik satu notifikasi untuk membukanya; statusnya langsung jadi dibaca dan angka di lonceng berkurang. Sakelar aktif/nonaktif ada di Pengaturan.', '#notifikasi']
   ];
   const istilah = [
     ['Omzet', 'Total uang dari penjualan, sebelum dikurangi apa pun.'],
@@ -515,10 +558,10 @@ export function panduan() {
     ['Bagaimana melihat laporan untuk bulan ini saja?', 'Di Laporan pilih periode "Bulan ini" pada menu di bagian atas. Semua angka dan tabel menyesuaikan.'],
     ['Tabel terlalu panjang, bagaimana melihat sisanya?', 'Gunakan tombol panah di bawah tabel, atau ketik nomor halaman langsung.'],
     ['Bagaimana membaca satu notifikasi saja?', 'Klik notifikasinya. Statusnya langsung jadi dibaca dan angka di lonceng berkurang satu, tanpa perlu menekan Tandai semua dibaca.'],
-    ['Bagaimana mematikan notifikasi?', 'Matikan tombol Notifikasi aktif di halaman Notifikasi atau di Pengaturan. Lencana angka di lonceng dan daftar aktivitas tidak ditampilkan. Bisa dinyalakan lagi kapan saja.'],
+    ['Bagaimana mematikan notifikasi?', 'Buka halaman Pengaturan dan matikan tombol Notifikasi aktif di kartu Notifikasi. Lencana angka di lonceng dan daftar aktivitas tidak ditampilkan. Bisa dinyalakan lagi kapan saja.'],
     ['Bagaimana melihat hanya barang masuk atau barang keluar di riwayat stok?', 'Di Manajemen Stok pakai filter jenis mutasi di atas tabel riwayat, lalu pilih jenis yang dicari, misalnya Barang masuk.'],
     ['Kenapa kotak Selisih dan Laba angkanya sama?', 'Laba dihitung dari pendapatan dikurangi pengeluaran (modal), sama dengan rumus Selisih. Kotak Selisih menambahkan keterangan Untung, Rugi, atau Impas.'],
-    ['Notifikasi saya terlalu banyak.', 'Di halaman Notifikasi tekan Tandai semua dibaca atau Hapus semua. Data transaksi dan stok tidak ikut terhapus.'],
+    ['Notifikasi saya terlalu banyak.', 'Di halaman Notifikasi pilih filter (Belum dibaca, Penjualan, Stok, atau Tutup buku) atau ketik kata kunci di kotak Cari. Bila masih terlalu banyak, tekan Tandai semua dibaca atau Hapus semua. Data transaksi dan stok tidak ikut terhapus.'],
     ['Apakah data saya aman bila browser ditutup?', 'Data tersimpan di browser ini. Jangan hapus data situs, dan jangan memakai tombol Reset di Pengaturan kecuali ingin kembali ke data contoh.']
   ];
   return `<div class="card"><div class="ch"><h4>Mulai dari mana?</h4></div><div class="cb gd">${langkah
@@ -820,7 +863,7 @@ export function pengaturan() {
     };
   }, 0);
   return `<div class="card"><div class="ch"><h4>Profil Toko</h4></div><div class="cb"><p>Pengguna Aktif: <b>${esc(me.nama)}</b> (${esc(me.email)})</p></div></div>
-  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Tampilkan aktivitas toko (penjualan, stok, tutup buku) di halaman Notifikasi dan lencana angka pada lonceng.</p>${notifSwitch('nsw2')}</div></div>
+  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Sakelar notifikasi hanya ada di halaman ini. Bila aktif, aktivitas toko (penjualan, stok, tutup buku) tampil di halaman Notifikasi dan angka muncul pada lencana lonceng.</p>${notifSwitch('nsw2')}</div></div>
   <div class="card"><div class="ch"><h4>Pembersihan Data</h4></div><div class="cb"><button class="btn bd" id="resetDB">Reset Basis Data ke Contoh</button></div></div>`;
 }
 

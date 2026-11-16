@@ -293,12 +293,13 @@
   }
   .tw td {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    justify-content: center;
+    gap: 2px;
     padding: 7px 0;
     border: 0;
-    text-align: right;
+    text-align: center;
     min-width: 0;
     word-break: break-word;
   }
@@ -308,7 +309,7 @@
     font-size: 12px;
     font-weight: 600;
     color: var(--tx);
-    text-align: left;
+    text-align: center;
   }
   .tw td[colspan] {
     display: block;
@@ -316,7 +317,8 @@
   }
   /* kolom aksi: tombol memenuhi baris */
   .tw td:last-child:has(.btn) {
-    justify-content: flex-end;
+    align-items: center;
+    justify-content: center;
     padding-top: 10px;
     margin-top: 4px;
     border-top: 1px dashed var(--bd);
@@ -347,10 +349,10 @@
   .md .tw td {
     display: table-cell;
     padding: 8px 6px;
-    text-align: left;
+    text-align: center;
   }
   .md .tw td.r {
-    text-align: right;
+    text-align: center;
   }
   .md .tw td[data-label]::before {
     display: none;

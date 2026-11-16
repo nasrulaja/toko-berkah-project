@@ -18,9 +18,9 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261116k';
-import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261116k';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116k';
+import { splash } from './splash.js?v=20261116m';
+import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261116m';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116m';
 import {
   dashboard,
   produk,
@@ -38,7 +38,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261116k';
+} from './pages.js?v=20261116m';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },

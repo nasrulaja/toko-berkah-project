@@ -181,3 +181,13 @@
 
 /* Keterangan kecil di kartu statistik (mis. Untung/Rugi pada Selisih) */
 .st small { display: block; margin-top: 4px; font-size: 12.5px; font-weight: 700; color: #fff; opacity: 0.9; }
+
+/* --- Semua isi tabel rata tengah (penegas, dimuat terakhir) --- */
+table th,
+table td,
+table th.r,
+table td.r,
+table td[data-label],
+table th[data-label] {
+  text-align: center !important;
+}
