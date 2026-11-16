@@ -18,9 +18,9 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261116o';
-import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261116o';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116o';
+import { splash } from './splash.js?v=20261116p';
+import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261116p';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116p';
 import {
   dashboard,
   produk,
@@ -39,7 +39,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261116o';
+} from './pages.js?v=20261116p';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -49,7 +49,7 @@ const PG = {
   panduan: { t: 'Panduan', s: 'Cara memakai Toko Berkah dan arti istilah', html: panduan },
   notifikasi: { t: 'Semua Notifikasi', s: 'Lihat semua aktivitas toko', html: notifikasi },
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
-  'tutup-buku': { t: 'Tutup Buku', s: 'Tutup akhir periode harian, bulanan, atau tahunan', html: hasilTutupBuku },
+  'tutup-buku': { t: 'Tutup Buku', s: 'Hasil tutup buku (proses dilakukan di Desktop)', html: hasilTutupBuku },
   laporan: { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
   penjualan: { t: 'Catat Penjualan', s: 'Input penjualan manual dari web', html: penjualan },
   transaksi: { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },

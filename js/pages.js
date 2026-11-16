@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116o';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116o';
-import { barChart, donut, spark, short } from './charts.js?v=20261116o';
+import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci } from './db.js?v=20261116p';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116p';
+import { barChart, donut, spark, short } from './charts.js?v=20261116p';
 
 let S = {};
 
@@ -524,7 +524,7 @@ export function panduan() {
     ['alert', 'Pantau Stok Menipis', 'Barang yang hampir habis dikumpulkan di satu halaman supaya tahu apa yang harus dibeli lagi.', '#stok-menipis'],
     ['recv', 'Lihat Riwayat Transaksi', 'Daftar semua penjualan beserta kode, waktu, dan total. Tekan tombol Detail untuk melihat barang yang dibeli. Status Terkunci berarti periodenya sudah ditutup buku.', '#transaksi'],
     ['chart', 'Baca Laporan', 'Pilih periode di bagian atas (hari ini, 7 hari, 30 hari, bulan ini, tahun ini, atau semua data). Angka dan tabel di bawahnya ikut berubah: laba per tanggal, hari dan tanggal tersibuk, produk terlaris, dan belanja terbesar.', '#laporan'],
-    ['book', 'Tutup Buku', 'Di akhir hari (atau bulan/tahun) pilih periode, isi uang fisik di laci bila ingin dicek, lalu tekan tombol tutup buku. Transaksi periode itu terkunci. Kotak Selisih menunjukkan untung atau rugi periode itu, dan selisih uang di laci tercatat.', '#tutup-buku'],
+    ['book', 'Tutup Buku', 'Halaman ini hanya menampilkan hasil tutup buku: jumlah periode yang sudah ditutup, periode yang ada selisih, total uang kurang, dan riwayat per periode (penjualan sistem, uang di laci, selisih). Proses tutup buku dilakukan di aplikasi Desktop. Kotak Selisih menunjukkan pemasukan dikurangi pengeluaran.', '#tutup-buku'],
     ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas. Gunakan filter (Semua, Belum dibaca, Penjualan, Stok, Tutup buku) atau kotak Cari untuk memilih notifikasi. Klik satu notifikasi untuk membukanya; statusnya langsung jadi dibaca dan angka di lonceng berkurang. Sakelar aktif/nonaktif ada di Pengaturan.', '#notifikasi']
   ];
   const istilah = [
@@ -541,10 +541,10 @@ export function panduan() {
     ['Pengeluaran (modal)', 'Harga beli barang yang sudah terjual pada periode itu. Bukan biaya listrik, gaji, atau sewa.'],
     ['Penjualan hari ini', 'Jumlah transaksi (struk) hari ini, bukan jumlah rupiah. Rupiahnya ada di Pendapatan hari ini.'],
     ['Total belanja terbesar', 'Nilai satu transaksi terbesar pada hari itu.'],
-    ['Tutup buku', 'Penutupan akhir periode (harian, bulanan, atau tahunan): menghitung pendapatan, pengeluaran, dan laba, lalu mengunci transaksi periode itu.'],
+    ['Tutup buku', 'Penutupan akhir periode yang dilakukan di aplikasi Desktop: uang di laci dibandingkan dengan total penjualan sistem, lalu transaksi periode itu dikunci. Web hanya menampilkan hasilnya.'],
     ['Transaksi terkunci', 'Transaksi dari periode yang sudah ditutup. Tidak bisa diubah lagi supaya pembukuan tetap konsisten.'],
-    ['Uang fisik', 'Uang nyata yang dihitung di laci kasir. Diisi saat tutup buku untuk dibandingkan dengan catatan sistem.'],
-    ['Selisih (kotak di Tutup Buku)', 'Pemasukan dikurangi pengeluaran pada periode itu. Biru bertuliskan "Untung" bila positif, merah "Rugi" bila negatif, "Impas" bila nol. Angkanya sama dengan Laba.'],
+    ['Uang fisik', 'Uang nyata yang dihitung di laci kasir. Diisi saat tutup buku di Desktop dan ditampilkan di web sebagai Uang di laci.'],
+    ['Selisih (kotak di Tutup Buku)', 'Pemasukan dikurangi pengeluaran dari seluruh periode yang sudah ditutup. Biru bertuliskan "Untung" bila positif, merah "Rugi" bila negatif, "Impas" bila nol.'],
     ['Selisih uang laci', 'Uang fisik dikurangi catatan sistem. "Kurang" berarti uang di laci lebih sedikit, "Lebih" berarti lebih banyak, "Sesuai" berarti cocok.'],
     ['Untung / Rugi / Impas', 'Untung: pemasukan lebih besar dari pengeluaran. Rugi: lebih kecil. Impas: sama persis.']
   ];
@@ -555,8 +555,8 @@ export function panduan() {
     ['Bagaimana mencari satu produk dengan cepat?', 'Di Produk & Kategori ketik nama atau barcode di kotak Cari, atau pilih kategori dari filter.'],
     ['Bagaimana menambah Pendapatan dari web?', 'Buka Catat Penjualan, tekan + Tambah pada barang, isi Uang diterima (atau Uang pas), lalu Simpan penjualan. Transaksinya tercatat dengan sumber "web" dan langsung muncul di Beranda, Laporan, dan Riwayat Transaksi.'],
     ['Kenapa penjualan ditolak?', 'Biasanya karena periode hari itu sudah ditutup buku, atau stok barang tidak cukup. Periode yang sudah ditutup tidak bisa diisi penjualan baru.'],
-    ['Bagaimana cara tutup buku?', 'Buka Tutup Buku, pilih Harian/Bulanan/Tahunan, cek ringkasan angkanya, isi Uang fisik di laci (boleh dikosongkan), lalu tekan tombol Tutup buku dan konfirmasi.'],
-    ['Uang di laci kurang dari catatan sistem, apa yang terjadi?', 'Isi Uang fisik saat tutup buku. Sistem mencatat selisihnya sebagai "Kurang" di Riwayat tutup buku dan memberi notifikasi, sehingga pemilik toko bisa menelusurinya.'],
+    ['Bagaimana cara tutup buku?', 'Tutup buku dilakukan di aplikasi Desktop: isi uang di laci, sistem membandingkannya dengan total penjualan, lalu menyimpan hasilnya. Di web, buka menu Tutup Buku untuk melihat hasilnya.'],
+    ['Uang di laci kurang dari catatan sistem, apa yang terjadi?', 'Saat tutup buku di Desktop, sistem mencatat selisihnya. Di web, selisih tampil sebagai "Kurang" di Riwayat tutup buku dan dijumlahkan di kotak Total uang kurang, sehingga pemilik toko bisa menelusurinya.'],
     ['Kenapa transaksi tidak bisa diubah?', 'Transaksi dari periode yang sudah ditutup dikunci. Ini disengaja agar angka pembukuan tidak berubah setelah dilaporkan.'],
     ['Bagaimana melihat laporan untuk bulan ini saja?', 'Di Laporan pilih periode "Bulan ini" pada menu di bagian atas. Semua angka dan tabel menyesuaikan.'],
     ['Tabel terlalu panjang, bagaimana melihat sisanya?', 'Gunakan tombol panah di bawah tabel, atau ketik nomor halaman langsung.'],
@@ -668,59 +668,23 @@ export function stok() {
    pengaturan() : profil toko, ganti user, reset ke data contoh, logout
    ========================================================================== */
 
-/** Tampilkan & jalankan tutup buku (akhir periode harian/bulanan/tahunan). | param: - | return: string HTML */
+/** Hasil tutup buku (hanya tampilan): ringkasan dan riwayat per periode. Proses tutup buku dilakukan di aplikasi Desktop. | param: - | return: string HTML */
 export function hasilTutupBuku() {
   const sel = (n) => (n === 0 ? ['g', 'Sesuai'] : n < 0 ? ['r', 'Kurang ' + rp(-n)] : ['o', 'Lebih ' + rp(n)]);
   const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const jn = { harian: 'Harian', bulanan: 'Bulanan', tahunan: 'Tahunan' };
-  const jenis = jn[S.tb] ? S.tb : 'harian',
-    ring = ringkasPeriode(jenis);
-  // tombol proses: hari ini / bulan ini / tahun ini sesuai jenis terpilih
-  const proses = (e) => {
-    e.preventDefault();
-    if (!ring.bisaDitutup) return;
-    const f = $('#tbfisik');
-    const raw = f && f.value.trim() !== '' ? Number(f.value) : NaN;
-    const cat = ($('#tbcat') || {}).value || '';
-    ask(`Tutup buku <b>${jn[jenis]}</b> periode <b>${esc(ring.label)}</b>?<br><br>Pendapatan ${rp(ring.pendapatan)} − pengeluaran ${rp(ring.pengeluaran)} = laba <b>${rp(ring.laba)}</b>.<br><br>Setelah ditutup, ${ring.transaksi} transaksi periode ini <b>dikunci</b> dan tidak bisa diubah.`, () => {
-      const l = tutupBuku(jenis, new Date(), Number.isFinite(raw) ? raw : null, cat);
-      if (!l) {
-        toast('Periode ini tidak bisa ditutup');
-        return;
-      }
-      save();
-      toast('Tutup buku berhasil · ' + l.periode);
-      shellRef();
-    });
-  };
   const rec = [...db.tutup].sort((a, b) => (a.waktu < b.waktu ? 1 : -1)),
     selisihHari = db.tutup.filter((x) => x.selisih !== 0).length,
+    uangKurang = db.tutup.reduce((a, x) => a + (x.selisih < 0 ? -x.selisih : 0), 0),
     pendapatanAll = db.tutup.reduce((a, x) => a + (x.pendapatan ?? x.total_sistem ?? 0), 0),
-    pengeluaranAll = db.tutup.reduce((a, x) => a + (x.pengeluaran ?? 0), 0);
-  // pasang handler setelah HTML disisipkan
-  setTimeout(() => {
-    const jenisSel = $('#tbjenis');
-    if (jenisSel)
-      jenisSel.onchange = () => {
-        S.tb = jenisSel.value;
-        shellRef();
-      };
-    const form = $('#tbform');
-    if (form) form.onsubmit = proses;
-  }, 0);
-  return `<div class="card"><div class="cb"><b>Apa itu tutup buku?</b><p>Tutup buku adalah proses akhir periode (harian, bulanan, atau tahunan) untuk mengunci seluruh catatan transaksi, menghitung total pendapatan dan pengeluaran, serta merapikan pembukuan agar siap digunakan untuk periode berikutnya.</p></div></div>
-  <div class="card"><div class="ch"><h4>Proses tutup buku</h4><div class="flt"><select id="tbjenis" aria-label="Jenis periode tutup buku">${Object.entries(jn).map(([k, v]) => `<option value="${k}"${k === jenis ? ' selected' : ''}>${v}</option>`).join('')}</select></div></div><div class="cb">
-    <div class="tbinfo"><div><span>Periode</span><b>${esc(ring.label)}</b></div><div><span>Rentang tanggal</span><b>${esc(ring.dari === ring.sampai ? tglId(ring.dari) : tglId(ring.dari) + ' – ' + tglId(ring.sampai))}</b></div><div><span>Jumlah transaksi</span><b>${ring.transaksi}</b></div><div><span>Status</span><span class="b ${ring.bisaDitutup ? 'g' : ring.sudahDitutup ? 'o' : 'r'}">${ring.bisaDitutup ? 'Siap ditutup' : ring.sudahDitutup ? 'Sudah ditutup' : 'Belum ada transaksi'}</span></div></div>
-    <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Pendapatan</span><h3>${rp(ring.pendapatan)}</h3></div><div class="st" style="background:#B54708"><span>Pengeluaran (modal)</span><h3>${rp(ring.pengeluaran)}</h3></div><div class="st" style="background:#0E9384"><span>Laba</span><h3>${rp(ring.laba)}</h3></div><div class="st" style="background:${ring.pendapatan - ring.pengeluaran >= 0 ? '#175CD3' : '#B42318'}"><span>Selisih</span><h3>${rp(ring.pendapatan - ring.pengeluaran)}</h3><small>Pemasukan − pengeluaran · ${ring.pendapatan - ring.pengeluaran > 0 ? 'Untung' : ring.pendapatan - ring.pengeluaran < 0 ? 'Rugi' : 'Impas'}</small></div></div>
-    <div class="row"><div class="fg"><label for="tbfisik">Uang fisik di kasir (opsional)</label><input id="tbfisik" type="number" min="0" step="any" placeholder="Kosongkan bila tidak dihitung"></div><div class="fg"><label for="tbcat">Catatan</label><input id="tbcat" placeholder="Misal: uang kembalian salah hitung"></div></div>
-    <p class="note">Isi "Uang fisik" untuk membandingkan uang di laci dengan catatan sistem; selisihnya tercatat otomatis.</p>
-    <form id="tbform"><button class="btn bp"${ring.bisaDitutup ? '' : ' disabled'}>${ring.bisaDitutup ? `Tutup buku ${jn[jenis].toLowerCase()} ini` : 'Tidak bisa ditutup'}</button></form>
-  </div></div>
-  <div class="stats"><div class="st" style="background:#092C4C"><span>Periode sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#B54708"><span>Periode ada selisih</span><h3>${selisihHari}</h3></div><div class="st" style="background:#0E9384"><span>Total pendapatan</span><h3>${rp(pendapatanAll)}</h3></div><div class="st" style="background:#475467"><span>Total pengeluaran</span><h3>${rp(pengeluaranAll)}</h3></div></div>
+    pengeluaranAll = db.tutup.reduce((a, x) => a + (x.pengeluaran ?? 0), 0),
+    selisihUntung = pendapatanAll - pengeluaranAll;
+  return `<div class="card"><div class="cb"><b>Apa itu tutup buku?</b><p>Tutup buku adalah proses akhir periode untuk mengunci catatan transaksi dan membandingkan total penjualan sistem dengan uang di laci. Prosesnya dilakukan di aplikasi Desktop; halaman ini hanya menampilkan hasilnya.</p></div></div>
+  <div class="stats"><div class="st" style="background:#092C4C"><span>Periode sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#B54708"><span>Periode ada selisih</span><h3>${selisihHari}</h3></div><div class="st" style="background:#B42318"><span>Total uang kurang</span><h3>${rp(uangKurang)}</h3></div><div class="st" style="background:${selisihUntung >= 0 ? '#175CD3' : '#B42318'}"><span>Selisih</span><h3>${rp(selisihUntung)}</h3><small>Pemasukan − pengeluaran · ${selisihUntung > 0 ? 'Untung' : selisihUntung < 0 ? 'Rugi' : 'Impas'}</small></div></div>
   <div class="card"><div class="ch"><h4>Riwayat tutup buku (${rec.length})</h4></div><div class="tw">${
     rec.length
-      ? `<table data-size="5"><tr><th>No</th><th>Periode</th><th>Pendapatan</th><th>Pengeluaran</th><th>Laba</th><th>Selisih</th></tr>${rec.map((x, i) => `<tr><td>${i + 1}</td><td><b>${esc(x.periode || tglId(x.tanggal))}</b> <span class="b g">${esc(jn[x.jenis] || 'Harian')}</span></td><td class="r">${rp(x.pendapatan ?? x.total_sistem ?? 0)}</td><td class="r">${rp(x.pengeluaran ?? 0)}</td><td class="r">${rp(x.laba ?? (x.total_sistem ?? 0) - (x.pengeluaran ?? 0))}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td></tr>`).join('')}</table>`
-      : empty('Belum ada hasil tutup buku', 'Pilih periode lalu tekan tombol tutup buku untuk mengunci catatan periode tersebut.')
+      ? `<table data-size="5"><tr><th>No</th><th>Periode</th><th class="r">Penjualan sistem</th><th class="r">Uang di laci</th><th>Selisih</th><th>Status</th></tr>${rec.map((x, i) => `<tr><td>${i + 1}</td><td><b>${esc(x.periode || tglId(x.tanggal))}</b> <span class="b g">${esc(jn[x.jenis] || 'Harian')}</span></td><td class="r">${rp(x.pendapatan ?? x.total_sistem ?? 0)}</td><td class="r">${rp(x.uang_fisik ?? x.total_sistem ?? 0)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td><td><span class="b ${x.selisih === 0 ? 'g' : 'o'}">${x.selisih === 0 ? 'Sesuai' : 'Ada selisih'}</span></td></tr>`).join('')}</table>`
+      : empty('Belum ada hasil tutup buku', 'Hasil akan muncul di sini setelah tutup buku dilakukan di aplikasi Desktop.')
   }</div></div>`;
 }
 
