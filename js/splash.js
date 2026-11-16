@@ -16,7 +16,7 @@ export function splash() {
   el.setAttribute('role', 'status');
   el.setAttribute('aria-label', 'Toko Berkah');
   el.innerHTML =
-    '<div class="sp-card"><div class="sp-logo">TB</div>' +
+    '<div class="sp-card">' +
     '<h1 class="sp-t" aria-hidden="true"><span id="spt"></span><b class="sp-caret"></b></h1>' +
     `<p class="sp-s">${SUB}</p><p class="sp-h">Ketuk untuk melanjutkan</p></div>`;
   document.body.appendChild(el);
