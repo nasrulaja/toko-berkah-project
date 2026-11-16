@@ -929,7 +929,7 @@ export function penjualan() {
         u = +U.value;
       if (!t) return toast('Pilih barang dulu');
       if (!(u >= t)) return toast('Uang diterima kurang dari total');
-      const r = sell(Object.entries(K.items).map(([id, q]) => [+id, q]), new Date().toISOString(), 'web', u, $('#pjb').value.trim() || 'Pelanggan umum');
+      const r = sell(Object.entries(K.items).map(([id, q]) => [+id, q]), new Date().toISOString(), 'web', u, 'Pelanggan umum');
       if (!r) return toast('Penjualan ditolak: periode hari ini sudah ditutup buku');
       save();
       K.items = {};
@@ -945,7 +945,6 @@ export function penjualan() {
   <div class="fg"><label for="pju">Uang diterima</label><input id="pju" type="number" min="0" inputmode="numeric" placeholder="Misal 50000"></div>
   <div class="pj-qc"><button type="button" class="btn sm" data-cash="pas">Uang pas</button><button type="button" class="btn sm" data-cash="20000">20.000</button><button type="button" class="btn sm" data-cash="50000">50.000</button><button type="button" class="btn sm" data-cash="100000">100.000</button></div>
   <div class="pj-t"><span>Kembalian</span><b id="pjkb">-</b></div>
-  <div class="fg"><label for="pjb">Nama pembeli (opsional)</label><input id="pjb" maxlength="40" placeholder="Kosongkan untuk Pelanggan umum"></div>
   <button class="btn bp" id="pjs" type="submit" disabled style="width:100%">Simpan penjualan</button></div></form></div>`;
 }
 
