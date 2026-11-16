@@ -2,6 +2,25 @@
 
 Aplikasi kasir desktop sederhana untuk toko kelontong, dibuat dengan **C# WinForms (.NET 8)** dan **SQLite**.
 
+## Cara mencoba aplikasi (paling cepat)
+
+1. Unduh **`Kasir-Demo.zip`** (ada di folder ini, ukuran ± 3,7 MB)
+2. Ekstrak ke folder mana pun
+3. Jalankan **`Kasir.exe`**
+4. Masuk dengan **kasir@gmail.com** / **kasir123**
+
+> PENTING: ZIP harus **diekstrak dulu**. Jangan jalankan `Kasir.exe` langsung dari dalam ZIP, karena aplikasi tidak akan menemukan file pendampingnya. `Kasir.exe` perlu berada satu folder dengan file `.dll` lainnya.
+
+Syarat: Windows 64-bit dan [.NET 8 Runtime (Desktop)](https://dotnet.microsoft.com/download/dotnet/8.0). Bila belum terpasang, Windows akan menampilkan tautan unduhannya saat aplikasi dijalankan.
+
+**File yang ada di repo ini:**
+
+| Lokasi | Isi |
+|---|---|
+| `Kasir-Demo.zip` | Paket siap jalan, unduh ini kalau hanya ingin mencoba |
+| `rilis/` | Isi paket yang sama tetapi belum dizip (untuk melihat isi file) |
+| `Kasir/` | Kode sumber lengkap (untuk diubah/dikembangkan) |
+
 ## Fitur
 
 - Input barang lewat kode atau barcode (Enter untuk menambah ke keranjang)
