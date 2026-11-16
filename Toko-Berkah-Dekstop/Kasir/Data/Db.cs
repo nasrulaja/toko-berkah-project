@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Security.Cryptography;
+using System.Text.Json.Nodes;
 using Microsoft.Data.Sqlite;
 
 namespace Kasir;
@@ -49,7 +50,10 @@ CREATE TABLE IF NOT EXISTS tutup_kasir(
     id INTEGER PRIMARY KEY AUTOINCREMENT, waktu TEXT, tanggal TEXT, kasir TEXT,
     modal INTEGER, transaksi INTEGER, penjualan INTEGER, uang_hitung INTEGER, selisih INTEGER);
 CREATE TABLE IF NOT EXISTS pengguna(
-    username TEXT PRIMARY KEY, nama TEXT NOT NULL, sandi TEXT NOT NULL);";
+    username TEXT PRIMARY KEY, nama TEXT NOT NULL, sandi TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS antrian(
+    id INTEGER PRIMARY KEY AUTOINCREMENT, entitas TEXT, aksi TEXT,
+    ref_id TEXT, isi TEXT, dibuat TEXT);";
             cmd.ExecuteNonQuery();
         }
         SeedPengguna(c);
@@ -106,6 +110,334 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
                 cmd.ExecuteNonQuery();
             }
             tx.Commit();
+        }
+    }
+
+    // ------------------------------------------------------------ sinkron Supabase
+    // Kolom supa_id = id baris di tabel `produk` Supabase. NULL berarti produk
+    // belum pernah dikirim (masih lokal saja).
+    static void SiapkanKolomSinkron(SqliteConnection c)
+    {
+        bool ada = false;
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "PRAGMA table_info(produk)";
+            using var r = cmd.ExecuteReader();
+            while (r.Read()) if (r.GetString(1) == "supa_id") ada = true;
+        }
+        if (ada) return;
+        using var ubah = c.CreateCommand();
+        ubah.CommandText = "ALTER TABLE produk ADD COLUMN supa_id INTEGER NULL";
+        ubah.ExecuteNonQuery();
+    }
+
+    // Catat pekerjaan yang belum terkirim ke Supabase (dikirim saat online).
+    public static void Antri(string entitas, string refId, JsonObject isi)
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = @"INSERT INTO antrian(entitas,aksi,ref_id,isi,dibuat)
+                            VALUES($e,'insert',$r,$i,$w)";
+        cmd.Parameters.AddWithValue("$e", entitas);
+        cmd.Parameters.AddWithValue("$r", refId);
+        cmd.Parameters.AddWithValue("$i", isi.ToJsonString());
+        cmd.Parameters.AddWithValue("$w", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        cmd.ExecuteNonQuery();
+    }
+
+    public static long JumlahAntrian()
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM antrian";
+        return (long)cmd.ExecuteScalar()!;
+    }
+
+    // Kirim produk baru (belum punya supa_id) ke Supabase, lalu simpan id-nya.
+    static int KirimProdukBaru()
+    {
+        var baru = new List<(string Kode, string Nama, long Harga, long Stok)>();
+        using (var c = Open())
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "SELECT kode,nama,harga,stok FROM produk WHERE supa_id IS NULL";
+            using var r = cmd.ExecuteReader();
+            while (r.Read()) baru.Add((r.GetString(0), r.GetString(1), r.GetInt64(2), r.GetInt64(3)));
+        }
+
+        int n = 0;
+        foreach (var p in baru)
+        {
+            var rows = new JsonArray
+            {
+                new JsonObject
+                {
+                    ["nama"] = p.Nama,
+                    ["barcode"] = p.Kode,
+                    ["harga_jual"] = p.Harga,
+                    ["stok"] = p.Stok,
+                    ["stok_minimum"] = 5
+                }
+            };
+            var hasil = Supa.Post("produk", rows);
+            if (hasil.Count == 0) continue;
+            using var c = Open();
+            using var cmd = c.CreateCommand();
+            cmd.CommandText = "UPDATE produk SET supa_id=$s WHERE kode=$k";
+            cmd.Parameters.AddWithValue("$s", hasil[0]["id"]!.GetValue<int>());
+            cmd.Parameters.AddWithValue("$k", p.Kode);
+            cmd.ExecuteNonQuery();
+            n++;
+        }
+        return n;
+    }
+
+    // Perbarui stok & harga produk yang sudah ada di Supabase.
+    static int KirimPerubahanProduk()
+    {
+        var lama = new List<(long Harga, long Stok, int SupaId)>();
+        using (var c = Open())
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "SELECT harga,stok,supa_id FROM produk WHERE supa_id IS NOT NULL";
+            using var r = cmd.ExecuteReader();
+            while (r.Read()) lama.Add((r.GetInt64(0), r.GetInt64(1), r.GetInt32(2)));
+        }
+        foreach (var p in lama)
+        {
+            var body = new JsonObject { ["stok"] = p.Stok, ["harga_jual"] = p.Harga };
+            Supa.Patch($"produk?id=eq.{p.SupaId}", body);
+        }
+        return lama.Count;
+    }
+
+    // Kirim isi antrian (transaksi + detail, stok_mutasi, tutup_buku).
+    static int KirimAntrian(int userId)
+    {
+        var antrian = new List<(long Id, string Entitas, string RefId, JsonObject Isi)>();
+        using (var c = Open())
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "SELECT id,entitas,ref_id,isi FROM antrian ORDER BY id";
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+                antrian.Add((r.GetInt64(0), r.GetString(1), r.GetString(2), JsonNode.Parse(r.GetString(3))!.AsObject()));
+        }
+
+        int n = 0;
+        foreach (var a in antrian)
+        {
+            switch (a.Entitas)
+            {
+                case "transaksi":
+                    {
+                        // transaksi harus masuk dulu supaya dapat id Supabase,
+                        // baru detail-nya boleh dikirim.
+                        a.Isi["user_id"] = userId;
+                        var res = PostTransaksiUnik(a.Isi);
+                        if (res.Count > 0)
+                            KirimDetailTransaksi(a.RefId, res[0]["id"]!.GetValue<int>());
+                        break;
+                    }
+                case "tutup_buku":
+                    a.Isi["user_id"] = userId;
+                    Supa.Post("tutup_buku", new JsonArray { a.Isi }, ambilId: false);
+                    break;
+                case "stok_mutasi":
+                    a.Isi["user_id"] = userId;
+                    Supa.Post("stok_mutasi", new JsonArray { a.Isi }, ambilId: false);
+                    break;
+            }
+
+            using var c = Open();
+            using var cmd = c.CreateCommand();
+            cmd.CommandText = "DELETE FROM antrian WHERE id=$i";
+            cmd.Parameters.AddWithValue("$i", a.Id);
+            cmd.ExecuteNonQuery();
+            n++;
+        }
+        return n;
+    }
+
+    // Supabase mewajibkan kode_transaksi unik. Kalau kode dari desktop sudah
+    // dipakai transaksi web di tanggal yang sama, nomor urutnya dinaikkan
+    // sampai tidak bentrok. Nomor asli tetap disimpan di kode lokal.
+    static List<JsonObject> PostTransaksiUnik(JsonObject isi)
+    {
+        var kode = isi["kode_transaksi"]?.ToString() ?? "";
+        var bagian = kode.Split('-');
+        string awalan = bagian.Length == 3 ? $"{bagian[0]}-{bagian[1]}-" : "TRX-";
+        if (bagian.Length == 3 && long.TryParse(bagian[2], out var nomor))
+        {
+            for (int coba = 0; coba < 30; coba++)
+            {
+                isi["kode_transaksi"] = awalan + nomor.ToString("D3");
+                try
+                {
+                    return Supa.Post("transaksi", new JsonArray { (JsonObject)isi.DeepClone() });
+                }
+                catch (Exception e) when (e.Message.Contains("23505"))
+                {
+                    nomor++; // kode sudah dipakai, coba nomor berikutnya
+                }
+            }
+            throw new Exception("Gagal membuat kode transaksi unik.");
+        }
+        return Supa.Post("transaksi", new JsonArray { isi });
+    }
+
+    // Barcode/nama lokal -> id produk Supabase. Dipakai agar detail transaksi
+    // punya produk_id yang benar (kolom itu wajib diisi).
+    static Dictionary<string, int> PetaProdukSupa()
+    {
+        var peta = new Dictionary<string, int>();
+        try
+        {
+            foreach (var p in Supa.Get("produk?select=id,barcode,nama"))
+            {
+                var id = p["id"]!.GetValue<int>();
+                var bc = p["barcode"]?.ToString();
+                var nm = p["nama"]?.ToString();
+                if (!string.IsNullOrEmpty(bc)) peta["bc:" + bc] = id;
+                if (!string.IsNullOrEmpty(nm))
+                {
+                    var kunci = "nm:" + NormalNama(nm);
+                    // id terkecil = baris terlama (data asli, bukan duplikat)
+                    if (!peta.TryGetValue(kunci, out var lama) || id < lama) peta[kunci] = id;
+                }
+            }
+        }
+        catch { /* offline */ }
+        return peta;
+    }
+
+    // Ambil detail lokal milik satu transaksi. `waktu` berformat
+    // "yyyy-MM-dd HH:mm:ss" (kolom waktu di tabel transaksi lokal).
+    static void KirimDetailTransaksi(string waktu, int supaTrxId)
+    {
+        if (string.IsNullOrEmpty(waktu)) return;
+        var peta = PetaProdukSupa();
+        var rows = new JsonArray();
+        var dilewati = new List<string>();
+        using (var c = Open())
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = @"SELECT d.kode,d.nama,d.harga,d.qty FROM detail d
+                                JOIN transaksi t ON t.id=d.trx_id
+                                WHERE t.waktu=$w";
+            cmd.Parameters.AddWithValue("$w", waktu);
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+            {
+                var kode = r.GetString(0);
+                var nama = r.GetString(1);
+                // cocokkan lewat barcode dulu, lalu nama (mis. "Aqua 600ml" vs "Aqua 600 ml")
+                if (!peta.TryGetValue("bc:" + kode, out var produkId) &&
+                    !peta.TryGetValue("nm:" + NormalNama(nama), out produkId))
+                { dilewati.Add(nama); continue; }
+                rows.Add(new JsonObject
+                {
+                    ["transaksi_id"] = supaTrxId,
+                    ["produk_id"] = produkId,
+                    ["nama_produk"] = nama,
+                    ["harga_jual"] = r.GetInt64(2),
+                    ["jumlah"] = r.GetInt64(3),
+                    ["subtotal"] = r.GetInt64(2) * r.GetInt64(3)
+                });
+            }
+        }
+        if (rows.Count > 0) Supa.Post("detail_transaksi", rows, ambilId: false);
+
+        // Barang yang belum terdaftar di web tetap tercatat di transaksi lokal,
+        // hanya detailnya yang tidak bisa dikirim (produk_id wajib di Supabase).
+        if (dilewati.Count > 0)
+            throw new Exception(
+                "Transaksi tersimpan & terkirim. Detail berikut belum ada di web sehingga dilewati: " +
+                string.Join(", ", dilewati) + ". Tambahkan barangnya lewat menu Kelola Produk.");
+    }
+
+    // Produk bawaan aplikasi sebenarnya sudah ada di Supabase dengan nama yang
+    // sama tetapi barcode berbeda. Cocokkan lewat barcode ATAU nama (tanpa
+    // memperhatikan huruf besar/kecil) supaya tidak dibuat duplikat.
+    static void SambungkanProdukLama()
+    {
+        List<JsonObject> supa;
+        try { supa = Supa.Get("produk?select=id,barcode,nama"); }
+        catch { return; }   // offline: coba lagi nanti
+
+        var petaBarcode = new Dictionary<string, int>();
+        var petaNama = new Dictionary<string, int>();
+        foreach (var p in supa)
+        {
+            var bc = p["barcode"]?.ToString();
+            var nm = p["nama"]?.ToString();
+            var id = p["id"]!.GetValue<int>();
+            if (!string.IsNullOrEmpty(bc)) petaBarcode[bc] = id;
+            // Nama bisa sama pada data duplikat: pertahankan id terkecil
+            // (baris terlama = data asli, bukan hasil sinkron yang dobel).
+            if (!string.IsNullOrEmpty(nm))
+            {
+                var kunci = NormalNama(nm);
+                if (!petaNama.TryGetValue(kunci, out var lama) || id < lama) petaNama[kunci] = id;
+            }
+        }
+
+        using var c = Open();
+        var cocok = new List<(string Kode, int Id)>();
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "SELECT kode,nama FROM produk WHERE supa_id IS NULL";
+            using var r = cmd.ExecuteReader();
+            while (r.Read())
+            {
+                var kode = r.GetString(0);
+                var nama = r.GetString(1);
+                int id;
+                if (petaBarcode.TryGetValue(kode, out id)) cocok.Add((kode, id));
+                else if (petaNama.TryGetValue(NormalNama(nama), out id)) cocok.Add((kode, id));
+            }
+        }
+        foreach (var (kode, id) in cocok)
+        {
+            using var cmd = c.CreateCommand();
+            cmd.CommandText = "UPDATE produk SET supa_id=$s WHERE kode=$k";
+            cmd.Parameters.AddWithValue("$s", id);
+            cmd.Parameters.AddWithValue("$k", kode);
+            cmd.ExecuteNonQuery();
+        }
+    }
+
+    // Bentuk nama yang bisa dibandingkan: huruf kecil, tanpa spasi/ukuran.
+    static string NormalNama(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "";
+        var b = new System.Text.StringBuilder();
+        foreach (var ch in s.ToLowerInvariant())
+            if (char.IsLetterOrDigit(ch)) b.Append(ch);
+        return b.ToString();
+    }
+
+    // Titik masuk sinkronisasi: dipanggil setelah bayar, setelah tutup kasir,
+    // dan saat aplikasi dibuka. Aman dipanggil saat offline.
+    public static (bool ok, string pesan) SinkronKeluar(string emailKasir)
+    {
+        try
+        {
+            using (var c = Open()) SiapkanKolomSinkron(c);
+            SambungkanProdukLama();
+
+            int userId = Supa.UserIdUntuk(emailKasir);
+            int nProduk = KirimProdukBaru();
+            int nUbah = KirimPerubahanProduk();
+            int nAntri = KirimAntrian(userId);
+
+            int total = nProduk + nUbah + nAntri;
+            return (true, total == 0 ? "Semua data sudah tersinkron." : $"{total} data tersinkron ke Supabase.");
+        }
+        catch (Exception e)
+        {
+            // Offline / server tidak terjangkau: data tetap aman di antrian lokal.
+            return (false, e.Message);
         }
     }
 
@@ -210,6 +542,9 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
     public static (long id, string waktu) SimpanTransaksi(
         IEnumerable<ItemKeranjang> items, long total, long bayar, long kembali)
     {
+        // Salin sekali: `items` dipakai dua kali (simpan detail & buat antrian
+        // Supabase). Kalau berupa iterator lazy, pemakaian kedua bisa kosong.
+        var daftar = items.ToList();
         var waktu = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         using var c = Open();
         using var tx = c.BeginTransaction();
@@ -227,7 +562,7 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
             trxId = (long)cmd.ExecuteScalar()!;
         }
 
-        foreach (var i in items)
+        foreach (var i in daftar)
         {
             using (var cmd = c.CreateCommand())
             {
@@ -251,6 +586,34 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
             }
         }
         tx.Commit();
+
+        // Catat ke antrian Supabase. Kalau sedang offline, baris ini menunggu
+        // dan dikirim otomatis saat aplikasi online lagi.
+        // Nomor urut transaksi hari ini dipakai di kode transaksi. Supabase
+        // mewajibkan kode_transaksi unik, jadi angkanya diambil dari jumlah
+        // transaksi lokal hari itu (bukan id global yang bisa bentrok).
+        long urutHariIni;
+        using (var cmd = c.CreateCommand())
+        {
+            cmd.CommandText = "SELECT COUNT(*) FROM transaksi WHERE waktu LIKE $h";
+            cmd.Parameters.AddWithValue("$h", waktu[..10] + "%");
+            urutHariIni = (long)cmd.ExecuteScalar()!;
+        }
+
+        var waktuSekarang = waktu;
+        var jTrx = new JsonObject
+        {
+            ["kode_transaksi"] = $"TRX-{DateTime.Now:yyyyMMdd}-{urutHariIni:D3}",
+            ["waktu"] = waktu.Replace(' ', 'T'),
+            ["total"] = total,
+            ["uang_diterima"] = bayar,
+            ["kembalian"] = kembali,
+            ["rekap_id"] = null
+        };
+        // ref_id = waktu transaksi; dipakai untuk mengambil detail lokal saat
+        // transaksi ini berhasil masuk ke Supabase (detail butuh transaksi_id).
+        Antri("transaksi", waktuSekarang, jTrx);
+
         return (trxId, waktu);
     }
 
@@ -413,6 +776,17 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
     }
 
     // ------------------------------------------------------------ tutup kasir
+    // True kalau hari ini (tanggal sistem) sudah pernah disimpan pembukuan tutup kasir.
+    // Dipakai untuk mencegah jendela ditutup sebelum pembukuan diisi.
+    public static bool SudahTutupHariIni()
+    {
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM tutup_kasir WHERE tanggal=$t";
+        cmd.Parameters.AddWithValue("$t", DateTime.Now.ToString("yyyy-MM-dd"));
+        return (long)cmd.ExecuteScalar()! > 0;
+    }
+
     // Catat hasil tutup kasir: uang yang seharusnya ada = modal awal + penjualan hari itu.
     public static long SimpanTutupKasir(string kasir, long modal, long transaksi, long penjualan, long uangHitung)
     {
@@ -431,6 +805,20 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
         cmd.Parameters.AddWithValue("$u", uangHitung);
         cmd.Parameters.AddWithValue("$s", selisih);
         cmd.ExecuteNonQuery();
+
+        // Kirim rekap harian ke tabel tutup_buku Supabase (dipakai dashboard web).
+        var j = new JsonObject
+        {
+            ["tanggal"] = sekarang.ToString("yyyy-MM-dd"),
+            ["total_penjualan"] = penjualan,
+            ["uang_di_laci"] = uangHitung,
+            ["selisih"] = selisih,
+            ["status"] = selisih == 0 ? "sesuai" : selisih < 0 ? "kurang" : "lebih",
+            ["catatan"] = null,
+            ["ditutup_pada"] = sekarang.ToString("yyyy-MM-ddTHH:mm:ss")
+        };
+        Antri("tutup_buku", sekarang.ToString("yyyy-MM-dd"), j);
+
         return selisih;
     }
 }

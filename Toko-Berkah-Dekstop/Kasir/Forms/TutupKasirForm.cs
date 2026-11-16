@@ -21,7 +21,12 @@ public class TutupKasirForm : Form
 
         Ui.Dpi(this);
         Text = "Tutup Kasir";
-        ClientSize = new Size(500, 480);
+        // Ukuran di-set dua kali: di sini sebagai nilai awal, lalu di Shown setelah form tampil.
+        // Dengan HighDpiMode.PerMonitorV2, constructor bisa ditimpa proses scaling Windows
+        // sehingga form mengecil dan baris tombol "Simpan & Keluar" terpotong.
+        // Baris berukuran tetap (bukan AutoSize), jadi tinggi harus benar-benar cukup.
+        ClientSize = new Size(560, 620);
+        MinimumSize = new Size(560, 620);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = MinimizeBox = false;
         ShowInTaskbar = false;
@@ -29,23 +34,32 @@ public class TutupKasirForm : Form
         Font = new Font("Segoe UI", 10.5f);
 
         var t = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, Padding = new Padding(Ui.Px(this, 16)) };
-        t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Ui.Px(this, 220)));
+        t.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Ui.Px(this, 250)));
         t.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
         int baris = 0;
         void Tambah(string judul, Control isi)
         {
-            t.RowStyles.Add(new RowStyle(SizeType.Absolute, Ui.Px(this, 40)));
+            t.RowStyles.Add(new RowStyle(SizeType.Absolute, Ui.Px(this, 44)));
             t.Controls.Add(new Label { Text = judul, AutoSize = true, Anchor = AnchorStyles.Left }, 0, baris);
             t.Controls.Add(isi, 1, baris);
             baris++;
         }
-        Label Nilai(string teks) => new Label { Text = teks, AutoSize = true, Anchor = AnchorStyles.Left, Font = new Font("Segoe UI", 10.5f, FontStyle.Bold) };
+        // Label nilai: jangan AutoSize supaya angka panjang (tanggal/Rupiah) tidak terpotong;
+        // teks dibungkus ke baris berikutnya kalau kolomnya sempit.
+        Label Nilai(string teks) => new Label
+        {
+            Text = teks,
+            AutoSize = false,
+            Dock = DockStyle.Fill,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Font = new Font("Segoe UI", 10.5f, FontStyle.Bold),
+        };
 
         eModal = new TextBox { Dock = DockStyle.Fill, TextAlign = HorizontalAlignment.Right };
         eHitung = new TextBox { Dock = DockStyle.Fill, TextAlign = HorizontalAlignment.Right };
         lblSeharusnya = Nilai("");
-        lblSelisih = new Label { AutoSize = true, Anchor = AnchorStyles.Left, Font = new Font("Segoe UI", 12f, FontStyle.Bold) };
+        lblSelisih = new Label { AutoSize = false, Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Font = new Font("Segoe UI", 12f, FontStyle.Bold) };
 
         Tambah("Tanggal", Nilai(hariIni.ToString("dd/MM/yyyy")));
         Tambah("Kasir", Nilai(kasir));
@@ -71,7 +85,12 @@ public class TutupKasirForm : Form
         eModal.TextChanged += (s, e) => Hitung();
         eHitung.TextChanged += (s, e) => Hitung();
         simpan.Click += (s, e) => Simpan();
-        Shown += (s, e) => eModal.Focus();
+        Shown += (s, e) =>
+        {
+            // Pastikan ukuran final benar setelah Windows selesai melakukan scaling DPI.
+            ClientSize = new Size(560, 620);
+            eModal.Focus();
+        };
         Hitung();
     }
 

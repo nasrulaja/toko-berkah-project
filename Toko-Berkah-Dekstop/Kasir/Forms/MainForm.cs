@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace Kasir;
 
@@ -10,6 +10,7 @@ public class MainForm : Form
     TextBox entKode, entQty, entBayar;
     ListView lv;
     Label lblTotal, lblKembali;
+    Label lblStatus; // status sinkron Supabase di bagian bawah jendela
 
     LoginPanel login; // menutupi seluruh jendela selama belum login
     string pengguna = "";
@@ -41,6 +42,96 @@ public class MainForm : Form
             }
         };
         Shown += (s, e) => { Ui.FitColumn(lv, 1); login.Reset(); };
+
+        // Wajib tutup buku sebelum aplikasi boleh ditutup (tombol X, Alt+F4, atau Close()).
+        FormClosing += (s, e) => CegahTutup(e);
+    }
+
+    // ------------------------------------------------------------ kunci tutup aplikasi
+    bool bolehTutup = false; // penanda: pembukuan baru saja disimpan, izinkan tutup
+    bool sedangTanya = false; // penanda: dialog wajib tutup kasir sedang tampil
+
+    // True kalau kasir sudah login (nama pengguna terisi).
+    // Dipakai untuk membedakan sesi kasir dari layar login.
+    bool SudahLogin => !string.IsNullOrEmpty(pengguna);
+
+    // Dipanggil setiap jendela mau ditutup. Kalau pembukuan hari ini belum diisi,
+    // penutupan dibatalkan dan kasir diarahkan mengisi Tutup Kasir lebih dulu.
+    void CegahTutup(FormClosingEventArgs e)
+    {
+        if (bolehTutup) return;          // sudah diizinkan lewat tombol Tutup Kasir
+
+        // Di layar login belum ada sesi kasir, jadi tidak ada transaksi hari ini
+        // yang perlu dibukukan: X boleh langsung menutup aplikasi.
+        if (!SudahLogin) return;
+
+        if (Db.SudahTutupHariIni()) return;    // pembukuan hari ini sudah lengkap
+
+        e.Cancel = true; // batalkan penutupan: X seolah tidak bereaksi
+        if (sedangTanya) return;         // jangan buka dialog dobel kalau X ditekan berkali-kali
+
+        sedangTanya = true;
+        try
+        {
+            if (keranjang.Count > 0)
+            {
+                MessageBox.Show(
+                    "Aplikasi tidak bisa ditutup karena pembukuan hari ini belum diisi.\n\n" +
+                    "Keranjang masih berisi barang. Selesaikan pembayaran atau batalkan transaksi dulu,\n" +
+                    "lalu isi Tutup Kasir lewat tombol \"Keluar\".",
+                    "Wajib Tutup Kasir", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                entKode.Focus();
+                return;
+            }
+
+            var jawab = MessageBox.Show(
+                "Pembukuan hari ini belum diisi.\n\n" +
+                "Aplikasi hanya bisa ditutup setelah Anda menghitung uang di laci dan menyimpan Tutup Kasir.\n\n" +
+                "Isi pembukuan sekarang?",
+                "Wajib Tutup Kasir", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+            if (jawab == DialogResult.Yes) IsiTutupKasir(autoTutup: true);
+            else entKode.Focus();
+        }
+        finally { sedangTanya = false; }
+    }
+
+    // Buka form Tutup Kasir. autoTutup = true kalau dipicu dari tombol X:
+    // begitu pembukuan tersimpan, aplikasi langsung ditutup.
+    void IsiTutupKasir(bool autoTutup)
+    {
+        if (keranjang.Count > 0)
+        {
+            MessageBox.Show("Keranjang masih berisi barang. Selesaikan pembayaran atau batalkan transaksi dulu.",
+                "Belum bisa tutup kasir", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        using var tutup = new TutupKasirForm(string.IsNullOrEmpty(pengguna) ? "Kasir" : pengguna);
+        if (tutup.ShowDialog(this) != DialogResult.OK) { entKode.Focus(); return; }
+
+        // Rekap harian sudah tersimpan lokal; kirim ke Supabase sebelum keluar
+        // supaya dashboard web langsung memuat angka hari ini.
+        var (okSinkron, pesanSinkron) = Db.SinkronKeluar(pengguna);
+        if (!okSinkron)
+            MessageBox.Show(
+                "Pembukuan tersimpan di komputer ini, tetapi belum terkirim ke server:\n\n" +
+                pesanSinkron + "\n\nData tidak hilang — akan dikirim otomatis saat online.",
+                "Belum tersinkron", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+        if (!autoTutup)
+        {
+            // Dipicu tombol Keluar: setelah pembukuan, kembali ke layar login.
+            pengguna = "";
+            Text = "Kasir - " + Db.NamaToko;
+            login.Visible = true;
+            login.BringToFront();
+            return;
+        }
+
+        // Dipicu tombol X: pembukuan tersimpan, jadi izinkan jendela ditutup.
+        bolehTutup = true;
+        Close();
     }
 
     // ------------------------------------------------------------ login / logout (satu jendela)
@@ -54,6 +145,9 @@ public class MainForm : Form
             Text = "Kasir - " + Db.NamaToko + "  |  Pengguna: " + pengguna;
             login.Visible = false;
             entKode.Focus();
+
+            // Setelah login, kirim data yang tertunda dari sesi sebelumnya.
+            SinkronLatar();
         };
         Controls.Add(login);
         login.BringToFront();
@@ -68,24 +162,31 @@ public class MainForm : Form
             return;
         }
 
-        // Pembukuan: setiap mau logout, kasir harus menghitung uang di laci dulu (Batal = tetap login).
-        using (var tutup = new TutupKasirForm(pengguna))
-            if (tutup.ShowDialog(this) != DialogResult.OK) { entKode.Focus(); return; }
-
-        pengguna = "";
-        Text = "Kasir - " + Db.NamaToko;
-        login.Visible = true;
-        login.BringToFront();
+        // Pembukuan: setiap mau keluar, kasir harus menghitung uang di laci dulu (Batal = tetap login).
+        IsiTutupKasir(autoTutup: false);
     }
 
     // ------------------------------------------------------------ tampilan
     void BuildUi()
     {
+        // ---- bilah status sinkron (paling bawah)
+        lblStatus = new Label
+        {
+            Dock = DockStyle.Bottom,
+            Height = 26,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Padding = new Padding(10, 0, 0, 0),
+            Text = "Belum tersinkron.",
+            ForeColor = Color.DimGray,
+            BackColor = Color.FromArgb(0xF7, 0xF7, 0xF7)
+        };
+
         // ---- panel kanan
         var kanan = new Panel { Dock = DockStyle.Right, Width = 330, Padding = new Padding(10) };
         var kiri = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
         Controls.Add(kiri);
         Controls.Add(kanan);
+        Controls.Add(lblStatus); // ditambahkan terakhir agar bilah status tetap di bawah
 
         // ---- input barang (atas)
         var atas = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 44, WrapContents = false };
@@ -238,6 +339,9 @@ public class MainForm : Form
         var btnLap = new Button { Text = "Laporan Penjualan (F3)", Width = w, Height = 36 };
         btnLap.Click += (s, e) => Laporan();
         stack.Controls.Add(btnLap);
+        var btnSinkron = new Button { Text = "Sinkron ke Web Sekarang", Width = w, Height = 36 };
+        btnSinkron.Click += (s, e) => SinkronLatar(tampilkanHasil: true);
+        stack.Controls.Add(btnSinkron);
         var btnKeluar = new Button { Text = "Keluar (Logout)", Width = w, Height = 36 };
         btnKeluar.Click += (s, e) => Logout();
         stack.Controls.Add(btnKeluar);
@@ -416,6 +520,40 @@ public class MainForm : Form
         entBayar.Clear();
         Refresh2();
         entKode.Focus();
+
+        // Kirim transaksi ke Supabase di latar belakang supaya kasir tidak
+        // menunggu internet. Kalau offline, data tetap di antrian lokal.
+        SinkronLatar();
+    }
+
+    // ------------------------------------------------------------ sinkron Supabase
+    bool sedangSinkron = false;
+
+    // Jalankan sinkron tanpa mengunci layar kasir.
+    async void SinkronLatar(bool tampilkanHasil = false)
+    {
+        if (sedangSinkron || !SudahLogin) return;
+        sedangSinkron = true;
+        SetStatus("Menyinkronkan ke Supabase…", Color.DimGray);
+        try
+        {
+            var (ok, pesan) = await Task.Run(() => Db.SinkronKeluar(pengguna));
+            if (ok) SetStatus(pesan, Color.SeaGreen);
+            else SetStatus("Offline — data tersimpan lokal (" + Db.JumlahAntrian() + " menunggu)", Color.DarkOrange);
+
+            if (tampilkanHasil)
+                MessageBox.Show(pesan, ok ? "Sinkron berhasil" : "Sinkron gagal",
+                    MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+        }
+        finally { sedangSinkron = false; }
+    }
+
+    void SetStatus(string teks, Color warna)
+    {
+        if (lblStatus == null) return;
+        if (InvokeRequired) { BeginInvoke(new Action(() => SetStatus(teks, warna))); return; }
+        lblStatus.Text = teks;
+        lblStatus.ForeColor = warna;
     }
 
     void KelolaProduk()
