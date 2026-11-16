@@ -27,21 +27,24 @@ public class LoginPanel : Panel
             e.Graphics.DrawEllipse(pena, t / 2, t / 2, logo.Width - t - 1, logo.Height - t - 1);
         };
 
-        var judul = new Label { Text = "LOGIN KASIR", Dock = DockStyle.Fill, AutoSize = true, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI", 18f, FontStyle.Bold), ForeColor = Color.FromArgb(0x22, 0x22, 0x22) };
+        var judul = new Label { Text = "MASUK KASIR", Dock = DockStyle.Fill, AutoSize = true, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI", 18f, FontStyle.Bold), ForeColor = Color.FromArgb(0x22, 0x22, 0x22) };
         var toko = new Label { Text = Db.NamaToko, Dock = DockStyle.Fill, AutoSize = true, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.Gray, Margin = new Padding(3, 0, 3, Ui.Px(tuan, 16)) };
 
-        eUser = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 12f), PlaceholderText = "Username", Margin = new Padding(3, 3, 3, Ui.Px(tuan, 10)) };
-        eSandi = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 12f), PlaceholderText = "Password", UseSystemPasswordChar = true, Margin = new Padding(3, 3, 3, Ui.Px(tuan, 6)) };
-        lblSalah = new Label { Dock = DockStyle.Fill, AutoSize = true, ForeColor = Color.Firebrick, Visible = false, Text = "Username atau password salah.", Margin = new Padding(3, 0, 3, Ui.Px(tuan, 6)) };
+        // label + isian dibuat berpasangan supaya jelas kolom mana yang diisi
+        var lblUser = new Label { Text = "Surel", AutoSize = true, ForeColor = Color.FromArgb(0x44, 0x44, 0x44), Margin = new Padding(3, 2, 3, 2) };
+        eUser = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 12f), PlaceholderText = "nama@contoh.com", Margin = new Padding(3, 0, 3, Ui.Px(tuan, 8)) };
+        var lblSandi = new Label { Text = "Kata Sandi", AutoSize = true, ForeColor = Color.FromArgb(0x44, 0x44, 0x44), Margin = new Padding(3, 2, 3, 2) };
+        eSandi = new TextBox { Dock = DockStyle.Fill, Font = new Font("Segoe UI", 12f), PlaceholderText = "Masukkan kata sandi", UseSystemPasswordChar = true, Margin = new Padding(3, 0, 3, Ui.Px(tuan, 6)) };
+        lblSalah = new Label { Dock = DockStyle.Fill, AutoSize = true, ForeColor = Color.Firebrick, Visible = false, Text = "Surel atau kata sandi salah.", Margin = new Padding(3, 0, 3, Ui.Px(tuan, 6)) };
 
-        // tampilkan / sembunyikan isi password
-        chkLihat = new CheckBox { Text = "Tampilkan password", AutoSize = true, ForeColor = Color.Gray, Margin = new Padding(3, 0, 3, Ui.Px(tuan, 6)) };
+        // tampilkan / sembunyikan isi kata sandi
+        chkLihat = new CheckBox { Text = "Tampilkan kata sandi", AutoSize = true, ForeColor = Color.Gray, Margin = new Padding(3, 0, 3, Ui.Px(tuan, 6)) };
         chkLihat.CheckedChanged += (s, e) => eSandi.UseSystemPasswordChar = !chkLihat.Checked;
 
 
         var btn = new Button
         {
-            Text = "LOG IN",
+            Text = "MASUK",
             Dock = DockStyle.Fill,
             Height = Ui.Px(tuan, 44),
             Font = new Font("Segoe UI", 11f, FontStyle.Bold),
@@ -82,7 +85,7 @@ public class LoginPanel : Panel
             using var garis = new Pen(Color.FromArgb(0xD5, 0xD9, 0xDE));
             e.Graphics.DrawRectangle(garis, 0, 0, kartu.Width - 1, kartu.Height - 1);
         };
-        foreach (Control c in new Control[] { logo, judul, toko, eUser, eSandi, chkLihat, lblSalah, btn })
+        foreach (Control c in new Control[] { logo, judul, toko, lblUser, eUser, lblSandi, eSandi, chkLihat, lblSalah, btn })
             kartu.Controls.Add(c);
 
         // satu sel penuh: kartu (Anchor None) otomatis berada di tengah

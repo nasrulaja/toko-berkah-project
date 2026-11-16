@@ -10,7 +10,7 @@ Aplikasi kasir desktop sederhana untuk toko kelontong, dibuat dengan **C# WinFor
 - Pembayaran dengan hitung kembalian otomatis dan tombol uang cepat (Uang Pas, 50rb, 100rb)
 - Struk pembayaran, stok barang berkurang otomatis setelah transaksi
 - Kelola produk: melihat dan mencari daftar produk (hanya baca, kasir tidak bisa menambah, mengedit, atau menghapus produk dan stok)
-- Halaman login (akun awal: admin / admin123 dan kasir / kasir123, sandi disimpan ter-hash), opsi tampilkan password, dan tombol Logout (semuanya di dalam satu jendela)
+- Halaman login dengan kolom **Surel** dan **Kata Sandi** (akun awal: kasir@gmail.com / kasir123, sandi disimpan ter-hash PBKDF2-SHA256), opsi tampilkan kata sandi, dan tombol Keluar (semuanya di dalam satu jendela)
 - Pembukuan saat logout: kasir menghitung uang di laci, dibandingkan dengan modal awal + penjualan hari ini, selisihnya dicatat
 - Laporan penjualan harian dan bulanan (pilih tanggal atau bulan, bisa di-download ke Excel): jumlah transaksi, total penjualan, rata-rata per transaksi, barang terlaris, rincian per hari (bulanan), dan stok menipis
 

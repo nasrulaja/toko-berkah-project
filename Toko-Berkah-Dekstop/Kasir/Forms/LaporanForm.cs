@@ -39,7 +39,7 @@ public class LaporanForm : Form
         filter.Controls.Add(cbJenis);
         filter.Controls.Add(dtp);
         filter.Controls.Add(btnSekarang);
-        var btnExcel = new Button { Text = "Download Excel", AutoSize = true, Margin = new Padding(Ui.Px(this, 24), 1, 3, 3) };
+        var btnExcel = new Button { Text = "Unduh Excel (.xlsx)", AutoSize = true, Margin = new Padding(Ui.Px(this, 24), 1, 3, 3) };
         filter.Controls.Add(btnExcel);
 
         // ---- ringkasan: tiga kotak angka
@@ -144,7 +144,7 @@ public class LaporanForm : Form
         return g;
     }
 
-    // ------------------------------------------------------------ Download Excel
+    // ------------------------------------------------------------ Unduh Excel
     void Unduh()
     {
         var d = dataKini;

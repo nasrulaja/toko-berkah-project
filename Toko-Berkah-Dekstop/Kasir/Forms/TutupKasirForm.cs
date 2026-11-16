@@ -56,7 +56,7 @@ public class TutupKasirForm : Form
         Tambah("Uang di laci (hasil hitung)", eHitung);
         Tambah("Selisih", lblSelisih);
 
-        var simpan = new Button { Text = "Simpan && Logout", Width = Ui.Px(this, 170), Height = Ui.Px(this, 38) };
+        var simpan = new Button { Text = "Simpan && Keluar", Width = Ui.Px(this, 170), Height = Ui.Px(this, 38) };
         var batal = new Button { Text = "Batal", Width = Ui.Px(this, 90), Height = Ui.Px(this, 38), DialogResult = DialogResult.Cancel };
         var tombol = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         tombol.Controls.Add(batal);
@@ -102,7 +102,7 @@ public class TutupKasirForm : Form
             eHitung.Focus();
             return;
         }
-        if (MessageBox.Show($"Selisih: {lblSelisih.Text}.\n\nSimpan dan logout sekarang?", "Tutup Kasir",
+        if (MessageBox.Show($"Selisih: {lblSelisih.Text}.\n\nSimpan dan keluar sekarang?", "Tutup Kasir",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
             return;
 

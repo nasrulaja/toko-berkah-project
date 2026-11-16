@@ -10,7 +10,7 @@ public class QtyForm : Form
     public QtyForm(string nama, long qty)
     {
         Ui.Dpi(this);
-        Text = "Ubah Qty";
+        Text = "Ubah Jumlah";
         ClientSize = new Size(340, 190);
         StartPosition = FormStartPosition.CenterParent;
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -36,7 +36,7 @@ public class QtyForm : Form
             Width = 130,
         };
         e.Location = new Point((ClientSize.Width - e.Width) / 2, 66);
-        var ok = new Button { Text = "OK", Width = 100, Height = 36 };
+        var ok = new Button { Text = "Simpan", Width = 100, Height = 36 };
         ok.Location = new Point((ClientSize.Width - ok.Width) / 2, 126);
         ok.Click += (s, a) => Simpan();
         e.KeyDown += (s, a) =>

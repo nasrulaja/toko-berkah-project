@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Cryptography;
 using Microsoft.Data.Sqlite;
 
 namespace Kasir;
@@ -348,7 +349,8 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
             cmd.CommandText = "SELECT COUNT(*) FROM pengguna";
             if ((long)cmd.ExecuteScalar()! > 0) return;
         }
-        var awal = new[] { ("admin", "Admin", "admin123"), ("kasir", "Kasir", "kasir123") };
+        // Surel dipakai sebagai nama pengguna (bukan sekadar username biasa).
+        var awal = new[] { ("kasir@gmail.com", "Kasir", "kasir123") };
         foreach (var (user, nama, sandi) in awal)
         {
             using var cmd = c.CreateCommand();
@@ -391,15 +393,15 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
         username = username.Trim();
         nama = nama.Trim();
         if (nama.Length == 0) return "Nama lengkap wajib diisi.";
-        if (username.Length < 3 || username.Contains(' ')) return "Username minimal 3 karakter, tanpa spasi.";
-        if (sandi.Length < 6) return "Password minimal 6 karakter.";
+        if (username.Length < 3 || username.Contains(' ')) return "Surel minimal 3 karakter, tanpa spasi.";
+        if (sandi.Length < 6) return "Kata sandi minimal 6 karakter.";
 
         using var c = Open();
         using (var cek = c.CreateCommand())
         {
             cek.CommandText = "SELECT COUNT(*) FROM pengguna WHERE username=$u COLLATE NOCASE";
             cek.Parameters.AddWithValue("$u", username);
-            if ((long)cek.ExecuteScalar()! > 0) return "Username sudah dipakai.";
+            if ((long)cek.ExecuteScalar()! > 0) return "Surel sudah dipakai.";
         }
         using var cmd = c.CreateCommand();
         cmd.CommandText = "INSERT INTO pengguna(username,nama,sandi) VALUES($u,$n,$s)";

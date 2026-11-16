@@ -118,7 +118,7 @@ public class MainForm : Form
 
         // ---- tombol bawah
         var bawah = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 40, Padding = new Padding(0, 6, 0, 0) };
-        var btnQty = new Button { Text = "Ubah Qty (dobel klik)", AutoSize = true };
+        var btnQty = new Button { Text = "Ubah Jumlah (dobel klik)", AutoSize = true };
         btnQty.Click += (s, e) => UbahQty();
         var btnHapus = new Button { Text = "Hapus Item (Del)", AutoSize = true };
         btnHapus.Click += (s, e) => HapusItem();
@@ -141,7 +141,7 @@ public class MainForm : Form
         lv.Columns.Add("Kode", Ui.Px(this, 130));
         lv.Columns.Add("Nama Barang", Ui.Px(this, 280));
         lv.Columns.Add("Harga", Ui.Px(this, 130), HorizontalAlignment.Right);
-        lv.Columns.Add("Qty", Ui.Px(this, 70), HorizontalAlignment.Center);
+        lv.Columns.Add("Jumlah", Ui.Px(this, 70), HorizontalAlignment.Center);
         lv.Columns.Add("Subtotal", Ui.Px(this, 160), HorizontalAlignment.Right);
         Ui.RowHeight(lv, Ui.Px(this, 32)); // baris lebih tinggi/lega seperti versi Python
         lv.Resize += (s, e) => Ui.FitColumn(lv, 1);
@@ -238,7 +238,7 @@ public class MainForm : Form
         var btnLap = new Button { Text = "Laporan Penjualan (F3)", Width = w, Height = 36 };
         btnLap.Click += (s, e) => Laporan();
         stack.Controls.Add(btnLap);
-        var btnKeluar = new Button { Text = "Logout", Width = w, Height = 36 };
+        var btnKeluar = new Button { Text = "Keluar (Logout)", Width = w, Height = 36 };
         btnKeluar.Click += (s, e) => Logout();
         stack.Controls.Add(btnKeluar);
     }
