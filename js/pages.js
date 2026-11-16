@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261114j';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261114j';
-import { barChart, donut, spark, short } from './charts.js?v=20261114j';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116a';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116a';
+import { barChart, donut, spark, short } from './charts.js?v=20261116a';
 
 let S = {};
 
@@ -907,10 +907,10 @@ export function kform(k) {
 
 export function login(routeFn) {
   $('#app').innerHTML =
-    `<div class="lg"><div class="lg-c"><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Toko Berkah · kelola stok dan transaksi</p><div class="lg-al" id="al" role="alert" hidden></div>
+    `<div class="lg"><i class="lg-o lg-o1"></i><i class="lg-o lg-o2"></i><i class="lg-o lg-o3"></i><div class="lg-c"><div class="lg-brand"><span class="lg-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.2-4.5A1 1 0 0 1 6.2 4h11.6a1 1 0 0 1 1 .5L20 9"/><path d="M4 9a2.67 2.67 0 0 0 5.33 0 2.67 2.67 0 0 0 5.34 0A2.67 2.67 0 0 0 20 9"/><path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/><path d="M10 20v-4.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V20"/></svg></span><b>TOKO BERKAH</b><span>Sistem stok dan transaksi</span></div><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Silakan masuk untuk melanjutkan</p><div class="lg-al" id="al" role="alert" hidden></div>
   <div class="lg-f"><label class="lg-l" for="em">${ico('mail')}Surel</label><div class="lg-w" id="w1"><span class="lg-i">${ico('mail')}</span><input id="em" name="email" type="email" autocomplete="username" placeholder="surel@contoh.com" value="berkah@gmail.com"></div></div>
   <div class="lg-f"><label class="lg-l" for="pw">${ico('lock')}Kata sandi</label><div class="lg-w" id="w2"><span class="lg-i">${ico('lock')}</span><input id="pw" name="pw" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" value="berkah123"><button type="button" class="lg-eye" id="eye" aria-label="Tampilkan kata sandi">${ico('eye')}</button></div></div>
-  <button class="lg-b">Masuk</button></form></div></div>`;
+  <button class="lg-b">Masuk</button></form><ul class="lg-chips"><li>${ico('box')}Stok</li><li>${ico('cart')}Penjualan</li><li>${ico('chart')}Laporan</li><li>${ico('book')}Tutup Buku</li></ul><p class="lg-ft">Dikembangkan oleh Ruelz</p></div></div>`;
   $('#eye').onclick = () => {
     const i = $('#pw');
     i.type = i.type === 'password' ? 'text' : 'password';
