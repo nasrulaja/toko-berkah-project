@@ -18,8 +18,9 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261114j';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261114j';
+import { splash } from './splash.js?v=20261116a';
+import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261116a';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116a';
 import {
   dashboard,
   produk,
@@ -37,7 +38,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261114j';
+} from './pages.js?v=20261116a';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -444,3 +445,5 @@ if (me && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   loader(true);
   setTimeout(() => loader(false), LOAD_FEEDBACK_MS);
 }
+
+splash(); // layar sambutan: "TOKO BERKAH" diketik, lalu masuk ke halaman
