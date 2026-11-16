@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS transaksi(
 CREATE TABLE IF NOT EXISTS detail(
     id INTEGER PRIMARY KEY AUTOINCREMENT, trx_id INTEGER,
     kode TEXT, nama TEXT, harga INTEGER, qty INTEGER);
+CREATE TABLE IF NOT EXISTS tutup_kasir(
+    id INTEGER PRIMARY KEY AUTOINCREMENT, waktu TEXT, tanggal TEXT, kasir TEXT,
+    modal INTEGER, transaksi INTEGER, penjualan INTEGER, uang_hitung INTEGER, selisih INTEGER);
 CREATE TABLE IF NOT EXISTS pengguna(
     username TEXT PRIMARY KEY, nama TEXT NOT NULL, sandi TEXT NOT NULL);";
             cmd.ExecuteNonQuery();
@@ -405,5 +408,27 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
         cmd.Parameters.AddWithValue("$s", BuatHash(sandi));
         cmd.ExecuteNonQuery();
         return null;
+    }
+
+    // ------------------------------------------------------------ tutup kasir
+    // Catat hasil tutup kasir: uang yang seharusnya ada = modal awal + penjualan hari itu.
+    public static long SimpanTutupKasir(string kasir, long modal, long transaksi, long penjualan, long uangHitung)
+    {
+        long selisih = uangHitung - (modal + penjualan);
+        var sekarang = DateTime.Now;
+        using var c = Open();
+        using var cmd = c.CreateCommand();
+        cmd.CommandText = @"INSERT INTO tutup_kasir(waktu,tanggal,kasir,modal,transaksi,penjualan,uang_hitung,selisih)
+                            VALUES($w,$t,$k,$m,$n,$p,$u,$s)";
+        cmd.Parameters.AddWithValue("$w", sekarang.ToString("yyyy-MM-dd HH:mm:ss"));
+        cmd.Parameters.AddWithValue("$t", sekarang.ToString("yyyy-MM-dd"));
+        cmd.Parameters.AddWithValue("$k", kasir);
+        cmd.Parameters.AddWithValue("$m", modal);
+        cmd.Parameters.AddWithValue("$n", transaksi);
+        cmd.Parameters.AddWithValue("$p", penjualan);
+        cmd.Parameters.AddWithValue("$u", uangHitung);
+        cmd.Parameters.AddWithValue("$s", selisih);
+        cmd.ExecuteNonQuery();
+        return selisih;
     }
 }
