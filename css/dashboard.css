@@ -288,8 +288,9 @@
   display: block;
   min-width: 520px;
 }
+/* kecil: skala mengikuti lebar kartu (viewBox), jangan memaksa lebar minimum yang membuat batang terakhir terpotong */
 .chart-wrap.sm .chart {
-  min-width: 300px;
+  min-width: 0;
 }
 .chart .ca {
   fill: var(--tx);

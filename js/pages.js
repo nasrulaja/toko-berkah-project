@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116n';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116n';
-import { barChart, donut, spark, short } from './charts.js?v=20261116n';
+import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116o';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116o';
+import { barChart, donut, spark, short } from './charts.js?v=20261116o';
 
 let S = {};
 
@@ -149,7 +149,7 @@ export function dashboard() {
   const hariBaik = [...days].sort((a, b) => b.sales - a.sales)[0],
     ringkasJual = [
       ['Rata-rata / hari', rp(Math.round(rSales / range))],
-      ['Perbandingan laba', rSales ? (rProfit / rSales * 100).toFixed(1).replace('.', ',') + '%' : '-'],
+      ['Margin laba', rSales ? (rProfit / rSales * 100).toFixed(1).replace('.', ',') + '%' : '-'],
       ['Hari terbaik', hariBaik && hariBaik.sales ? hariBaik.d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' }) : '-']
     ];
 
@@ -187,9 +187,10 @@ export function dashboard() {
     series: [{ name: 'Transaksi', cls: 's3', values: hc }],
     fmt: (v) => v + ' transaksi',
     yfmt: (v) => String(Math.round(v)),
-    w: 360,
-    h: 250,
-    left: 30
+    int: true,
+    w: 300,
+    h: 230,
+    left: 24
   });
 
   /* --- Transaksi terbaru --- */
@@ -540,7 +541,6 @@ export function panduan() {
     ['Pengeluaran (modal)', 'Harga beli barang yang sudah terjual pada periode itu. Bukan biaya listrik, gaji, atau sewa.'],
     ['Penjualan hari ini', 'Jumlah transaksi (struk) hari ini, bukan jumlah rupiah. Rupiahnya ada di Pendapatan hari ini.'],
     ['Total belanja terbesar', 'Nilai satu transaksi terbesar pada hari itu.'],
-    ['Perbandingan laba', 'Laba periode ini dibanding periode sebelumnya, dalam persen.'],
     ['Tutup buku', 'Penutupan akhir periode (harian, bulanan, atau tahunan): menghitung pendapatan, pengeluaran, dan laba, lalu mengunci transaksi periode itu.'],
     ['Transaksi terkunci', 'Transaksi dari periode yang sudah ditutup. Tidak bisa diubah lagi supaya pembukuan tetap konsisten.'],
     ['Uang fisik', 'Uang nyata yang dihitung di laci kasir. Diisi saat tutup buku untuk dibandingkan dengan catatan sistem.'],

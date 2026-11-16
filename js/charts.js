@@ -46,7 +46,7 @@ const attr = (s) =>
    ========================================================================== */
 
 /** Grafik batang berkelompok. | param: { labels, series, fmt, every, yfmt, w, h, left } | return: string SVG */
-export function barChart({ labels, series, fmt = (v) => v, yfmt = short, every = 1, w = 640, h = 270, left = 46 }) {
+export function barChart({ labels, series, fmt = (v) => v, yfmt = short, every = 1, w = 640, h = 270, left = 46, int = false }) {
   const W = w,
     H = h,
     L = left,
@@ -56,8 +56,15 @@ export function barChart({ labels, series, fmt = (v) => v, yfmt = short, every =
   const pw = W - L - R,
     ph = H - T - B,
     n = labels.length;
-  const max = niceMax(Math.max(...series.flatMap((s) => s.values), 1));
-  const ticks = 4;
+  const vmax = Math.max(...series.flatMap((s) => s.values), 1);
+  // int: sumbu bilangan bulat (jumlah transaksi) — garis bantu jatuh tepat di angka bulat, tanpa pecahan
+  let max = niceMax(vmax),
+    ticks = 4;
+  if (int) {
+    const m = Math.ceil(vmax);
+    if (m <= 5) (max = m), (ticks = m);
+    else (ticks = 4), (max = Math.ceil(m / 4) * 4);
+  }
   const grid = [...Array(ticks + 1)]
     .map((_, i) => {
       const v = (max / ticks) * i,
