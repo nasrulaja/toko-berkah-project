@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116d';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116d';
-import { barChart, donut, spark, short } from './charts.js?v=20261116d';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116e';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116e';
+import { barChart, donut, spark, short } from './charts.js?v=20261116e';
 
 let S = {};
 
@@ -910,7 +910,7 @@ export function login(routeFn) {
     `<div class="lg"><div class="lg-c"><div class="lg-brand"><b>TOKO BERKAH</b><span>Sistem manajemen toko</span></div><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Silakan masuk untuk melanjutkan</p><div class="lg-al" id="al" role="alert" hidden></div>
   <div class="lg-f"><label class="lg-l" for="em">${ico('mail')}Surel</label><div class="lg-w" id="w1"><span class="lg-i">${ico('mail')}</span><input id="em" name="email" type="email" autocomplete="username" placeholder="surel@contoh.com" value="berkah@gmail.com"></div></div>
   <div class="lg-f"><label class="lg-l" for="pw">${ico('lock')}Kata sandi</label><div class="lg-w" id="w2"><span class="lg-i">${ico('lock')}</span><input id="pw" name="pw" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" value="berkah123"><button type="button" class="lg-eye" id="eye" aria-label="Tampilkan kata sandi">${ico('eye')}</button></div></div>
-  <button class="lg-b">Masuk</button></form><ul class="lg-chips"><li>${ico('box')}Stok</li><li>${ico('cart')}Penjualan</li><li>${ico('chart')}Laporan</li><li>${ico('book')}Tutup Buku</li></ul><p class="lg-ft">Dikembangkan oleh Ruelz</p></div></div>`;
+  <button class="lg-b">Masuk</button></form><ul class="lg-chips"><li>${ico('box')}Stok</li><li>${ico('cart')}Penjualan</li><li>${ico('chart')}Laporan</li><li>${ico('book')}Tutup Buku</li></ul></div></div>`;
   $('#eye').onclick = () => {
     const i = $('#pw');
     i.type = i.type === 'password' ? 'text' : 'password';
