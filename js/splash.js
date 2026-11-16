@@ -6,8 +6,6 @@
    ========================================================================== */
 const JUDUL = 'TOKO BERKAH';
 const SUB = 'Kelola stok dan transaksi toko dengan mudah';
-const LOGO =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.2-4.5A1 1 0 0 1 6.2 4h11.6a1 1 0 0 1 1 .5L20 9"/><path d="M4 9a2.67 2.67 0 0 0 5.33 0 2.67 2.67 0 0 0 5.34 0A2.67 2.67 0 0 0 20 9"/><path d="M5 12v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/><path d="M10 20v-4.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V20"/></svg>';
 
 /** Tampilkan splash sekali per pemuatan halaman. | param: - | return: void */
 export function splash() {
@@ -18,8 +16,7 @@ export function splash() {
   el.setAttribute('role', 'status');
   el.setAttribute('aria-label', 'Toko Berkah');
   el.innerHTML =
-    '<i class="sp-o sp-o1"></i><i class="sp-o sp-o2"></i><i class="sp-o sp-o3"></i>' +
-    `<div class="sp-card"><div class="sp-logo">${LOGO}</div>` +
+    '<div class="sp-card"><div class="sp-logo">TB</div>' +
     '<h1 class="sp-t" aria-hidden="true"><span id="spt"></span><b class="sp-caret"></b></h1>' +
     `<p class="sp-s">${SUB}</p><p class="sp-h">Ketuk untuk melanjutkan</p></div>`;
   document.body.appendChild(el);

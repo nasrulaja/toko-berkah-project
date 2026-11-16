@@ -92,3 +92,9 @@ body.sp-on { overflow: hidden; }
 }
 .lg-c { box-sizing: border-box; min-height: 100vh; min-height: 100dvh; } .lg { min-height: 100vh; min-height: 100dvh; }
 body:has(.lg) { padding-bottom: 0 !important; }
+
+/* logo monogram "TB" menggantikan ikon toko; tanpa bola kaca */
+.sp-logo, .lg-logo { font-weight: 800; letter-spacing: 0.04em; color: #fff; text-shadow: 0 1px 2px rgba(9, 44, 76, 0.3); background: linear-gradient(160deg, #4cb8f5, #1b7fcf); }
+.sp-logo { font-size: 30px; }
+.lg-logo { font-size: 21px; }
+.lg-o, .sp-o { display: none !important; }
