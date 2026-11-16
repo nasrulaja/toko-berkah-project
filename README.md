@@ -10,7 +10,7 @@ native Windows), dan versi **Android** yang sedang disiapkan.
 |---|---|---|---|
 | **Web** | ✅ Tersedia | HTML + CSS + JS (ES Module, `localStorage`) | root repo (`index.html`, `js/`, `css/`) |
 | **Desktop** | ✅ Tersedia | C# WinForms (.NET 8) + SQLite | folder `Toko-Berkah-Dekstop/` |
-| **Android** | 🚧 **Coming soon** | — | belum tersedia |
+| **Android** | ✅ Tersedia (Aplikasi Pemilik) | Kotlin + Jetpack Compose + Supabase | folder `TokoBerkah-Android-Owner/` |
 
 ---
 
@@ -123,18 +123,41 @@ dotnet publish -c Release -r win-x64 --self-contained true ^
 
 ---
 
-## 📱 Versi Android — Coming Soon 🚧
+## Toko Berkah Android Owner App
 
-Versi Android **belum tersedia**. Belum ada kode, APK, maupun tanggal rilis.
+Aplikasi Android **native untuk pemilik toko** — mengelola harga, stok, dan barang masuk
+langsung dari HP, terhubung ke **backend Supabase yang sama** dengan Web Admin & Kasir Desktop.
 
-Kalau Anda ingin menambahkannya, jalur yang paling masuk akal adalah memakai
-ulang logika bisnis yang sudah ada, misalnya:
+📁 **Folder project:** [`TokoBerkah-Android-Owner/`](TokoBerkah-Android-Owner/)
+📖 **Dokumentasi lengkap:** [`TokoBerkah-Android-Owner/README.md`](TokoBerkah-Android-Owner/README.md)
 
-- **Wrapper WebView** — membungkus versi web (paling cepat, tapi data tetap di perangkat)
-- **Kotlin / Jetpack Compose** — dengan Room (SQLite) agar setara versi desktop
-- **Flutter atau .NET MAUI** — jika ingin menargetkan iOS sekaligus
+### Fitur
+- **Login Pemilik** — validasi email & sandi, loading, pesan galat, sesi terenkripsi
+- **Cek Harga** — pindai barcode + daftar produk (gambar, EAN, harga, stok, kategori, rak)
+- **Detail Produk & Ubah Harga** — harga jual kasir, indikator naik/turun otomatis, alasan wajib, konfirmasi
+- **Riwayat Harga** — tanggal • jam, harga sebelum ➜ baru, selisih, pemilik yang mengubah
+- **Cek Stok** — status hijau/oranye/merah, sisa stok total, rak depan & gudang, jumlah perlu restok
+- **Barang Masuk** — jumlah (-, +, +5/+10/+20/+50), harga beli, total nilai, estimasi stok; stok tersinkron ke Web Admin tanpa penggandaan
+- **Barcode Scanner** — CameraX + ML Kit (EAN-13/8, UPC-A/E, Code128, Code39, QR), senter, input manual
+- **Floating Warning** — notifikasi merah/oranye/hijau yang bisa ditutup
 
-Silakan buka *Issue* kalau ada kebutuhan spesifik untuk versi Android.
+### Teknologi
+Kotlin · Jetpack Compose (Material 3) · MVVM · Navigation Compose · Coroutines & Flow ·
+Retrofit + OkHttp · Room · DataStore + EncryptedSharedPreferences · CameraX + ML Kit ·
+Coil · Gradle Kotlin DSL · minSdk 24 / targetSdk 34.
+
+### APK siap pasang
+[`TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-debug.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-debug.apk)
+
+### Build
+```bash
+cd TokoBerkah-Android-Owner
+gradlew.bat assembleDebug   # Windows
+./gradlew assembleDebug     # macOS/Linux
+```
+
+> BASE_URL diatur lewat `local.properties` (`BASE_URL=...`) atau `-PBASE_URL=...`,
+> bukan di-hardcode. Lihat README Android untuk detail.
 
 ---
 
