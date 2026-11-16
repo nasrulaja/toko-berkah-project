@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116i';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116i';
-import { barChart, donut, spark, short } from './charts.js?v=20261116i';
+import { db, me, save, mut, KS, setMe, setDB, seed, rentangPeriode, ringkasPeriode, tutupBuku, terkunci } from './db.js?v=20261116j';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116j';
+import { barChart, donut, spark, short } from './charts.js?v=20261116j';
 
 let S = {};
 
@@ -659,7 +659,7 @@ export function hasilTutupBuku() {
   return `<div class="card"><div class="cb"><b>Apa itu tutup buku?</b><p>Tutup buku adalah proses akhir periode (harian, bulanan, atau tahunan) untuk mengunci seluruh catatan transaksi, menghitung total pendapatan dan pengeluaran, serta merapikan pembukuan agar siap digunakan untuk periode berikutnya.</p></div></div>
   <div class="card"><div class="ch"><h4>Proses tutup buku</h4><div class="flt"><select id="tbjenis" aria-label="Jenis periode tutup buku">${Object.entries(jn).map(([k, v]) => `<option value="${k}"${k === jenis ? ' selected' : ''}>${v}</option>`).join('')}</select></div></div><div class="cb">
     <div class="tbinfo"><div><span>Periode</span><b>${esc(ring.label)}</b></div><div><span>Rentang tanggal</span><b>${esc(ring.dari === ring.sampai ? tglId(ring.dari) : tglId(ring.dari) + ' – ' + tglId(ring.sampai))}</b></div><div><span>Jumlah transaksi</span><b>${ring.transaksi}</b></div><div><span>Status</span><span class="b ${ring.bisaDitutup ? 'g' : ring.sudahDitutup ? 'o' : 'r'}">${ring.bisaDitutup ? 'Siap ditutup' : ring.sudahDitutup ? 'Sudah ditutup' : 'Belum ada transaksi'}</span></div></div>
-    <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Pendapatan</span><h3>${rp(ring.pendapatan)}</h3></div><div class="st" style="background:#B54708"><span>Pengeluaran (modal)</span><h3>${rp(ring.pengeluaran)}</h3></div><div class="st" style="background:#0E9384"><span>Laba</span><h3>${rp(ring.laba)}</h3></div></div>
+    <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Pendapatan</span><h3>${rp(ring.pendapatan)}</h3></div><div class="st" style="background:#B54708"><span>Pengeluaran (modal)</span><h3>${rp(ring.pengeluaran)}</h3></div><div class="st" style="background:#0E9384"><span>Laba</span><h3>${rp(ring.laba)}</h3></div><div class="st" style="background:${ring.pendapatan - ring.pengeluaran >= 0 ? '#175CD3' : '#B42318'}"><span>Selisih</span><h3>${rp(ring.pendapatan - ring.pengeluaran)}</h3><small>Pemasukan − pengeluaran · ${ring.pendapatan - ring.pengeluaran > 0 ? 'Untung' : ring.pendapatan - ring.pengeluaran < 0 ? 'Rugi' : 'Impas'}</small></div></div>
     <div class="row"><div class="fg"><label for="tbfisik">Uang fisik di kasir (opsional)</label><input id="tbfisik" type="number" min="0" step="any" placeholder="Kosongkan bila tidak dihitung"></div><div class="fg"><label for="tbcat">Catatan</label><input id="tbcat" placeholder="Misal: uang kembalian salah hitung"></div></div>
     <p class="note">Isi "Uang fisik" untuk membandingkan uang di laci dengan catatan sistem; selisihnya tercatat otomatis.</p>
     <form id="tbform"><button class="btn bp"${ring.bisaDitutup ? '' : ' disabled'}>${ring.bisaDitutup ? `Tutup buku ${jn[jenis].toLowerCase()} ini` : 'Tidak bisa ditutup'}</button></form>
