@@ -181,6 +181,12 @@
         stretch = Math.min(Math.abs(p) / DETACH, CONFIG.STRETCH_MAX),
         scX = 1 + stretch * CONFIG.SCALE_X * (Math.abs(p) > 0 ? 1 : 0),
         scY = 1 - Math.min(Math.abs(p) / DETACH, 1) * CONFIG.SCALE_Y * (Math.abs(p) > 0 ? 1 : 0);
+      /* posisi & tinggi penanda mengikuti item pertama yang sebenarnya, supaya tetap lurus
+         walau tinggi tombol "Sembunyikan"/font berubah (mis. font cadangan belum termuat) */
+      if (items[0]) {
+        ind.style.top = items[0].offsetTop + 'px';
+        ind.style.height = items[0].offsetHeight + 'px';
+      }
       ind.style.transform =
         'translate(0,' + pos.x + 'px) translateX(' + p + 'px) scale(' + scX.toFixed(3) + ',' + scY.toFixed(3) + ')';
       rail.style.transform = 'translateY(-50%) translateY(' + rubber.x + 'px)';
@@ -328,6 +334,10 @@
     }
     rail._sync = sync;
     sync();
+    // font web yang termuat belakangan mengubah ukuran: hitung ulang posisi penanda
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { render(); });
+    window.addEventListener('load', function () { render(); });
+    window.addEventListener('resize', function () { render(); });
   }
 
   // Saat layar melewati batas 992px, lebarkan (desktop) atau ciutkan (HP) rail otomatis,
