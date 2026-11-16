@@ -12,7 +12,8 @@
    Catatan penting soal nama kolom:
    Tabel di Supabase memakai nama kolom bahasa Indonesia yang sedikit berbeda
    dengan properti di aplikasi. Semua perbedaan itu diterjemahkan di sini
-   (fungsi MAP di bawah), jadi db.js & pages.js tetap memakai nama lamanya.
+   (fungsi muatDB & simpanDB di bawah), jadi db.js & pages.js tetap memakai
+   nama lamanya.
 
    PETA NAMA KOLOM (Supabase  ->  aplikasi):
      produk.harga_jual             -> produk.harga
@@ -54,18 +55,6 @@ async function get(tabel, q = 'select=*') {
     throw new Error(`${tabel}: ${res.status} ${t.slice(0, 200)}`);
   }
   return res.json();
-}
-
-/** Menghapus isi satu tabel (untuk sinkron ulang). | param: tabel (string) | return: void */
-async function clear(tabel) {
-  const res = await fetch(`${BASE}/${tabel}?id=gte.0`, {
-    method: 'DELETE',
-    headers: head({ Prefer: 'return=minimal' })
-  });
-  if (!res.ok) {
-    const t = await res.text().catch(() => '');
-    throw new Error(`hapus ${tabel}: ${res.status} ${t.slice(0, 200)}`);
-  }
 }
 
 /** Menyisipkan banyak baris sekaligus. | param: tabel (string), rows (array) | return: void */
