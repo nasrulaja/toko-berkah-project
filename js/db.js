@@ -10,6 +10,8 @@
      BAGIAN 4  DATA CONTOH          seed()
    ========================================================================== */
 
+import { muatDB, simpanDB } from './api.js?v=20261116q';
+
 /* ==========================================================================
    BAGIAN 1 — KUNCI & STATE
    K/KS dipakai di banyak tempat, jadi jangan diganti sembarangan: mengubahnya
@@ -20,6 +22,11 @@ export const K = 'berkah_db_v1',
   KS = 'berkah_session';
 export let db;
 export let me = null;
+
+/** Dari mana data terakhir dimuat: 'supabase' atau 'lokal'. Dipakai halaman Pengaturan. */
+export let dbSumber = 'lokal';
+/** Pesan galat bila Supabase gagal dihubungi (kosong bila tidak ada masalah). */
+export let dbGalat = '';
 
 /** Menetapkan user yang sedang login. | param: val (objek user) | return: void */
 export const setMe = (val) => {
@@ -54,8 +61,26 @@ export const setDB = (val) => {
    aplikasi tetap jalan dengan data contoh dan tanpa menyimpan.
    ========================================================================== */
 
-/** Memuat database dari localStorage; jika kosong, buat data contoh via seed(). | param: - | return: objek DB */
-export function load() {
+/** Memuat database: coba Supabase dulu, lalu localStorage, terakhir data contoh.
+ *  param: - | return: Promise<objek DB> */
+export async function load() {
+  // 1) Utamakan database Supabase agar data selalu sama di semua perangkat
+  try {
+    const d = await muatDB();
+    if (d && Array.isArray(d.produk) && d.produk.length) {
+      dbSumber = 'supabase';
+      // simpan salinan lokal supaya aplikasi tetap bisa dibuka saat offline
+      try {
+        localStorage.setItem(K, JSON.stringify(d));
+      } catch (e) {}
+      return d;
+    }
+  } catch (e) {
+    // Supabase tidak terjangkau: lanjut ke data lokal, aplikasi tidak berhenti
+    dbSumber = 'lokal';
+    dbGalat = e.message || String(e);
+  }
+  // 2) Data lokal (localStorage)
   try {
     const s = localStorage.getItem(K);
     if (s) {
@@ -70,9 +95,6 @@ export function load() {
         d.produk.forEach((p) => {
           if (!(p.isi_pack >= 1)) p.isi_pack = PACK[p.nama] || 1;
         });
-        d.transaksi.forEach((t) => {
-          if (!t.pembeli) t.pembeli = namaPembeli(t.id);
-        });
         return d;
       }
     }
@@ -85,11 +107,23 @@ export function load() {
   return fresh;
 }
 
-/** Menyimpan database aktif ke localStorage. | param: - | return: void */
+/** Menyimpan database aktif: ke localStorage (selalu) dan ke Supabase (bila terhubung).
+ *  param: - | return: void */
 export function save() {
+  // selalu simpan salinan lokal agar tetap jalan saat offline
   try {
     localStorage.setItem(K, JSON.stringify(db));
   } catch (e) {}
+  // kirim perubahan ke Supabase di latar belakang; kegagalan tidak menghentikan aplikasi
+  if (dbSumber === 'supabase') {
+    simpanDB(db)
+      .then((r) => {
+        if (!r.ok) dbGalat = r.pesan || '';
+      })
+      .catch((e) => {
+        dbGalat = e.message || String(e);
+      });
+  }
 }
 
 /* ==========================================================================

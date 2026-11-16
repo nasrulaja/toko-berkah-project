@@ -18,9 +18,9 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261116p';
-import { load, db, setDB, me, setMe, KS, save } from './db.js?v=20261116p';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116p';
+import { splash } from './splash.js?v=20261116q';
+import { load, db, setDB, me, setMe, KS, K, save, seed } from './db.js?v=20261116q';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116q';
 import {
   dashboard,
   produk,
@@ -39,7 +39,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261116p';
+} from './pages.js?v=20261116q';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -402,7 +402,26 @@ try {
 }
 theme('light'); // aplikasi hanya memakai tema terang
 
-setDB(load());
+/** Memuat data dengan batas waktu; bila Supabase lambat, pakai data lokal.
+ *  param: ms (batas waktu milidetik) | return: Promise<objek DB> */
+async function loadAman(ms = 8000) {
+  return Promise.race([
+    load(),
+    new Promise((resolve) =>
+      setTimeout(async () => {
+        // waktu habis: tetap beri data agar aplikasi bisa dibuka
+        try {
+          const s = localStorage.getItem(K);
+          if (s) return resolve(JSON.parse(s));
+        } catch (e) {}
+        resolve(await load().catch(() => seed()));
+      }, ms)
+    )
+  ]);
+}
+
+// Muat data: Supabase lebih dulu (async), lalu tampilkan aplikasi
+setDB(await loadAman());
 try {
   const s = localStorage.getItem(KS);
   setMe(db.users.find((u) => u.id == s) || null);
