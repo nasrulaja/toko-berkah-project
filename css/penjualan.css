@@ -1,0 +1,21 @@
+/* ==========================================================================
+   TOKO BERKAH — penjualan.css
+   Halaman Catat Penjualan: daftar barang di kiri, keranjang di kanan.
+   ========================================================================== */
+.pj { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.pj-l { display: grid; gap: 8px; margin-top: 12px; max-height: 520px; overflow-y: auto; padding-right: 4px; }
+.pj-i, .pj-c { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--bd); background: color-mix(in srgb, var(--card) 70%, transparent); }
+.pj-i b, .pj-c b { color: var(--hd); }
+.pj-i small, .pj-c small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--tx); }
+.pj-i.off { opacity: 0.5; }
+#pjk { display: grid; gap: 8px; margin-bottom: 14px; }
+.pj-q { display: inline-flex; align-items: center; gap: 8px; flex: none; }
+.pj-q button { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--bd); background: var(--card); color: var(--hd); font-size: 18px; font-weight: 700; line-height: 1; cursor: pointer; }
+.pj-q button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pj-q span { min-width: 22px; text-align: center; font-weight: 700; color: var(--hd); }
+.pj-t { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; margin: 12px 0; border-radius: 14px; background: color-mix(in srgb, var(--p) 14%, transparent); font-weight: 600; color: var(--hd); }
+.pj-t b { font-size: 20px; }
+.pj-t b.bad { color: var(--bad); }
+.pj-qc { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 4px; }
+.pj .fg { margin-bottom: 10px; }
+@media (max-width: 900px) { .pj { grid-template-columns: 1fr; } .pj-l { max-height: 340px; } }
