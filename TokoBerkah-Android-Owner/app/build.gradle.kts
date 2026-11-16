@@ -54,7 +54,11 @@ android {
             isMinifyEnabled = false
         }
         release {
-            isMinifyEnabled = false
+            // R8 wajib aktif: tanpanya dex berisi seluruh kode Compose + ML Kit
+            // mentah (~49 MB). Dengan R8 turun drastis karena kode yang tidak
+            // dipakai (mis. varian ML Kit, kelas debug) dibuang.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Release ditandatangani dengan keystore lokal bila tersedia
             // (lihat README bagian "Build APK Release"). Tidak ada kredensial di repo.
@@ -80,6 +84,20 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    // APK per ABI. `libbarhopper_v3.so` (ML Kit barcode) ~5 MB per arsitektur,
+    // sehingga APK universal membawa 4 salinan sekaligus (~19 MB). Dengan split,
+    // tiap HP hanya mengunduh arsitektur yang dipakainya.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            // arm64-v8a = hampir semua HP Android modern; armeabi-v7a = HP lama.
+            // x86/x86_64 hanya dipakai emulator, jadi tidak ikut didistribusikan.
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
     }
     testOptions {
         unitTests {

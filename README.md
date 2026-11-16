@@ -54,9 +54,9 @@ Demo ↓
 | Cek Stok | ![Cek Stok](docs/screenshots/06-cek-stok.png) |
 
 Untuk mencoba di HP: unduh
-[`apk/TokoBerkah-Owner-debug.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-debug.apk),
-lalu instal (izinkan "sumber tidak dikenal"). Login memakai akun pemilik yang
-sama dengan Web Admin.
+[`apk/TokoBerkah-Owner-arm64-v8a-debug.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-arm64-v8a-debug.apk)
+(27 MB; untuk HP lama 32-bit pakai versi `armeabi-v7a`), lalu instal (izinkan
+"sumber tidak dikenal"). Login memakai akun pemilik yang sama dengan Web Admin.
 
 > Berbeda dengan versi Desktop, aplikasi Android tidak bisa dijalankan langsung
 > dari browser — harus dipasang di perangkat Android.
@@ -172,7 +172,15 @@ Retrofit + OkHttp · Room · DataStore + EncryptedSharedPreferences · CameraX +
 Coil · Gradle Kotlin DSL · minSdk 24 / targetSdk 34.
 
 ### APK siap pasang
-[`TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-debug.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-debug.apk)
+
+| Arsitektur | APK | Ukuran |
+| --- | --- | --- |
+| arm64-v8a (HP modern) | [`TokoBerkah-Owner-arm64-v8a-debug.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-arm64-v8a-debug.apk) | 27 MB |
+| release, arm64-v8a | [`TokoBerkah-Owner-arm64-v8a-release-unsigned.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-arm64-v8a-release-unsigned.apk) | **8.1 MB** |
+| release, armeabi-v7a | [`TokoBerkah-Owner-armeabi-v7a-release-unsigned.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-armeabi-v7a-release-unsigned.apk) | **6.5 MB** |
+
+APK debug bisa langsung dipasang. APK release berukuran jauh lebih kecil
+(R8 aktif) tetapi masih **unsigned** — tanda tangani dulu sebelum dipasang.
 
 ### Build
 ```bash

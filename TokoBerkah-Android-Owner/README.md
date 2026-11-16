@@ -64,7 +64,9 @@ TokoBerkah-Android-Owner/
 │       │   └── viewmodel/               # Auth, Products, Pricing, Stock, SharedUi
 │       └── res/
 ├── gradle/wrapper/
-├── apk/TokoBerkah-Owner-debug.apk
+├── apk/
+│   ├── TokoBerkah-Owner-arm64-v8a-release-unsigned.apk   # 8 MB, untuk HP modern
+│   └── TokoBerkah-Owner-armeabi-v7a-release-unsigned.apk # 6.5 MB, untuk HP lama
 ├── build.gradle.kts
 ├── settings.gradle.kts
 └── README.md
@@ -123,8 +125,35 @@ gradlew.bat assembleDebug        # Windows
 ./gradlew assembleDebug          # macOS/Linux
 ```
 
-Hasil: `app/build/outputs/apk/debug/app-debug.apk` (juga disalin ke
-`apk/TokoBerkah-Owner-debug.apk`).
+Hasil: `app/build/outputs/apk/debug/app-arm64-v8a-debug.apk` (dan
+`app-armeabi-v7a-debug.apk`).
+
+### Ukuran APK & split per arsitektur
+
+APK dipisah per ABI (`splits.abi` di `app/build.gradle.kts`) karena library
+native ML Kit (`libbarhopper_v3.so`) berukuran ~5 MB **per arsitektur**. Bila
+digabung jadi satu APK universal, file itu ikut terbawa 4 kali.
+
+| APK | Ukuran | Peruntukan |
+| --- | --- | --- |
+| `arm64-v8a` release | **8.1 MB** | hampir semua HP Android modern |
+| `armeabi-v7a` release | **6.5 MB** | HP lama (32-bit) |
+| `arm64-v8a` debug | 27 MB | pengembangan |
+
+Sebelumnya satu APK universal berukuran **44 MB** (87 MB setelah diekstrak),
+karena R8 tidak aktif sehingga dex berisi seluruh kode Compose + ML Kit mentah
+(49 MB). Penyebabnya `isMinifyEnabled = false` pada build *release*, yang kini
+diaktifkan bersama `isShrinkResources`.
+
+R8 bisa memangkas sebanyak itu dengan aman karena keep-rules di
+`app/proguard-rules.pro` hanya menyisakan yang benar-benar butuh refleksi:
+DTO Gson (`data/models`), interface Retrofit, dan kelas Room. Setelah build,
+17/17 unit test tetap lulus dan nama field DTO diverifikasi utuh di dalam
+`classes.dex`.
+
+> APK `unsigned` adalah build release yang **belum ditandatangani**. Android
+> menolak memasangnya sampai ditandatangani. Untuk mencoba di HP, pakai APK
+> debug, atau tanda tangani dulu (lihat di bawah).
 
 **Release** (opsional): tambahkan ke `local.properties`:
 ```properties
