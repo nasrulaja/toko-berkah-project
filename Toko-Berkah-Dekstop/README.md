@@ -17,8 +17,8 @@ Syarat: Windows 64-bit dan [.NET 8 Runtime (Desktop)](https://dotnet.microsoft.c
 
 | Lokasi | Isi |
 |---|---|
-| `Kasir-Demo.zip` | Paket siap jalan, unduh ini kalau hanya ingin mencoba |
-| `rilis/` | Isi paket yang sama tetapi belum dizip (untuk melihat isi file) |
+| [`Kasir-Demo.zip`](https://github.com/nasrulaja/toko-berkah-project/raw/main/Kasir-Demo.zip) | Paket siap jalan, di root repo — unduh ini kalau hanya ingin mencoba |
+| [`demo-kasir/`](../../demo-kasir/) | Isi paket yang sama tetapi belum dizip (bisa dilihat per file) |
 | `Kasir/` | Kode sumber lengkap (untuk diubah/dikembangkan) |
 
 ## Fitur

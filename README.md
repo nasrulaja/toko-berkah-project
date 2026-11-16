@@ -14,6 +14,30 @@ native Windows), dan versi **Android** yang sedang disiapkan.
 
 ---
 
+## 🖥️ Demo Aplikasi Desktop — langsung dari sini
+
+Aplikasi kasir Windows siap dipakai. **Tidak perlu masuk ke folder mana pun.**
+
+| Untuk | Ambil ini | Cara pakai |
+|---|---|---|
+| **Paling mudah** | [`Kasir-Demo.zip`](https://github.com/nasrulaja/toko-berkah-project/raw/main/Kasir-Demo.zip) | Unduh → ekstrak → jalankan `Kasir.exe` |
+| **Tanpa zip** | folder [`demo-kasir/`](demo-kasir/) | Unduh seluruh isi folder, lalu jalankan `Kasir.exe` |
+
+Login: **kasir@gmail.com** / **kasir123**
+
+> ⚠️ Wajib **diekstrak dulu**. Jangan jalankan `Kasir.exe` dari dalam ZIP — aplikasi tidak akan
+> menemukan file pendampingnya dan langsung error. `Kasir.exe` harus satu folder dengan 17 file `.dll` di `demo-kasir/`.
+
+Syarat: Windows 64-bit + [.NET 8 Runtime (Desktop)](https://dotnet.microsoft.com/download/dotnet/8.0).
+Bila runtime belum ada, Windows akan menampilkan tautan unduhannya saat `Kasir.exe` dijalankan.
+
+Yang bisa dicoba: login kasir, cari barang lewat barcode, keranjang, bayar + kembalian, struk,
+laporan harian/bulanan (ekspor Excel), tutup kasir, dan **sinkron otomatis ke database web**
+(bilah status hijau di bawah jendela). Bila internet mati, transaksi tetap tersimpan dan
+terkirim sendiri saat online kembali.
+
+---
+
 ## 🌐 Versi Web
 
 Prototipe web sesuai PRD (bagian Web 4.1). Fitur kasir/POS tidak disertakan karena
