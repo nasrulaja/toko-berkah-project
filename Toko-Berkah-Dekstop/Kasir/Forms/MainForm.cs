@@ -67,6 +67,11 @@ public class MainForm : Form
                 "Belum bisa logout", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
+
+        // Pembukuan: setiap mau logout, kasir harus menghitung uang di laci dulu (Batal = tetap login).
+        using (var tutup = new TutupKasirForm(pengguna))
+            if (tutup.ShowDialog(this) != DialogResult.OK) { entKode.Focus(); return; }
+
         pengguna = "";
         Text = "Kasir - " + Db.NamaToko;
         login.Visible = true;
