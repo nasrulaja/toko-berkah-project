@@ -18,7 +18,7 @@
 
    PETA NAMA KOLOM (Supabase  ->  aplikasi):
      produk.harga_jual             -> produk.harga
-     produk...                     -> produk.harga_beli (tidak ada di DB)
+     produk.harga_beli             -> produk.harga_beli (bila kolomnya ada; bila tidak, dari stok_mutasi.harga_kulak)
      stok_mutasi.harga_kulak       -> mutasi.harga_beli
      transaksi.kode_transaksi      -> transaksi.kode
      transaksi.rekap_id            -> transaksi.terkunci (penanda periode)
@@ -97,6 +97,9 @@ const iso = (s) => {
 /** Ambil tanggal (YYYY-MM-DD) dari sebuah waktu. | param: w | return: string */
 const tgl = (w) => new Date(w).toLocaleDateString('en-CA');
 
+/** Penanda: tabel produk di Supabase punya kolom harga_beli (diisi saat muatDB). */
+let HARGA_BELI_ADA = false;
+
 /** Susun objek DB aplikasi dari tabel-tabel Supabase. | param: - | return: objek DB */
 export async function muatDB() {
   // semua tabel diambil sekaligus agar cepat
@@ -111,11 +114,16 @@ export async function muatDB() {
     get('tutup_buku', 'select=*&order=id')
   ]);
 
-  // harga beli tidak disimpan di tabel produk. Ambil nilai terakhir yang
-  // diketahui dari riwayat stok masuk (harga_kulak) sebagai perkiraan.
+  // harga beli: utamakan kolom produk.harga_beli bila ada di tabel. Bila kolom
+  // belum ada (atau kosong), pakai nilai terakhir dari riwayat stok masuk
+  // (stok_mutasi.harga_kulak) sebagai perkiraan.
+  HARGA_BELI_ADA = produk.some((p) => 'harga_beli' in p);
   const beli = new Map();
   mutasi.forEach((m) => {
     if (m.harga_kulak != null && m.harga_kulak > 0) beli.set(m.produk_id, m.harga_kulak);
+  });
+  produk.forEach((p) => {
+    if (p.harga_beli != null && p.harga_beli > 0) beli.set(p.id, p.harga_beli);
   });
 
   return {
@@ -246,6 +254,7 @@ export async function simpanDB(data, opsi = {}) {
           stok: p.stok,
           kategori_id: p.kategori_id,
           stok_minimum: p.stok_minimum ?? 0,
+          ...(HARGA_BELI_ADA ? { harga_beli: p.harga_beli ?? 0 } : {}),
           updated_at: new Date().toISOString()
         })
       });
