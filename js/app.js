@@ -18,7 +18,7 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261117m';
+import { splash } from './splash.js?v=20261117p';
 import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117m';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
 import {
