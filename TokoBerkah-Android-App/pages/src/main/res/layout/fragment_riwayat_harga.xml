@@ -105,7 +105,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Semua perubahan harga tersimpan otomatis untuk memudahkan pengecekan."
-                android:textColor="@color/navy_soft"
+                android:textColor="@color/gray_text"
                 android:textSize="13sp" />
         </LinearLayout>
 

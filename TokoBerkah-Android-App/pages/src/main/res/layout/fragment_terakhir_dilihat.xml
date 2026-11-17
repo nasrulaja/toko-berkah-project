@@ -80,7 +80,7 @@
                 android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:text="@string/scan_info"
-                android:textColor="@color/navy_soft"
+                android:textColor="@color/gray_text"
                 android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>

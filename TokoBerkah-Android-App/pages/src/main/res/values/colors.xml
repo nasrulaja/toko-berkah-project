@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Palet disamakan dengan Figma (file desain utama) -->
-    <color name="blue_primary">#3FB8FF</color>
+    <color name="blue_primary">#38B6FF</color>
+    <color name="blue_btn_scan">#40B8FF</color>
+    <color name="nav_pill">#3FB8FF</color>
+    <color name="chip_category_bg">#C6E7FF</color>
     <color name="blue_primary_dark">#004668</color>
     <color name="blue_soft">#EEF4FF</color>
-    <color name="blue_soft_2">#E4EFFF</color>
+    <color name="blue_soft_2">#EEF4FF</color>
     <color name="blue_banner">#E4EFFF</color>
     <color name="blue_text">#006492</color>
 
@@ -12,19 +15,19 @@
     <color name="navy_soft">#004668</color>
     <color name="gray_text">#3E4850</color>
     <color name="gray_muted">#6E7881</color>
-    <color name="gray_icon">#6E7881</color>
+    <color name="gray_icon">#3E4850</color>
 
     <color name="bg_page">#F8F9FF</color>
     <color name="white">#FFFFFF</color>
     <color name="card_border">#E4EFFF</color>
-    <color name="field_border">#C6E7FF</color>
+    <color name="field_border">#DCE6EF</color>
 
-    <color name="green">#006947</color>
-    <color name="green_dot">#006947</color>
+    <color name="green">#065F46</color>
+    <color name="green_dot">#4CCBA1</color>
     <color name="red_alert">#BA1A1A</color>
 
-    <color name="chip_ean_bg">#EEF4FF</color>
-    <color name="soft_btn_bg">#EEF4FF</color>
+    <color name="chip_ean_bg">#E4EFFF</color>
+    <color name="soft_btn_bg">#E4EFFF</color>
     <color name="highlight_bg">#EEF4FF</color>
 
     <color name="ic_launcher_bg">#3FB8FF</color>

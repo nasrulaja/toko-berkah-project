@@ -182,7 +182,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/navy_soft"
+                android:textColor="@color/gray_text"
                 android:textSize="13sp"
                 tools:text="Harga kasir akan diperbarui menjadi Rp 35.000 per buah. Pastikan harga sudah sesuai." />
         </LinearLayout>
