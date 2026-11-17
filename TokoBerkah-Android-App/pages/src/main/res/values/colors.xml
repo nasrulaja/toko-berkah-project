@@ -2,7 +2,7 @@
 <resources>
     <!-- Palet disamakan dengan Figma (file desain utama) -->
     <color name="blue_primary">#38B6FF</color>
-    <color name="blue_btn_scan">#40B8FF</color>
+    <color name="blue_btn_scan">#3FB8FF</color>
     <color name="nav_pill">#3FB8FF</color>
     <color name="chip_category_bg">#C6E7FF</color>
     <color name="blue_primary_dark">#004668</color>
