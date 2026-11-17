@@ -154,6 +154,64 @@
 .kpi .lk:hover {
   text-decoration: underline;
 }
+/* Kartu KPI dengan tautan "Selengkapnya": seluruh kartu bisa diklik */
+.kpi.has-lnk {
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+.kpi.has-lnk:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--kc) 45%, var(--bd));
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--kc) 55%, transparent);
+}
+.kpi.has-lnk:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--kc) 60%, transparent);
+  outline-offset: 2px;
+}
+/* panah kecil di kanan bawah, sejajar tautan */
+.kpi-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--pd);
+  text-decoration: none;
+  padding: 2px 6px;
+  margin-left: -6px;
+  border-radius: 7px;
+}
+.kpi-more span {
+  transition: transform 0.16s ease;
+}
+.kpi.has-lnk:hover .kpi-more {
+  text-decoration: underline;
+}
+.kpi.has-lnk:hover .kpi-more span {
+  transform: translateX(3px);
+}
+:root[data-theme='dark'] .kpi-more {
+  color: var(--p);
+}
+/* jangan garis bawahi label saat kartu di-hover lewat tautan dalam */
+.kpi .lk:hover,
+.kpi-more:hover {
+  text-decoration: underline;
+}
+/* hormati pengguna yang mengurangi animasi */
+@media (prefers-reduced-motion: reduce) {
+  .kpi.has-lnk,
+  .kpi-more span {
+    transition: none;
+  }
+  .kpi.has-lnk:hover {
+    transform: none;
+  }
+  .kpi.has-lnk:hover .kpi-more span {
+    transform: none;
+  }
+}
 .tr {
   display: inline-flex;
   align-items: center;

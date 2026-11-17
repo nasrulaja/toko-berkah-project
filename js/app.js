@@ -18,9 +18,9 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261117b';
-import { load, db, setDB, me, setMe, KS, K, save, seed } from './core/db.js?v=20261117b';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117b';
+import { splash } from './splash.js?v=20261117c';
+import { load, db, setDB, me, setMe, KS, K, save, seed } from './core/db.js?v=20261117c';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117c';
 import {
   dashboard,
   produk,
@@ -38,7 +38,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261117b';
+} from './pages.js?v=20261117c';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -387,6 +387,19 @@ function theme(t) {
    render halaman pertama. Setiap akses localStorage dibungkus try/catch agar
    aplikasi tetap jalan walau penyimpanan diblokir browser.
    ========================================================================== */
+
+/* Kartu KPI yang dapat diklik: satu klik di mana pun pada kartu membuka halaman
+   selengkapnya. Klik pada tautan/tombol di dalam kartu (tip '?', "Lihat semua",
+   "Selengkapnya") dibiarkan berjalan sendiri agar tidak dobel pindah halaman.
+   Hanya klik kiri tanpa tombol pengubah yang diproses, supaya buka-di-tab-baru
+   dan menu klik-kanan tetap berfungsi normal. */
+document.addEventListener('click', (e) => {
+  if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const card = e.target.closest && e.target.closest('[data-kpi-link]');
+  if (!card) return;
+  if (e.target.closest('a, button')) return;
+  location.hash = card.dataset.kpiLink;
+});
 
 // Satu listener klik untuk seluruh aplikasi (juga aktif di halaman login, mis. tombol tema)
 document.addEventListener('click', onClick);
