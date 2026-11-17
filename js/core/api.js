@@ -126,6 +126,19 @@ export async function muatDB() {
     if (p.harga_beli != null && p.harga_beli > 0) beli.set(p.id, p.harga_beli);
   });
 
+  // modal (pengeluaran) per hari = harga beli x jumlah barang terjual pada hari itu
+  const trxHari = new Map();
+  transaksi.forEach((t) => {
+    const k = tgl(iso(t.waktu));
+    if (!trxHari.has(k)) trxHari.set(k, new Set());
+    trxHari.get(k).add(t.id);
+  });
+  const modalHari = (tg) => {
+    const ids = trxHari.get(tg);
+    if (!ids) return 0;
+    return detail.filter((d) => ids.has(d.transaksi_id)).reduce((a, d) => a + (beli.get(d.produk_id) ?? 0) * d.jumlah, 0);
+  };
+
   return {
     n: Math.max(0, ...[...users, ...kategori, ...produk, ...transaksi, ...detail, ...mutasi, ...tutup].map((r) => r.id || 0)) + 1000,
 
@@ -191,6 +204,7 @@ export async function muatDB() {
       stok_sebelum: m.stok_sebelum,
       stok_sesudah: m.stok_sesudah,
       harga_beli: m.harga_kulak,
+      _db: true,
       transaksi_id: m.transaksi_id,
       catatan: m.catatan || '',
       waktu: iso(m.waktu),
@@ -213,8 +227,8 @@ export async function muatDB() {
       transaksi: transaksi.filter((t) => tgl(iso(t.waktu)) === x.tanggal).length,
       total_sistem: x.total_penjualan,
       pendapatan: x.total_penjualan,
-      pengeluaran: 0,
-      laba: x.total_penjualan,
+      pengeluaran: modalHari(x.tanggal),
+      laba: x.total_penjualan - modalHari(x.tanggal),
       uang_fisik: x.uang_di_laci,
       selisih: x.selisih ?? 0,
       catatan: x.catatan || '',
@@ -228,51 +242,83 @@ export async function muatDB() {
 /* ==========================================================================
    BAGIAN 3 — SIMPAN: objek DB aplikasi -> Supabase
    Strategi: tulis HANYA baris yang berubah, bukan menimpa seluruh tabel.
-   - Produk  : dicocokkan lewat id, di-update satu per satu (stok & harga).
-   - Transaksi baru, detail, dan mutasi: ditambahkan (insert).
-   Tabel master (users, roles, kategori) tidak diubah dari aplikasi.
+   - Kategori & produk: baru = POST (id dibuat database), berubah = PATCH.
+   - Mutasi stok baru: ditambahkan (insert). Transaksi dibuat aplikasi Desktop.
+   Tabel users dan roles tidak diubah dari aplikasi.
    ========================================================================== */
+
+/** Kirim satu permintaan tulis ke Supabase. | param: metode, path, body (opsional), balik (true = kembalikan baris) | return: array baris (bila balik) */
+async function tulis(metode, path, body, balik = false) {
+  const res = await fetch(`${BASE}/${path}`, {
+    method: metode,
+    headers: head({ Prefer: balik ? 'return=representation' : 'return=minimal' }),
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`${path.split('?')[0]}: ${res.status} ${t.slice(0, 200)}`);
+  }
+  return balik ? res.json() : null;
+}
 
 /**
  * Menyimpan perubahan dari objek DB ke Supabase.
+ * Urutan: kategori -> produk -> hapus kategori -> mutasi stok.
+ * Baris baru dikirim TANPA id; id asli dibuat database, lalu dipakai ulang
+ * untuk menghubungkan produk <-> kategori <-> mutasi.
  * @param {object} data objek DB aplikasi
- * @param {object} opsi { produkSaja:boolean } — bila true, hanya stok/harga produk yang dikirim
  * @return {Promise<{ok:boolean, pesan?:string}>}
  */
-export async function simpanDB(data, opsi = {}) {
+export async function simpanDB(data) {
   try {
-    // 1) PRODUK: kirim harga jual & stok terkini
-    for (const p of data.produk || []) {
-      if (!p.id) continue;
-      const res = await fetch(`${BASE}/produk?id=eq.${p.id}`, {
-        method: 'PATCH',
-        headers: head({ Prefer: 'return=minimal' }),
-        body: JSON.stringify({
-          nama: p.nama,
-          barcode: p.barcode || null,
-          harga_jual: p.harga,
-          stok: p.stok,
-          kategori_id: p.kategori_id,
-          stok_minimum: p.stok_minimum ?? 0,
-          ...(HARGA_BELI_ADA ? { harga_beli: p.harga_beli ?? 0 } : {}),
-          updated_at: new Date().toISOString()
-        })
-      });
-      if (!res.ok) {
-        const t = await res.text().catch(() => '');
-        throw new Error(`produk ${p.id}: ${res.status} ${t.slice(0, 200)}`);
+    // 1) KATEGORI: tambah yang baru, ubah nama yang berbeda
+    const katDb = await get('kategori', 'select=id,nama');
+    const petaKat = new Map();
+    for (const k of data.kategori || []) {
+      const ada = katDb.find((r) => r.id === k.id);
+      if (!ada) {
+        const [b] = await tulis('POST', 'kategori', [{ nama: k.nama }], true);
+        petaKat.set(k.id, b.id);
+      } else if (ada.nama !== k.nama) {
+        await tulis('PATCH', `kategori?id=eq.${k.id}`, { nama: k.nama });
       }
     }
+    for (const p of data.produk || []) if (petaKat.has(p.kategori_id)) p.kategori_id = petaKat.get(p.kategori_id);
+    (data.kategori || []).forEach((k) => petaKat.has(k.id) && (k.id = petaKat.get(k.id)));
 
-    if (opsi.produkSaja) return { ok: true };
+    // 2) PRODUK: tambah yang baru, ubah hanya yang berbeda dari database
+    const prodDb = await get('produk', 'select=*');
+    const petaProd = new Map();
+    for (const p of data.produk || []) {
+      const badan = {
+        nama: p.nama,
+        barcode: p.barcode || null,
+        harga_jual: p.harga,
+        stok: p.stok,
+        kategori_id: p.kategori_id ?? null,
+        stok_minimum: p.stok_minimum ?? 0,
+        ...(HARGA_BELI_ADA ? { harga_beli: p.harga_beli ?? 0 } : {})
+      };
+      const ada = prodDb.find((r) => r.id === p.id);
+      if (!ada) {
+        const [b] = await tulis('POST', 'produk', [badan], true);
+        petaProd.set(p.id, b.id);
+      } else if (Object.keys(badan).some((k) => (ada[k] ?? null) !== badan[k])) {
+        await tulis('PATCH', `produk?id=eq.${p.id}`, { ...badan, updated_at: new Date().toISOString() });
+      }
+    }
+    for (const m of data.mutasi || []) if (petaProd.has(m.produk_id)) m.produk_id = petaProd.get(m.produk_id);
 
-    // 2) MUTASI STOK: hanya baris yang belum ada di database
-    const adaMutasi = new Set((await get('stok_mutasi', 'select=id')).map((r) => r.id));
+    // 3) HAPUS kategori yang sudah tidak ada di aplikasi (produknya sudah dikosongkan di langkah 2)
+    const idKat = new Set((data.kategori || []).map((k) => k.id));
+    const hapus = katDb.filter((r) => !idKat.has(r.id)).map((r) => r.id);
+    if (hapus.length) await tulis('DELETE', `kategori?id=in.(${hapus.join(',')})`);
+
+    // 4) MUTASI STOK: hanya yang baru dibuat di aplikasi (belum bertanda _db)
     const mutBaru = (data.mutasi || [])
-      .filter((m) => !adaMutasi.has(m.id))
+      .filter((m) => !m._db)
       .map((m) => ({
-        id: m.id,
-        produk_id: m.produk_id,
+        produk_id: petaProd.get(m.produk_id) ?? m.produk_id,
         jenis: m.jenis === 'jual' ? 'keluar' : m.jenis === 'penyesuaian' ? 'penyesuaian' : 'masuk',
         jumlah: m.jumlah,
         stok_sebelum: m.stok_sebelum,
@@ -284,38 +330,6 @@ export async function simpanDB(data, opsi = {}) {
         user_id: m.user_id || 1
       }));
     await insert('stok_mutasi', mutBaru);
-
-    // 3) TRANSAKSI: hanya yang belum ada
-    const adaTrx = new Set((await get('transaksi', 'select=id')).map((r) => r.id));
-    const trxBaru = (data.transaksi || [])
-      .filter((t) => !adaTrx.has(t.id))
-      .map((t) => ({
-        id: t.id,
-        kode_transaksi: t.kode,
-        waktu: t.waktu,
-        total: t.total,
-        uang_diterima: t.uang_diterima ?? t.total,
-        kembalian: t.kembalian ?? 0,
-        user_id: t.user_id || 1,
-        rekap_id: null
-      }));
-    await insert('transaksi', trxBaru);
-
-    // 4) DETAIL TRANSAKSI: hanya yang belum ada
-    const adaDetail = new Set((await get('detail_transaksi', 'select=id')).map((r) => r.id));
-    const detBaru = (data.detail || [])
-      .filter((d) => !adaDetail.has(d.id))
-      .map((d) => ({
-        id: d.id,
-        transaksi_id: d.transaksi_id,
-        struk_id: null,
-        produk_id: d.produk_id,
-        nama_produk: d.nama_produk,
-        harga_jual: d.harga_satuan,
-        jumlah: d.jumlah,
-        subtotal: d.subtotal
-      }));
-    await insert('detail_transaksi', detBaru);
 
     return { ok: true };
   } catch (e) {

@@ -18,9 +18,9 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261117f';
-import { load, db, setDB, me, setMe, KS, K, save, seed } from './core/db.js?v=20261117f';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117f';
+import { splash } from './splash.js?v=20261117g';
+import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117g';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117g';
 import {
   dashboard,
   produk,
@@ -38,7 +38,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261117f';
+} from './pages.js?v=20261117g';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -261,9 +261,10 @@ function onClick(e) {
           if (p.kategori_id === id) p.kategori_id = null;
         });
         db.kategori = db.kategori.filter((x) => x.id !== id);
-        save();
-        toast('Kategori dihapus');
-        shell();
+        save().then((r) => {
+          toast(r.ok ? 'Kategori dihapus' : 'Gagal menyimpan ke database: ' + r.pesan);
+          shell();
+        });
       });
     } else if (a === 'det') {
       const t = db.transaksi.find((x) => x.id === id);
@@ -412,26 +413,23 @@ try {
 }
 theme('light'); // aplikasi hanya memakai tema terang
 
-/** Memuat data dengan batas waktu; bila Supabase lambat, pakai data lokal.
- *  param: ms (batas waktu milidetik) | return: Promise<objek DB> */
-async function loadAman(ms = 8000) {
-  return Promise.race([
-    load(),
-    new Promise((resolve) =>
-      setTimeout(async () => {
-        // waktu habis: tetap beri data agar aplikasi bisa dibuka
-        try {
-          const s = localStorage.getItem(K);
-          if (s) return resolve(JSON.parse(s));
-        } catch (e) {}
-        resolve(await load().catch(() => seed()));
-      }, ms)
-    )
-  ]);
+/** Layar galat bila database tidak terjangkau: aplikasi tidak memakai data cadangan. | param: pesan (string) | return: void */
+function layarGalat(pesan) {
+  $('#app').innerHTML = `<div class="lg"><div class="lg-c"><div class="lg-brand"><b>TOKO BERKAH</b><span>Sistem manajemen toko</span></div><div class="lg-card"><h2 class="lg-t">Tidak dapat terhubung</h2><p class="lg-s">Data toko diambil dari database dan saat ini belum bisa dijangkau. Periksa koneksi internet, lalu coba lagi.</p><p class="note" style="word-break:break-word">${esc(pesan)}</p><button class="lg-b" id="ulang">Coba lagi</button></div></div></div>`;
+  $('#ulang').onclick = () => location.reload();
 }
 
-// Muat data: Supabase lebih dulu (async), lalu tampilkan aplikasi
-setDB(await loadAman());
+// salinan data lama di browser (versi sebelumnya) dihapus; data hanya dari Supabase
+try {
+  localStorage.removeItem('berkah_db_v1');
+} catch (e) {}
+// Muat data dari Supabase, lalu tampilkan aplikasi
+try {
+  setDB(await load());
+} catch (e) {
+  layarGalat(e.message || String(e));
+  throw e;
+}
 try {
   const s = localStorage.getItem(KS);
   setMe(db.users.find((u) => u.id == s) || null);
