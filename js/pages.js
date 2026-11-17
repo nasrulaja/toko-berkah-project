@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci, dbSumber, dbGalat } from './core/db.js?v=20261117f';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117f';
-import { barChart, donut, spark, short } from './charts.js?v=20261117f';
+import { db, me, save, mut, KS, setMe, terkunci, dbGalat } from './core/db.js?v=20261117g';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117g';
+import { barChart, donut, spark, short } from './charts.js?v=20261117g';
 
 let S = {};
 
@@ -567,8 +567,8 @@ export function panduan() {
     ['Bagaimana melihat hanya barang masuk atau barang keluar di riwayat stok?', 'Di Manajemen Stok pakai filter jenis mutasi di atas tabel riwayat, lalu pilih jenis yang dicari, misalnya Barang masuk.'],
     ['Kenapa kotak Selisih dan Laba angkanya sama?', 'Laba dihitung dari pendapatan dikurangi pengeluaran (modal), sama dengan rumus Selisih. Kotak Selisih menambahkan keterangan Untung, Rugi, atau Impas.'],
     ['Notifikasi saya terlalu banyak.', 'Di halaman Notifikasi pilih filter (Belum dibaca, Penjualan, Stok, atau Tutup buku) atau ketik kata kunci di kotak Cari. Bila masih terlalu banyak, tekan Tandai semua dibaca atau Hapus semua. Data transaksi dan stok tidak ikut terhapus.'],
-    ['Apakah data saya aman bila browser ditutup?', 'Data tersimpan di database Supabase, jadi tetap ada walau browser ditutup dan bisa dibuka dari perangkat lain. Saat internet terputus, aplikasi memakai salinan terakhir di browser. Jangan memakai tombol Reset di Pengaturan kecuali ingin kembali ke data contoh.'],
-    ['Dari mana aplikasi mengambil data?', 'Data diambil langsung dari database Supabase. Status koneksi bisa dilihat di halaman Pengaturan pada kartu Basis Data: Terhubung berarti data terkirim ke server, sedangkan Lokal (offline) berarti sedang memakai salinan di browser karena server tidak terjangkau.'],
+    ['Apakah data saya aman bila browser ditutup?', 'Data tersimpan di database Supabase, jadi tetap ada walau browser ditutup dan bisa dibuka dari perangkat lain. Aplikasi tidak menyimpan data toko di browser, jadi butuh koneksi internet untuk dibuka.'],
+    ['Dari mana aplikasi mengambil data?', 'Data diambil langsung dari database Supabase. Status koneksi bisa dilihat di halaman Pengaturan pada kartu Basis Data: Terhubung berarti data terkirim ke server, sedangkan Ada masalah berarti penyimpanan terakhir gagal dan pesannya tampil di kartu itu.'],
   ];
   return `<div class="card"><div class="ch"><h4>Mulai dari mana?</h4></div><div class="cb gd">${langkah
     .map(([ic, t, d, h], i) => `<a class="gd-i" href="${h}"><span class="gd-n">${i + 1}</span><span class="nic">${ico(ic)}</span><span><b>${t}</b><small>${d}</small></span></a>`)
@@ -635,9 +635,7 @@ export function stok() {
         if (q === p.stok) return toast('Stok sudah sama, tidak ada perubahan');
         mut(p, 'penyesuaian', q - p.stok, { cat });
       }
-      save();
-      toast('Stok diperbarui');
-      shellRef();
+      simpan('Stok diperbarui');
     };
   }, 0);
   const fj = jb[S.mj] ? S.mj : '',
@@ -668,7 +666,7 @@ export function stok() {
    laporan()    : ringkasan omzet/laba, grafik, dan produk terlaris
    hasilTutupBuku(): riwayat laporan tutup buku (proses dilakukan di desktop)
    transaksi()  : daftar seluruh transaksi + tombol detail
-   pengaturan() : profil toko, ganti user, reset ke data contoh, logout
+   pengaturan() : profil toko, status database, notifikasi, logout
    ========================================================================== */
 
 /** Hasil tutup buku (hanya tampilan): ringkasan dan riwayat per periode. Proses tutup buku dilakukan di aplikasi Desktop. | param: - | return: string HTML */
@@ -823,23 +821,18 @@ export function transaksi() {
 export function pengaturan() {
   setTimeout(() => {
     bindSwitch('nsw2');
-    $('#resetDB').onclick = () => {
-      ask('Reset seluruh data ke awal (data contoh)? Data Anda akan terhapus.', () => {
-        setDB(seed());
-        save();
-        toast('Data direset ke contoh');
-        shellRef();
-      });
-    };
   }, 0);
   return `<div class="card"><div class="ch"><h4>Profil Toko</h4></div><div class="cb"><p>Pengguna Aktif: <b>${esc(me.nama)}</b> (${esc(me.email)})</p></div></div>
-  <div class="card"><div class="ch"><h4>Basis Data</h4></div><div class="cb"><p style="margin:0 0 10px">${
-    dbSumber === 'supabase'
-      ? 'Terhubung ke database Supabase. Semua perubahan langsung tersimpan ke server, jadi data sama di setiap perangkat.'
-      : 'Sedang memakai data lokal di browser ini karena database Supabase tidak terjangkau. Perubahan belum terkirim ke server.'
-  }</p><p class="note" style="margin:0">Status: <b>${dbSumber === 'supabase' ? 'Terhubung' : 'Lokal (offline)'}</b>${dbGalat ? ` — ${esc(dbGalat)}` : ''}</p></div></div>
-  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Sakelar notifikasi hanya ada di halaman ini. Bila aktif, aktivitas toko (penjualan, stok, tutup buku) tampil di halaman Notifikasi dan angka muncul pada lencana lonceng.</p>${notifSwitch('nsw2')}</div></div>
-  <div class="card"><div class="ch"><h4>Pembersihan Data</h4></div><div class="cb"><button class="btn bd" id="resetDB">Reset Basis Data ke Contoh</button></div></div>`;
+  <div class="card"><div class="ch"><h4>Basis Data</h4></div><div class="cb"><p style="margin:0 0 10px">Terhubung ke database Supabase. Semua perubahan langsung tersimpan ke server, jadi data sama di setiap perangkat. Aplikasi tidak menyimpan data toko di browser.</p><p class="note" style="margin:0">Status: <b>${dbGalat ? 'Ada masalah' : 'Terhubung'}</b>${dbGalat ? ` — ${esc(dbGalat)}` : ''}</p></div></div>
+  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Sakelar notifikasi hanya ada di halaman ini. Bila aktif, aktivitas toko (penjualan, stok, tutup buku) tampil di halaman Notifikasi dan angka muncul pada lencana lonceng.</p>${notifSwitch('nsw2')}</div></div>`;
+}
+
+/** Menyimpan perubahan ke Supabase, memberi tahu hasilnya, lalu menampilkan ulang halaman dari isi database. | param: ok (pesan bila berhasil) | return: Promise<boolean> */
+async function simpan(ok) {
+  const r = await save();
+  toast(r.ok ? ok : 'Gagal menyimpan ke database: ' + r.pesan);
+  shellRef();
+  return r.ok;
 }
 
 /* ==========================================================================
@@ -897,9 +890,7 @@ export function saveP(d, p) {
     db.produk.push(n);
     if (stokBaru > 0) mut(n, 'masuk', stokBaru, { hb: n.harga_beli, cat: 'Stok awal' });
   }
-  save();
-  toast('Produk disimpan');
-  shellRef();
+  simpan('Produk disimpan');
 }
 
 export function kform(k) {
@@ -915,9 +906,7 @@ export function kform(k) {
       }
       if (k) k.nama = n;
       else db.kategori.push({ id: ++db.n, nama: n, created_at: new Date().toISOString() });
-      save();
-      toast('Kategori disimpan');
-      shellRef();
+      simpan('Kategori disimpan');
     }
   );
 }
