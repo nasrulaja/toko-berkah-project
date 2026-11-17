@@ -32,8 +32,8 @@
    hak aksesnya dibatasi oleh Row Level Security di Supabase.
    ========================================================================== */
 
-export const SUPA_URL = 'https://tflawnflbyjgnqtdkjyq.supabase.co';
-export const SUPA_KEY = 'sb_publishable_OjaTZ3hwwpvVlQDIb-D7qQ_E9lbEhse';
+export const SUPA_URL = 'https://ejohssqnhhtaveelmter.supabase.co';
+export const SUPA_KEY = 'sb_publishable_PGbNjr7ySv7Mvwh0hGn8Uw_lz7uAGLs';
 
 /** Alamat dasar REST API. | param: - | return: string */
 const BASE = SUPA_URL + '/rest/v1';
@@ -104,6 +104,8 @@ let HARGA_BELI_ADA = false;
 export async function muatDB() {
   // semua tabel diambil sekaligus agar cepat
   const [users, roles, kategori, produk, transaksi, detail, mutasi, tutup] = await Promise.all([
+    // users: password_hash sengaja tidak boleh dibaca anon key (RLS/column privilege),
+    // jadi kolomnya ditulis satu per satu. Jangan pakai select=* — akan ditolak 401.
     get('users', 'select=id,nama,email,role_id'),
     get('roles', 'select=*'),
     get('kategori', 'select=*&order=id'),
