@@ -64,7 +64,12 @@ class StockCheckActivity : AppCompatActivity() {
             overridePendingTransition(0, 0)
         }
         binding.navIncoming.setOnClickListener {
-            Toast.makeText(this, R.string.nav_not_available, Toast.LENGTH_SHORT).show()
+            // Buka halaman Barang Masuk (modul pages)
+            startActivity(
+                Intent(this, com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            )
+            overridePendingTransition(0, 0)
         }
     }
 
