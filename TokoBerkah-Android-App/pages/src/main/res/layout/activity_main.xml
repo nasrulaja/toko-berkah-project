@@ -14,15 +14,15 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
+    <!-- Bottom nav: struktur & ukuran disamakan persis dengan halaman Cek Stok -->
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:layout_height="80dp"
+        android:background="@color/bg_page"
         android:elevation="12dp"
-        android:orientation="horizontal"
-        android:paddingTop="8dp"
-        android:paddingBottom="10dp">
+        android:gravity="center"
+        android:orientation="horizontal">
 
         <!-- Cek Harga -->
         <LinearLayout
@@ -34,19 +34,17 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp">
+            android:orientation="vertical">
 
             <FrameLayout
-                android:layout_width="64dp"
+                android:layout_width="52dp"
                 android:layout_height="28dp"
                 android:background="@drawable/bg_nav_pill"
                 android:duplicateParentState="true">
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:layout_gravity="center"
                     android:contentDescription="@string/nav_cek_harga"
                     android:duplicateParentState="true"
@@ -57,12 +55,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:duplicateParentState="true"
+                android:fontFamily="@font/plus_jakarta_bold"
                 android:text="@string/nav_cek_harga"
                 android:textColor="@color/nav_label_tint"
-                android:textSize="11sp"
-                android:textStyle="bold" />
+                android:textSize="11sp" />
         </LinearLayout>
 
         <!-- Cek Stok -->
@@ -75,19 +73,17 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp">
+            android:orientation="vertical">
 
             <FrameLayout
-                android:layout_width="64dp"
+                android:layout_width="52dp"
                 android:layout_height="28dp"
                 android:background="@drawable/bg_nav_pill"
                 android:duplicateParentState="true">
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:layout_gravity="center"
                     android:contentDescription="@string/nav_cek_stok"
                     android:duplicateParentState="true"
@@ -98,8 +94,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:duplicateParentState="true"
+                android:fontFamily="@font/plus_jakarta_bold"
                 android:text="@string/nav_cek_stok"
                 android:textColor="@color/nav_label_tint"
                 android:textSize="11sp" />
@@ -115,19 +112,17 @@
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp">
+            android:orientation="vertical">
 
             <FrameLayout
-                android:layout_width="64dp"
+                android:layout_width="52dp"
                 android:layout_height="28dp"
                 android:background="@drawable/bg_nav_pill"
                 android:duplicateParentState="true">
 
                 <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:layout_gravity="center"
                     android:contentDescription="@string/nav_masuk"
                     android:duplicateParentState="true"
@@ -138,8 +133,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="2dp"
                 android:duplicateParentState="true"
+                android:fontFamily="@font/plus_jakarta_bold"
                 android:text="@string/nav_masuk"
                 android:textColor="@color/nav_label_tint"
                 android:textSize="11sp" />

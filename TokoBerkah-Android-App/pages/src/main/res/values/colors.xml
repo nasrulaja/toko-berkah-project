@@ -17,6 +17,11 @@
     <color name="gray_muted">#6E7881</color>
     <color name="gray_icon">#3E4850</color>
 
+    <!-- Bottom nav (disamakan dengan halaman Cek Stok) -->
+    <color name="nav_active">#3FB8FF</color>
+    <color name="nav_inactive">#3E4850</color>
+    <color name="transparent">#00000000</color>
+
     <color name="bg_page">#F8F9FF</color>
     <color name="white">#FFFFFF</color>
     <color name="card_border">#E4EFFF</color>
