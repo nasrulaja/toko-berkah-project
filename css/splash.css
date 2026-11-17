@@ -119,33 +119,46 @@ body:has(.lg) { padding-bottom: 0 !important; }
 
 /* Di layar sempit: rapatkan huruf & padding agar kartu tidak melebihi layar */
 
-/* --- Animasi logo SVG: keranjang tumbuh, daun mekar, pegangan tergambar --- */
-.sp-svg { width: clamp(112px, 30vw, 168px); height: auto; overflow: visible; filter: drop-shadow(0 12px 26px rgba(44, 159, 230, 0.4)); }
-/* Keranjang: muncul dari bawah dengan sedikit membesar */
-.sp-basket { transform-box: fill-box; transform-origin: 50% 100%; animation: sp-tumbuh 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
-@keyframes sp-tumbuh {
-  from { opacity: 0; transform: translateY(16px) scale(0.72); }
-  60% { opacity: 1; }
+/* --- Animasi logo splash: logo asli diputar+skala masuk, lalu kilau melintas --- */
+.sp-logo-w {
+  position: relative;
+  display: block;
+  line-height: 0;
+  border-radius: 18px;
+  /* tanpa overflow:hidden agar drop-shadow logo tidak terpotong;
+     kilau dibatasi oleh .sp-glare sendiri (opacity 0 di luar sapuan) */
 }
-/* Daun: mekar sambil berputar halus dari pangkalnya, lalu bergoyang */
-.sp-leaf { transform-box: fill-box; transform-origin: 8% 100%; animation: sp-mekar 0.85s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both, sp-goyang 3.2s ease-in-out 1.2s infinite; }
-@keyframes sp-mekar {
-  from { opacity: 0; transform: scale(0.35) rotate(-26deg); }
+.sp-logo-w .sp-img {
+  width: clamp(104px, 27vw, 152px);
+  height: auto;
+  filter: drop-shadow(0 12px 26px rgba(44, 159, 230, 0.4));
+  will-change: transform, opacity;
+  animation: sp-masuk 0.9s ease-out both;
 }
-@keyframes sp-goyang {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-5deg); }
+@keyframes sp-masuk {
+  from { opacity: 0; transform: translateY(12px) scale(0.6); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-/* Kilau melintas sekali setelah logo selesai tumbuh */
-.sp-sheen { animation: sp-kilau 1.15s cubic-bezier(0.4, 0, 0.2, 1) 0.95s both; }
+/* Kilau: pita putih miring yang menyapu logo sekali */
+.sp-glare {
+  position: absolute;
+  top: -40%;
+  left: -70%;
+  width: 55%;
+  height: 180%;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
+  transform: skewX(-18deg);
+  mix-blend-mode: screen;
+  animation: sp-kilau 0.95s cubic-bezier(0.4, 0, 0.2, 1) 0.75s both;
+}
 @keyframes sp-kilau {
-  from { transform: translateX(0); }
-  to { transform: translateX(210px); }
+  from { opacity: 0; transform: translateX(0) skewX(-18deg); }
+  15% { opacity: 1; }
+  to { opacity: 0; transform: translateX(420%) skewX(-18deg); }
 }
-/* Cincin denyut lembut di bawah logo */
-/* (cadangan: tidak dipakai agar logo bersih) */
 @media (prefers-reduced-motion: reduce) {
-  .sp-basket, .sp-leaf, .sp-sheen { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .sp-logo-w .sp-img, .sp-glare { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
 
 /* --- Logo Toko Berkah (gambar) --- */
@@ -166,7 +179,7 @@ i.lgi img { width: 100%; height: 100%; object-fit: contain; display: block; }
 @media (max-width: 480px) {
   .sp-card { padding: 28px 18px 24px; gap: 12px; max-width: calc(100vw - 28px); box-sizing: border-box; }
   .sp-t { font-size: clamp(23px, 8.4vw, 32px); letter-spacing: 0.05em; }
-  .sp-svg { width: clamp(92px, 28vw, 124px); }
+  .sp-logo-w .sp-img { width: clamp(88px, 26vw, 118px); }
   .sp-s { font-size: 13px; }
   .sp-h { font-size: 11.5px; }
 }
