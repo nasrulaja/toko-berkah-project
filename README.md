@@ -56,7 +56,10 @@ Demo ↓
 Untuk mencoba di HP: unduh
 [`apk/TokoBerkah-Owner-arm64-v8a-debug.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-arm64-v8a-debug.apk)
 (27 MB; untuk HP lama 32-bit pakai versi `armeabi-v7a`), lalu instal (izinkan
-"sumber tidak dikenal"). Login memakai akun pemilik yang sama dengan Web Admin.
+"sumber tidak dikenal").
+
+Login: **kasir@gmail.com** / **kasir123** — form sudah terisi otomatis, cukup tekan
+**Masuk ke Toko**.
 
 > Berbeda dengan versi Desktop, aplikasi Android tidak bisa dijalankan langsung
 > dari browser — harus dipasang di perangkat Android.

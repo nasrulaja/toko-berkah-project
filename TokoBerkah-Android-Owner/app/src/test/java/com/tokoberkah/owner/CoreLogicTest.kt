@@ -123,4 +123,15 @@ class CoreLogicTest {
         assertFalse(com.tokoberkah.owner.data.repository.AuthRepository.isValidEmail("pemilik"))
         assertFalse(com.tokoberkah.owner.data.repository.AuthRepository.isValidEmail("a@b"))
     }
+
+    @Test
+    fun `akun demo terisi otomatis dan lolos validasi form`() {
+        val auth = com.tokoberkah.owner.data.repository.AuthRepository
+        // Email & sandi demo harus lolos validasi yang sama dengan isian manual,
+        // supaya tombol Masuk tidak menolak sebelum sempat menghubungi server.
+        assertTrue(auth.isValidEmail(auth.TOKO_DEMO_EMAIL))
+        assertTrue(auth.TOKO_DEFAULT_PASSWORD.length >= 6)
+        assertEquals("kasir@gmail.com", auth.TOKO_DEMO_EMAIL)
+        assertEquals("kasir123", auth.TOKO_DEFAULT_PASSWORD)
+    }
 }

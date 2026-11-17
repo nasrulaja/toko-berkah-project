@@ -171,8 +171,14 @@ lalu `gradlew.bat assembleRelease`. **Jangan commit** keystore/password ke Git.
 - Pastikan perangkat punya internet.
 - Untuk backend lokal, gunakan `http://<IP-LAN>:<port>` lewat `BASE_URL`
   (cleartext sudah diizinkan di manifest).
-- Akun pemilik default: `pemilik@tokoberkah.local`. Bila kata sandi di Web Admin diubah,
-  sesuaikan kebijakan di `AuthRepository` atau pasang Edge Function `login-pemilik`.
+- Akun pemilik default: `kasir@gmail.com` / `kasir123` (sama dengan akun demo Desktop,
+  jadi satu akun untuk semua platform). Form login sudah terisi otomatis — cukup tekan
+  **Masuk ke Toko**.
+  Akun ini terdaftar di tabel `users` Supabase dengan role pemilik
+  (`bisa_kelola_barang = true`); bila dihapus dari database, login akan gagal dengan
+  pesan *"Email belum terdaftar"*.
+- Bila kata sandi di Web Admin diubah, sesuaikan kebijakan di `AuthRepository` atau
+  pasang Edge Function `login-pemilik`.
 
 ---
 

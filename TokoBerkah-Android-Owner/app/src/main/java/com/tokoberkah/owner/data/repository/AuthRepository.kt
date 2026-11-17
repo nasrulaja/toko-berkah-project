@@ -87,8 +87,23 @@ class AuthRepository(
     }
 
     companion object {
-        /** Sandi default yang ditetapkan saat inisialisasi toko. */
-        const val TOKO_DEFAULT_PASSWORD = "pemilik123"
+        /**
+         * Sandi default yang ditetapkan saat inisialisasi toko.
+         *
+         * Sebelumnya "pemilik123" — diganti menjadi "kasir123" agar SATU akun
+         * demo dipakai di seluruh aplikasi Toko Berkah (Desktop, Web, Android).
+         */
+        const val TOKO_DEFAULT_PASSWORD = "kasir123"
+
+        /**
+         * Akun demo yang mengisi form login secara otomatis, sama seperti
+         * aplikasi Kasir Desktop & Web yang sudah mengisi kolomnya di muka.
+         *
+         * Akun ini HARUS ada di tabel `users` Supabase dengan role pemilik
+         * ([TOKO_DEMO_EMAIL]). Bila dihapus dari database, login tetap gagal
+         * dengan pesan "Email belum terdaftar" — tidak ada jalur login lokal.
+         */
+        const val TOKO_DEMO_EMAIL = "kasir@gmail.com"
 
         fun isValidEmail(s: String): Boolean =
             Regex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$").matches(s)

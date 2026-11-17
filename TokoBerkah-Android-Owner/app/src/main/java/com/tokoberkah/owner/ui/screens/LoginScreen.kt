@@ -79,8 +79,8 @@ fun LoginContent(
     loading: Boolean,
     error: String?,
     lastEmail: String,
-    initialEmail: String = "",
-    initialPassword: String = "",
+    initialEmail: String = AuthRepository.TOKO_DEMO_EMAIL,
+    initialPassword: String = AuthRepository.TOKO_DEFAULT_PASSWORD,
     onLogin: (String, String) -> Unit,
     onClearError: () -> Unit
 ) {
@@ -90,7 +90,8 @@ fun LoginContent(
     var localError by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(lastEmail) {
-        if (email.isBlank() && lastEmail.isNotBlank()) email = lastEmail
+        // Email yang terakhir dipakai menang; bila belum ada, tetap tampil akun demo.
+        if (lastEmail.isNotBlank()) email = lastEmail
     }
 
     fun submit() {

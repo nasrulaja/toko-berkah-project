@@ -6,7 +6,7 @@ otomatis dari Composable-nya sendiri (bukan mockup).
 
 | # | Halaman | Fungsi |
 |---|---|---|
-| 1 | Login | Masuk dengan akun pemilik yang terdaftar di Web Admin |
+| 1 | Login | Akun demo `kasir@gmail.com` sudah terisi otomatis, tinggal tekan Masuk |
 | 2 | Cek Harga | Pindai barcode → harga jual muncul, bisa ubah jumlah |
 | 3 | Detail Produk | Harga, stok, rak, dan tombol Riwayat / Ubah Harga |
 | 4 | Riwayat Harga | Semua perubahan harga + alasan & selisih |
@@ -53,7 +53,8 @@ Desktop (`Kasir.exe`) atau versi Web. Untuk mencobanya di HP:
    (27 MB). Bila HP Anda 32-bit, pakai varian `armeabi-v7a`.
 2. Pindahkan ke HP Android, lalu ketuk file-nya
 3. Izinkan **"Instal dari sumber tidak dikenal"** bila diminta
-4. Login memakai akun pemilik yang sama dengan Web Admin
+4. Login dengan **`kasir@gmail.com`** / **`kasir123`** — form sudah terisi otomatis,
+   cukup tekan **Masuk ke Toko**
 
 Butuh versi lebih kecil? APK release hanya **8.1 MB** karena R8 membuang kode
 yang tidak dipakai — tetapi masih *unsigned*, jadi harus ditandatangani dulu

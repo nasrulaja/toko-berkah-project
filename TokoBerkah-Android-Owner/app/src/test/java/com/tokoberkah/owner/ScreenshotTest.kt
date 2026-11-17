@@ -130,8 +130,6 @@ class ScreenshotTest {
                 loading = false,
                 error = null,
                 lastEmail = "",
-                initialEmail = "pemilik@tokoberkah.com",
-                initialPassword = "rahasia123",
                 onLogin = { _, _ -> },
                 onClearError = {}
             )
