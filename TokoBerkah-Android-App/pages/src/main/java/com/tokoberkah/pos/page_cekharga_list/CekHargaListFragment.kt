@@ -31,14 +31,6 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
         _binding = FragmentCekhargaListBinding.bind(view)
         setBreadcrumb(getString(R.string.nav_cek_harga))
 
-        binding.btnBack.setOnClickListener {
-            Toast.makeText(
-                requireContext(),
-                "Kamu sudah berada di halaman utama Cek Harga.",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-
         // Pemindai barcode asli (modul app): hasil scan dicocokkan ke katalog harga.
         binding.btnScan.setOnClickListener {
             startActivityForResult(
