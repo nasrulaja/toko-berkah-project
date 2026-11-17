@@ -277,7 +277,7 @@ export function dashboard() {
   </div>
 
   <div class="dgrid3">
-    <div class="card"><div class="ch"><h4>Produk Terlaris</h4><a href="#laporan" class="btn sm">Laporan</a></div><div class="cb">${
+    <div class="card"><div class="ch"><h4>Produk Terlaris</h4><a href="#laporan" class="btn sm">Selengkapnya</a></div><div class="cb">${
       best
         .map(
           (x, i) =>
@@ -285,7 +285,7 @@ export function dashboard() {
         )
         .join('') || empty('Belum ada penjualan', 'Produk terlaris tampil setelah ada transaksi.')
     }</div></div>
-    <div class="card"><div class="ch"><h4>Stok Menipis</h4><a href="#stok-menipis" class="btn sm">Lihat semua</a></div><div class="cb">${
+    <div class="card"><div class="ch"><h4>Stok Menipis</h4><a href="#stok-menipis" class="btn sm">Selengkapnya</a></div><div class="cb">${
       (L.length ? '' : '<p class="note ok">Semua stok aman. Produk dengan stok paling sedikit:</p>') +
       sedikit
         .slice(0, 5)
@@ -298,7 +298,7 @@ export function dashboard() {
     <div class="card"><div class="ch"><h4>Jam Tersibuk</h4><a href="#laporan" class="btn sm">Selengkapnya</a></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p><div class="mini">${ringkasJam.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>${top3Jam.map(([h, c]) => `<div class="tp" style="margin-top:12px"><span class="rk">${String(h).padStart(2, '0')}</span><div class="tp-b"><div class="tp-h"><b>Pukul ${String(h).padStart(2, '0')}.00</b><span>${c} transaksi</span></div><div class="bar"><i style="width:${Math.round((c / maxJam) * 100)}%"></i></div></div></div>`).join('')}</div></div>
   </div>
 
-  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
+  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Selengkapnya</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
     rec.slice(0, 5).map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
     `<tr><td colspan="6">${empty('Belum ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
   }</table></div></div>
