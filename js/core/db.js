@@ -27,6 +27,37 @@ export let dbSumber = 'supabase';
 /** Pesan galat terakhir dari Supabase (kosong bila tidak ada masalah). */
 export let dbGalat = '';
 
+/** Akun demo sementara: dipakai untuk login saat pengembangan/uji coba.
+ *  Akun ini TIDAK bergantung pada Supabase dan selalu disisipkan ke db.users
+ *  oleh load(), supaya bisa masuk walau data Supabase tidak punya user yang cocok.
+ *  Kredensial: email `berkah@gmail.com`, kata sandi `berkah123`.
+ *  Hapus DEMO_USER dari load() bila verifikasi login sudah pindah ke server. */
+export const DEMO_USER = {
+  id: 'demo',
+  nama: 'Berkah',
+  email: 'berkah@gmail.com',
+  pw: btoa('berkah123'),
+  role_id: 1,
+  bisa_kelola_barang: true,
+  bisa_transaksi: true
+};
+
+/** Menyisipkan akun demo ke daftar user bila belum ada. | param: list (array user) | return: array user
+ *  Bila email demo sudah ada tetapi kata sandinya tidak cocok (mis. data Supabase
+ *  menyimpan pw = null karena hash tidak pernah dikirim ke klien), entri itu
+ *  ditimpa dengan DEMO_USER supaya akun demo dijamin bisa dipakai. */
+function denganDemo(list) {
+  const arr = Array.isArray(list) ? list : [];
+  const i = arr.findIndex((u) => u && u.email === DEMO_USER.email);
+  if (i === -1) return [DEMO_USER, ...arr];
+  // sudah ada dan kata sandinya cocok: biarkan apa adanya
+  if (arr[i].pw === DEMO_USER.pw) return arr;
+  // ada tapi tanpa/tidak cocok kata sandi: pakai data demo yang pasti bisa masuk
+  const copy = arr.slice();
+  copy[i] = { ...arr[i], ...DEMO_USER };
+  return copy;
+}
+
 /** Menetapkan user yang sedang login. | param: val (objek user) | return: void */
 export const setMe = (val) => {
   me = val;
@@ -47,6 +78,10 @@ export async function load() {
   try {
     const d = await muatDB();
     dbGalat = '';
+    // akun demo: selalu bisa masuk walau Supabase tidak punya user yang cocok.
+    // Disisipkan di satu-satunya jalur muat (Supabase) karena load() kini
+    // tidak lagi memakai fallback localStorage/seed.
+    if (d) d.users = denganDemo(d.users);
     return d;
   } catch (e) {
     dbGalat = e.message || String(e);
