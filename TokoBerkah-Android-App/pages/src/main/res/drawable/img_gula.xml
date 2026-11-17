@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+    <!-- background -->
+    <path
+        android:fillColor="#EFF4FF"
+        android:pathData="M16,0H84A16,16 0,0 1,100 16V84A16,16 0,0 1,84 100H16A16,16 0,0 1,0 84V16A16,16 0,0 1,16 0Z" />
+    <!-- sugar bag -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#C7D6F5"
+        android:strokeWidth="2"
+        android:pathData="M28,26h44a6,6 0,0 1,6 6v50a6,6 0,0 1,-6 6H28a6,6 0,0 1,-6 -6V32a6,6 0,0 1,6 -6z" />
+    <!-- folded top -->
+    <path
+        android:fillColor="#DBEAFE"
+        android:pathData="M22,26h56v12H22z" />
+    <!-- blue band -->
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M22,48h56v10H22z" />
+    <!-- label -->
+    <path
+        android:fillColor="#EFF6FF"
+        android:pathData="M32,64h36v16H32z" />
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M36,70h28v4H36z" />
+</vector>

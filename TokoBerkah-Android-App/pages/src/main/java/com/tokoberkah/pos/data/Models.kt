@@ -1,0 +1,48 @@
+package com.tokoberkah.pos.data
+
+import androidx.annotation.DrawableRes
+
+/**
+ * A single recorded change of a product's selling price.
+ * [history] lists are stored newest-first.
+ */
+data class PriceChange(
+    val date: String,
+    val time: String,
+    val oldPrice: Int,
+    val newPrice: Int,
+    val by: String,
+    val reason: String
+) {
+    val delta: Int
+        get() = newPrice - oldPrice
+}
+
+/** A product sold at Toko Berkah. */
+data class Product(
+    val ean: String,
+    val name: String,
+    val category: String,
+    val stock: Int,
+    val location: String,
+    @DrawableRes val imageRes: Int,
+    val badge: String,
+    var price: Int,
+    val history: MutableList<PriceChange> = mutableListOf()
+)
+
+/** Groups digits with Indonesian thousands separators: 34000 -> "34.000". */
+fun Long.grouped(): String {
+    val digits = toString()
+    val sb = StringBuilder()
+    digits.forEachIndexed { index, c ->
+        if (index > 0 && (digits.length - index) % 3 == 0) sb.append('.')
+        sb.append(c)
+    }
+    return sb.toString()
+}
+
+fun Int.grouped(): String = toLong().grouped()
+
+/** Formats an amount as rupiah: "Rp 34.000". */
+fun Int.rp(): String = "Rp ${grouped()}"

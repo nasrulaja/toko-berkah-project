@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Plus Jakarta Sans (tepat dari desain Figma) -->
+    <style name="FontRegular">
+        <item name="android:fontFamily">@font/plus_jakarta_regular</item>
+    </style>
+
+    <style name="FontMedium">
+        <item name="android:fontFamily">@font/plus_jakarta_medium</item>
+    </style>
+
+    <style name="FontSemiBold">
+        <item name="android:fontFamily">@font/plus_jakarta_semibold</item>
+    </style>
+
+    <style name="FontBold">
+        <item name="android:fontFamily">@font/plus_jakarta_bold</item>
+    </style>
+
+    <style name="FontExtraBold">
+        <item name="android:fontFamily">@font/plus_jakarta_extrabold</item>
+    </style>
+
+    <!-- Liberation Mono untuk barcode / EAN -->
+    <style name="FontMono">
+        <item name="android:fontFamily">@font/liberation_mono_bold</item>
+    </style>
+
+</resources>

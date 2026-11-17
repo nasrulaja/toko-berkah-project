@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ===== App ===== -->
+    <string name="app_name">Toko Berkah</string>
+    <string name="store_name">Toko Berkah</string>
+    <string name="app_subtitle">POS Companion</string>
+
+    <!-- ===== Umum ===== -->
+    <string name="status_online">Online</string>
+    <string name="status_offline">Offline</string>
+    <string name="action_save">Simpan</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_done">Selesai</string>
+    <string name="action_close">Tutup</string>
+    <string name="action_see_all">Lihat Semua</string>
+    <string name="action_back">Kembali</string>
+    <string name="currency_format">Rp %1$s</string>
+    <string name="unit_pcs">pcs</string>
+    <string name="unit_box">dus</string>
+
+    <!-- ===== Bottom Navigation ===== -->
+    <string name="nav_check_price">Cek Harga</string>
+    <string name="nav_check_stock">Cek Stok</string>
+    <string name="nav_incoming">Masuk</string>
+    <string name="nav_not_available">Halaman belum tersedia</string>
+
+    <!-- ===== 1. Login ===== -->
+    <string name="login_title">Toko Berkah</string>
+    <string name="login_subtitle">Aplikasi Khusus Pemilik Toko</string>
+    <string name="login_email_label">Email Pemilik</string>
+    <string name="login_email_hint">pemilik@tokoberkah.com</string>
+    <string name="login_password_label">Kata Sandi</string>
+    <string name="login_show_password">Tampilkan kata sandi</string>
+    <string name="login_hide_password">Sembunyikan kata sandi</string>
+    <string name="login_button">Masuk ke Toko</string>
+    <string name="login_error_empty">Email dan kata sandi wajib diisi</string>
+    <string name="login_error_invalid">Email atau kata sandi salah</string>
+
+    <!-- ===== 2. Pemindai Barcode ===== -->
+    <string name="scan_title">Pemindai Barcode</string>
+    <string name="scan_aim_hint">Arahkan kamera ke barcode produk</string>
+    <string name="scan_aim_subhint">Posisikan kode batang di dalam kotak</string>
+    <string name="scan_sound_on">Bunyi &amp; Getar Aktif</string>
+    <string name="scan_sound_off">Bunyi &amp; Getar Nonaktif</string>
+    <string name="scan_flash_toggle">Nyalakan / matikan lampu</string>
+    <string name="scan_close">Tutup pemindai barcode</string>
+    <string name="scan_out_of_stock">Stok habis, tidak bisa ditambahkan! (Stok: %1$d)</string>
+    <string name="scan_not_found_format">Produk tidak ditemukan! Barcode: %1$s</string>
+    <string name="scan_input_manual">Input Manual</string>
+    <string name="scan_permission_needed">Izin kamera diperlukan untuk scan barcode</string>
+    <string name="scan_permission_grant">Izinkan kamera</string>
+    <string name="scan_open_settings">Buka Pengaturan</string>
+    <string name="scan_manual_title">Input Barcode Manual</string>
+    <string name="scan_manual_hint">Masukkan kode barcode</string>
+    <string name="scan_manual_search">Cari</string>
+    <string name="scan_qty_increase">Tambah jumlah</string>
+    <string name="scan_qty_decrease">Kurangi jumlah</string>
+    <string name="scan_total_format">(Total: %1$d %2$s)</string>
+
+    <!-- ===== 3. Cek Stok ===== -->
+    <string name="stock_title">Cek Stok</string>
+    <string name="stock_scan_button">Pindai Kode Batang Produk</string>
+    <string name="stock_scan_hint">Arahkan kamera ke Kode Batang</string>
+    <string name="stock_results_title">Hasil Pengecekan</string>
+    <string name="stock_items_format">%1$d Barang Terdata</string>
+    <string name="stock_restock_format">%1$d Perlu Restok</string>
+    <string name="stock_status_low">Stok Menipis</string>
+    <string name="stock_status_out">Habis</string>
+    <string name="stock_status_safe">Stok Tersedia</string>
+    <string name="stock_total_label">SISA STOK TOTAL</string>
+    <string name="stock_on_shelf">Di Rak Depan</string>
+    <string name="stock_in_warehouse">Di Gudang Belakang</string>
+    <string name="stock_last_incoming_format">Terakhir Masuk: %1$s</string>
+    <string name="stock_urgent">Segera Restok</string>
+    <string name="stock_scan_result_banner">Menampilkan produk hasil scan</string>
+    <string name="stock_close_scan_result">Tutup hasil scan</string>
+
+    <!-- ===== Format harga ===== -->
+    <string name="price_format">Rp %1$s</string>
+    <string name="ean_format">EAN: %1$s</string>
+
+</resources>

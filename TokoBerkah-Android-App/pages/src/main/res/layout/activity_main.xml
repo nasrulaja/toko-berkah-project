@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_page"
+    android:orientation="vertical">
+
+    <include layout="@layout/view_store_header" />
+
+    <FrameLayout
+        android:id="@+id/fragmentContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:elevation="12dp"
+        android:orientation="horizontal"
+        android:paddingTop="8dp"
+        android:paddingBottom="10dp">
+
+        <!-- Cek Harga -->
+        <LinearLayout
+            android:id="@+id/navCekHarga"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_nav_pill"
+                android:duplicateParentState="true">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/nav_cek_harga"
+                    android:duplicateParentState="true"
+                    android:src="@drawable/ic_tag"
+                    android:tint="@color/nav_icon_tint" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:duplicateParentState="true"
+                android:text="@string/nav_cek_harga"
+                android:textColor="@color/nav_label_tint"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Cek Stok -->
+        <LinearLayout
+            android:id="@+id/navCekStok"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_nav_pill"
+                android:duplicateParentState="true">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/nav_cek_stok"
+                    android:duplicateParentState="true"
+                    android:src="@drawable/ic_box"
+                    android:tint="@color/nav_icon_tint" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:duplicateParentState="true"
+                android:text="@string/nav_cek_stok"
+                android:textColor="@color/nav_label_tint"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Masuk -->
+        <LinearLayout
+            android:id="@+id/navMasuk"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+
+            <FrameLayout
+                android:layout_width="64dp"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_nav_pill"
+                android:duplicateParentState="true">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="@string/nav_masuk"
+                    android:duplicateParentState="true"
+                    android:src="@drawable/ic_truck"
+                    android:tint="@color/nav_icon_tint" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:duplicateParentState="true"
+                android:text="@string/nav_masuk"
+                android:textColor="@color/nav_label_tint"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ===== Brand / Primary (dari Figma: #3FB8FF) ===== -->
+    <color name="primary">#3FB8FF</color>
+    <color name="primary_dark">#004668</color>
+    <color name="primary_light">#EEF4FF</color>
+    <color name="primary_container">#E4EFFF</color>
+    <color name="on_primary">#001D34</color>
+    <color name="accent_blue">#006492</color>
+
+    <!-- ===== Background & Surface ===== -->
+    <color name="background">#F8F9FF</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#EEF4FF</color>
+    <color name="card_stroke">#E4EFFF</color>
+    <color name="divider">#E4EFFF</color>
+
+    <!-- ===== Text ===== -->
+    <color name="text_primary">#001D34</color>
+    <color name="text_secondary">#3E4850</color>
+    <color name="text_hint">#6E7881</color>
+    <color name="text_link">#006492</color>
+    <color name="text_on_dark">#E9F1FF</color>
+    <color name="bullet_gray">#BEC8D2</color>
+
+    <!-- ===== Status: Success / Stok Tersedia ===== -->
+    <color name="success">#006947</color>
+    <color name="success_light">#6FFBBE</color>
+    <color name="on_success">#002113</color>
+
+    <!-- ===== Status: Warning (banner #FF9421, badge #FFDCC2) ===== -->
+    <color name="warning">#FF9421</color>
+    <color name="warning_on">#663600</color>
+    <color name="warning_light">#FFDCC2</color>
+    <color name="warning_dark">#8F4E00</color>
+    <color name="warning_badge_text">#2E1500</color>
+
+    <!-- ===== Status: Error / Habis ===== -->
+    <color name="error">#BA1A1A</color>
+    <color name="error_light">#FFDAD6</color>
+    <color name="error_dark">#93000A</color>
+
+    <!-- ===== Status: Info ===== -->
+    <color name="info">#3FB8FF</color>
+    <color name="info_light">#E4EFFF</color>
+
+    <!-- ===== Input field (login) ===== -->
+    <color name="input_background">#C6E7FF</color>
+    <color name="input_stroke">#C6E7FF</color>
+    <color name="input_focused_stroke">#3FB8FF</color>
+
+    <!-- ===== Bottom navigation ===== -->
+    <color name="nav_active">#3FB8FF</color>
+    <color name="nav_inactive">#3E4850</color>
+    <color name="nav_indicator">#3FB8FF</color>
+
+    <!-- ===== Chip "Perlu Restok" ===== -->
+    <color name="chip_blue">#DAEAFF</color>
+
+    <!-- ===== Layar Scan Barcode (gelap) ===== -->
+    <color name="scan_background">#15324D</color>
+    <color name="scan_overlay">#6615324D</color>
+    <color name="scan_frame">#3FB8FF</color>
+    <color name="scan_line">#3FB8FF</color>
+    <color name="scan_panel">#15324D</color>
+    <color name="scan_badge_bg">#15324DE6</color>
+
+    <!-- ===== Utility ===== -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="scrim">#66000000</color>
+
+</resources>

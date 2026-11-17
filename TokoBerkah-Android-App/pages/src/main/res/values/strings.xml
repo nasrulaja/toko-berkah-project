@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Toko Berkah POS</string>
+
+    <string name="store_name">Toko Berkah</string>
+    <string name="store_companion">POS Companion</string>
+
+    <string name="nav_cek_harga">Cek Harga</string>
+    <string name="nav_cek_stok">Cek Stok</string>
+    <string name="nav_masuk">Masuk</string>
+
+    <string name="scan_button">Pindai Kode Batang Produk</string>
+    <string name="scan_hint">Arahkan kamera ke Kode Batang</string>
+    <string name="scan_info">Hasil scan otomatis diperbarui setiap barcode baru terdeteksi di rak.</string>
+
+    <string name="btn_back">Kembali</string>
+    <string name="btn_riwayat">Riwayat Harga</string>
+    <string name="btn_ubah">Ubah Harga</string>
+    <string name="btn_simpan">Simpan Harga Baru</string>
+    <string name="btn_batal">Batal</string>
+    <string name="lihat_semua">Lihat Semua</string>
+
+    <string name="harga_kasir">HARGA JUAL KASIR</string>
+    <string name="resmi_terdaftar">Resmi Terdaftar</string>
+    <string name="per_unit">/1 Buah</string>
+</resources>
