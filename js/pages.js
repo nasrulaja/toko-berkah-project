@@ -21,11 +21,29 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, terkunci, dbGalat } from './core/db.js?v=20261117g';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117g';
-import { barChart, donut, spark, short } from './charts.js?v=20261117g';
+import { db, me, save, mut, KS, setMe, terkunci, dbGalat } from './core/db.js?v=20261117h';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117h';
+import { barChart, donut, spark, short } from './charts.js?v=20261117h';
 
 let S = {};
+
+/** Mengisi filter halaman dari tautan (mis. #laporan?lp=hari) sebelum halaman digambar. | param: o (objek kunci-nilai) | return: void */
+export const terapkanFilter = (o) => Object.assign(S, o);
+
+/** Daftar periode filter dan batas awalnya (ms). | param: tf (kunci periode) | return: ms awal periode */
+const PERIODE = [
+  ['semua', 'Semua data'],
+  ['hari', 'Hari ini'],
+  ['7hari', '7 hari terakhir'],
+  ['30hari', '30 hari terakhir'],
+  ['bulan', 'Bulan ini'],
+  ['tahun', 'Tahun ini']
+];
+const awalPeriode = (tf) => {
+  const k = new Date(),
+    h = new Date(k.getFullYear(), k.getMonth(), k.getDate()).getTime();
+  return { semua: 0, hari: h, '7hari': h - 6 * 864e5, '30hari': h - 29 * 864e5, bulan: new Date(k.getFullYear(), k.getMonth(), 1).getTime(), tahun: new Date(k.getFullYear(), 0, 1).getTime() }[tf];
+};
 
 const prod = (id) => db.produk.find((x) => x.id == id);
 const kat = (id) => db.kategori.find((x) => x.id == id);
@@ -124,13 +142,13 @@ export function dashboard() {
   });
   const stokBeli7 = db.produk.reduce((a, p) => a + (p.stok - (ubah.get(p.id) || 0)) * p.harga_beli, 0);
   const kpis1 = [
-    kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'dibanding kemarin'), sp: spark(w7.map((x) => x.sales)), lnk: '#laporan' }),
-    kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'dibanding kemarin'), sp: spark(w7.map((x) => x.count)), lnk: '#transaksi' }),
-    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'dibanding kemarin'), sp: spark(w7.map((x) => x.profit)), lnk: '#laporan' }),
-    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Nilai satu transaksi paling besar pada hari ini. Dihitung per hari, bukan per pembeli.', v: rp(belanjaMax), f: `<small>${trxHariIni.length ? `Dari ${trxHariIni.length} transaksi hari ini` : 'Belum ada transaksi hari ini'}</small>`, lnk: '#transaksi' })
+    kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'dibanding kemarin'), sp: spark(w7.map((x) => x.sales)), lnk: '#laporan?lp=hari' }),
+    kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'dibanding kemarin'), sp: spark(w7.map((x) => x.count)), lnk: '#transaksi?tp=hari' }),
+    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'dibanding kemarin'), sp: spark(w7.map((x) => x.profit)), lnk: '#laporan?lp=hari' }),
+    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Nilai satu transaksi paling besar pada hari ini. Dihitung per hari, bukan per pembeli.', v: rp(belanjaMax), f: `<small>${trxHariIni.length ? `Dari ${trxHariIni.length} transaksi hari ini` : 'Belum ada transaksi hari ini'}</small>`, lnk: '#transaksi?tp=hari&tu=total' })
   ].join('');
   const kpis2 = [
-    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'dibanding 7 hari lalu'), lnk: '#laporan' }),
+    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'dibanding 7 hari lalu'), lnk: '#laporan?lp=7hari' }),
     kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', h: 'Harga beli dikali stok semua barang yang masih ada. Artinya uang modal yang tertanam di barang.', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'dibanding 7 hari lalu') + `<small class="blk"><span>Potensi jual${tip('Perkiraan uang yang didapat bila semua stok yang ada terjual habis dengan harga jual sekarang.')}</span><b>${rp(stokJual)}</b></small>`, lnk: '#stok' }),
     kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', h: 'Banyaknya jenis barang yang terdaftar.', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>`, lnk: '#produk' }),
     kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', h: 'Barang yang stoknya sudah sama dengan atau di bawah batas minimum. Segera isi ulang.', v: L.length, f: `<small>${L.length ? 'Perlu segera diisi ulang' : 'Semua stok aman'}</small>`, lnk: '#stok-menipis' })
@@ -692,16 +710,7 @@ export function hasilTutupBuku() {
 export function laporan() {
   /* --- Filter periode: menyaring SEMUA angka & tabel di halaman ini --- */
   const tf = ['semua', 'hari', '7hari', '30hari', 'bulan', 'tahun'].includes(S.lp) ? S.lp : 'semua';
-  const kini = new Date(),
-    awalHari = new Date(kini.getFullYear(), kini.getMonth(), kini.getDate()).getTime();
-  const batas = {
-    semua: 0,
-    hari: awalHari,
-    '7hari': awalHari - 6 * 864e5,
-    '30hari': awalHari - 29 * 864e5,
-    bulan: new Date(kini.getFullYear(), kini.getMonth(), 1).getTime(),
-    tahun: new Date(kini.getFullYear(), 0, 1).getTime()
-  }[tf];
+  const batas = awalPeriode(tf);
   const labelPeriode = {
     semua: 'seluruh data',
     hari: 'hari ini',
@@ -773,14 +782,7 @@ export function laporan() {
         shellRef();
       };
   });
-  const opsi = [
-      ['semua', 'Semua data'],
-      ['hari', 'Hari ini'],
-      ['7hari', '7 hari terakhir'],
-      ['30hari', '30 hari terakhir'],
-      ['bulan', 'Bulan ini'],
-      ['tahun', 'Tahun ini']
-    ],
+  const opsi = PERIODE,
     fltBar = `<div class="flt"><select id="flp" aria-label="Filter periode laporan">${opsi.map(([k, v]) => `<option value="${k}"${k === tf ? ' selected' : ''}>${v}</option>`).join('')}</select></div>`;
   return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b> — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
@@ -811,10 +813,29 @@ export function laporan() {
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function transaksi() {
-  const rec = [...db.transaksi].reverse(),
-    nKunci = rec.filter(terkunci).length;
-  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4>${nKunci ? `<span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
-  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
+  const tp = PERIODE.some(([k]) => k === S.tp) ? S.tp : 'semua',
+    tu = S.tu === 'total' ? 'total' : 'baru',
+    batas = awalPeriode(tp),
+    semua = [...db.transaksi].reverse(),
+    rec = semua.filter((t) => new Date(t.waktu).getTime() >= batas).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
+    nKunci = rec.filter(terkunci).length,
+    label = PERIODE.find(([k]) => k === tp)[1].toLowerCase();
+  setTimeout(() => {
+    const f = $('#ftp'),
+      u = $('#ftu');
+    if (f)
+      f.onchange = () => {
+        S.tp = f.value;
+        shellRef();
+      };
+    if (u)
+      u.onchange = () => {
+        S.tu = u.value;
+        shellRef();
+      };
+  }, 0);
+  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${tp === 'semua' ? rec.length : rec.length + ' dari ' + semua.length})</h4><div class="flt"><select id="ftp" aria-label="Filter periode transaksi">${PERIODE.map(([k, v]) => `<option value="${k}"${k === tp ? ' selected' : ''}>${v}</option>`).join('')}</select><select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>.${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
+  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('') || `<tr><td colspan="6">Belum ada transaksi pada periode ini.</td></tr>`}</table></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */

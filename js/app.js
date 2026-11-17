@@ -18,10 +18,11 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261117g';
-import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117g';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117g';
+import { splash } from './splash.js?v=20261117h';
+import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117h';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117h';
 import {
+  terapkanFilter,
   dashboard,
   produk,
   stok,
@@ -38,7 +39,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261117g';
+} from './pages.js?v=20261117h';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -88,7 +89,10 @@ const NAV = [
    route() : kalau belum login tampilkan form login, kalau sudah render shell
    ========================================================================== */
 
-const cur = () => (Object.prototype.hasOwnProperty.call(PG, location.hash.slice(1)) ? location.hash.slice(1) : 'dashboard');
+const cur = () => {
+  const h = location.hash.slice(1).split('?')[0];
+  return Object.prototype.hasOwnProperty.call(PG, h) ? h : 'dashboard';
+};
 
 function shell() {
   const k = cur(),
@@ -292,6 +296,12 @@ function onClick(e) {
    ========================================================================== */
 
 function route() {
+  // tautan berfilter (mis. #laporan?lp=hari): terapkan filter, lalu bersihkan tanda tanya dari alamat
+  const [hh, qs] = location.hash.slice(1).split('?');
+  if (qs) {
+    terapkanFilter(Object.fromEntries(new URLSearchParams(qs)));
+    history.replaceState(null, '', '#' + hh);
+  }
   if (!me) {
     login(route);
     return;
