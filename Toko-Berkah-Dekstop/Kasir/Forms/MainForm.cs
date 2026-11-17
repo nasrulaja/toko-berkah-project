@@ -537,12 +537,18 @@ public class MainForm : Form
         SetStatus("Menyinkronkan ke Supabase…", Color.DimGray);
         try
         {
+            // Unduh master produk/kategori dari web dulu, baru kirim data lokal.
+            // Tanpa langkah pertama, kategori & pencarian tidak pernah ikut web.
+            var (okMasuk, pesanMasuk) = await Task.Run(() => Db.SinkronMasuk());
+            if (!okMasuk) SetStatus("Offline — memakai data lokal", Color.DarkOrange);
+
             var (ok, pesan) = await Task.Run(() => Db.SinkronKeluar(pengguna));
-            if (ok) SetStatus(pesan, Color.SeaGreen);
+            if (ok) SetStatus(okMasuk ? pesanMasuk + " " + pesan : pesan, Color.SeaGreen);
             else SetStatus("Offline — data tersimpan lokal (" + Db.JumlahAntrian() + " menunggu)", Color.DarkOrange);
 
             if (tampilkanHasil)
-                MessageBox.Show(pesan, ok ? "Sinkron berhasil" : "Sinkron gagal",
+                MessageBox.Show(okMasuk ? pesanMasuk + "\n" + pesan : "Gagal mengunduh dari Supabase.",
+                    ok ? "Sinkron berhasil" : "Sinkron gagal",
                     MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
         finally { sedangSinkron = false; }

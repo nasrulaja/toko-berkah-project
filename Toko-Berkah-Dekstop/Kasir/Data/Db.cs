@@ -417,7 +417,167 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
         return b.ToString();
     }
 
+    // ------------------------------------------------------------ unduh dari Supabase
+    // Arah sebaliknya dari SinkronKeluar: tarik master produk & kategori dari
+    // Supabase ke SQLite lokal, supaya kategori dan hasil pencarian di desktop
+    // sama dengan yang tampil di web. Tanpa ini desktop hanya punya 8 produk
+    // contoh bawaan dan pencarian tidak menemukan barang dari web.
+    // Produk lokal yang belum ada di Supabase (dibuat offline) TIDAK dihapus.
+    public static (bool ok, string pesan) SinkronMasuk()
+    {
+        List<JsonObject> supa;
+        try { supa = Supa.Get("produk?select=id,barcode,nama,harga_jual,stok,kategori_id"); }
+        catch (Exception e) { return (false, "Gagal menghubungi Supabase: " + e.Message); }
+
+        // id kategori -> nama, supaya kolom kategori lokal berisi nama (bukan angka)
+        var petaKategori = new Dictionary<int, string>();
+        try
+        {
+            foreach (var k in Supa.Get("kategori?select=id,nama"))
+                petaKategori[k["id"]!.GetValue<int>()] = k["nama"]?.ToString() ?? "Lainnya";
+        }
+        catch { /* kategori opsional: kalau gagal, pakai 'Lainnya' */ }
+
+        int baru = 0, ubah = 0;
+        using var c = Open();
+
+        // Nama kategori resmi dari web, dipakai untuk menyelaraskan ejaan lama
+        // (mis. 'Lainnya' bawaan aplikasi -> 'Lain-lain' seperti di web).
+        var namaResmi = new HashSet<string>(petaKategori.Values, StringComparer.OrdinalIgnoreCase);
+
+        // Barcode yang benar-benar dipakai web, untuk membedakan kode karangan
+        // produk contoh dari barcode asli.
+        var kodeWeb = new HashSet<string>(
+            supa.Select(p => p["barcode"]?.ToString())
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x!), StringComparer.Ordinal);
+
+        using (var tx = c.BeginTransaction())
+        {
+            foreach (var p in supa)
+            {
+                var nama = p["nama"]?.ToString();
+                if (string.IsNullOrWhiteSpace(nama)) continue;
+
+                var barcode = p["barcode"]?.ToString();
+                var kode = string.IsNullOrWhiteSpace(barcode) ? "S" + p["id"] : barcode!;
+                var harga = Angka(p["harga_jual"]);
+                var stok = Angka(p["stok"]);
+
+                var kid = p["kategori_id"];
+                var kategori = kid != null && petaKategori.TryGetValue(kid.GetValue<int>(), out var nm)
+                    ? nm : "Lain-lain";
+
+                // Sudah ada di lokal? Barcode dulu, lalu nama yang dinormalkan.
+                // Nama perlu karena produk contoh memakai barcode karangan.
+                string? kodeLokal = null;
+                using (var cek = c.CreateCommand())
+                {
+                    cek.Transaction = tx;
+                    cek.CommandText = "SELECT kode FROM produk WHERE kode=$k";
+                    cek.Parameters.AddWithValue("$k", kode);
+                    if (cek.ExecuteScalar() is string kdl) kodeLokal = kdl;
+                }
+                if (kodeLokal == null)
+                {
+                    // Cari baris lokal yang namanya sama tetapi kodenya masih kode
+                    // karangan (belum dipakai web).
+                    using var cek2 = c.CreateCommand();
+                    cek2.Transaction = tx;
+                    cek2.CommandText = "SELECT kode,nama FROM produk";
+                    var sama = new List<string>();
+                    using (var rr = cek2.ExecuteReader())
+                        while (rr.Read())
+                        {
+                            var kk = rr.GetString(0);
+                            if (kk.Equals(kode, StringComparison.Ordinal)) continue;
+                            if (NormalNama(rr.GetString(1)) == NormalNama(nama)) sama.Add(kk);
+                        }
+                    // Prioritaskan baris yang kodenya bukan barcode web (sisa contoh)
+                    kodeLokal = sama.FirstOrDefault(x => !kodeWeb.Contains(x)) ?? sama.FirstOrDefault();
+                }
+
+                using var cmd = c.CreateCommand();
+                cmd.Transaction = tx;
+                if (kodeLokal != null)
+                {
+                    // Nama, kategori, dan stok dari web dianggap sumber kebenaran.
+                    // Harga lokal dibiarkan bila sudah pernah diubah kasir.
+                    // Kode disamakan ke barcode web supaya tidak dobel.
+                    var bedaKode = !kodeLokal.Equals(kode, StringComparison.Ordinal);
+                    if (bedaKode)
+                    {
+                        cmd.CommandText = @"UPDATE produk SET kode=$k, nama=$n, kategori=$g,
+                                            stok=$s, harga=CASE WHEN $h > 0 THEN $h ELSE harga END
+                                            WHERE kode=$lama";
+                    }
+                    else
+                    {
+                        cmd.CommandText = @"UPDATE produk SET nama=$n, kategori=$g,
+                                            stok=$s, harga=CASE WHEN $h > 0 THEN $h ELSE harga END
+                                            WHERE kode=$lama";
+                    }
+                    cmd.Parameters.AddWithValue("$lama", kodeLokal);
+                    ubah++;
+                }
+                else
+                {
+                    cmd.CommandText = @"INSERT INTO produk(kode,nama,harga,stok,kategori)
+                                        VALUES($k,$n,$h,$s,$g)";
+                    baru++;
+                }
+                cmd.Parameters.AddWithValue("$k", kode);
+                cmd.Parameters.AddWithValue("$n", nama);
+                cmd.Parameters.AddWithValue("$h", harga);
+                cmd.Parameters.AddWithValue("$s", stok);
+                cmd.Parameters.AddWithValue("$g", kategori);
+                cmd.ExecuteNonQuery();
+            }
+            tx.Commit();
+        }
+
+        // Rapikan ejaan kategori lama agar daftar tidak berisi 'Lainnya' dan
+        // 'Lain-lain' sekaligus. Hanya menyamakan nama, tidak menghapus produk.
+        if (namaResmi.Count > 0)
+        {
+            using var cmd = c.CreateCommand();
+            cmd.CommandText = "SELECT DISTINCT kategori FROM produk";
+            var lama = new List<string>();
+            using (var r = cmd.ExecuteReader())
+                while (r.Read())
+                {
+                    var g = r.IsDBNull(0) ? "" : r.GetString(0);
+                    if (g.Length > 0 && !namaResmi.Contains(g)) lama.Add(g);
+                }
+            foreach (var g in lama)
+            {
+                // 'Lainnya' -> 'Lain-lain' bila web punya ejaan itu
+                var ganti = namaResmi.FirstOrDefault(x =>
+                    string.Equals(x, g, StringComparison.OrdinalIgnoreCase))
+                    ?? (g.Equals("Lainnya", StringComparison.OrdinalIgnoreCase) && namaResmi.Contains("Lain-lain")
+                        ? "Lain-lain" : null);
+                if (ganti == null) continue;
+                using var u = c.CreateCommand();
+                u.CommandText = "UPDATE produk SET kategori=$b WHERE kategori=$a";
+                u.Parameters.AddWithValue("$b", ganti);
+                u.Parameters.AddWithValue("$a", g);
+                u.ExecuteNonQuery();
+            }
+        }
+
+        return (true, $"Produk dari web: {baru} baru, {ubah} diperbarui, {petaKategori.Count} kategori.");
+    }
+
+    // Angka JSON -> long, aman untuk null / desimal.
+    static long Angka(JsonNode? n)
+    {
+        if (n == null) return 0;
+        try { return (long)Math.Round(n.GetValue<decimal>()); }
+        catch { return long.TryParse(n.ToString(), out var v) ? v : 0; }
+    }
+
     // Titik masuk sinkronisasi: dipanggil setelah bayar, setelah tutup kasir,
+
     // dan saat aplikasi dibuka. Aman dipanggil saat offline.
     public static (bool ok, string pesan) SinkronKeluar(string emailKasir)
     {
