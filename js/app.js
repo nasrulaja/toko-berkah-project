@@ -19,7 +19,7 @@
    ========================================================================== */
 
 import { splash } from './splash.js?v=20261116q';
-import { load, db, setDB, me, setMe, KS, K, save, seed } from './db.js?v=20261116q';
+import { load, db, setDB, me, setMe, KS, K, save, seed } from './core/db.js?v=20261116q';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116q';
 import {
   dashboard,

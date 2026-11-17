@@ -64,13 +64,13 @@ TokoBerkah-Android-Owner/
 │       │   └── viewmodel/               # Auth, Products, Pricing, Stock, SharedUi
 │       └── res/
 ├── gradle/wrapper/
-├── apk/
-│   ├── TokoBerkah-Owner-arm64-v8a-release-unsigned.apk   # 8 MB, untuk HP modern
-│   └── TokoBerkah-Owner-armeabi-v7a-release-unsigned.apk # 6.5 MB, untuk HP lama
 ├── build.gradle.kts
 ├── settings.gradle.kts
 └── README.md
 ```
+
+> 📦 **APK hasil build tidak disimpan di folder ini.** Semua paket siap pasang
+> (Android, Desktop) dikumpulkan di satu tempat: [`../demo/`](../demo/).
 
 ---
 
@@ -139,6 +139,8 @@ digabung jadi satu APK universal, file itu ikut terbawa 4 kali.
 | `arm64-v8a` release | **8.1 MB** | hampir semua HP Android modern |
 | `armeabi-v7a` release | **6.5 MB** | HP lama (32-bit) |
 | `arm64-v8a` debug | 27 MB | pengembangan |
+
+Semua file di atas tersedia di **[`../demo/android/`](../demo/android/)**.
 
 Sebelumnya satu APK universal berukuran **44 MB** (87 MB setelah diekstrak),
 karena R8 tidak aktif sehingga dex berisi seluruh kode Compose + ML Kit mentah

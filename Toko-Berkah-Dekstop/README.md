@@ -4,7 +4,7 @@ Aplikasi kasir desktop sederhana untuk toko kelontong, dibuat dengan **C# WinFor
 
 ## Cara mencoba aplikasi (paling cepat)
 
-1. Unduh **`Kasir-Demo.zip`** (ada di folder ini, ukuran ± 3,7 MB)
+1. Unduh **`Kasir-Demo.zip`** (di folder `demo/desktop/`, ukuran ± 3,7 MB)
 2. Ekstrak ke folder mana pun
 3. Jalankan **`Kasir.exe`**
 4. Masuk dengan **kasir@gmail.com** / **kasir123**
@@ -17,8 +17,8 @@ Syarat: Windows 64-bit dan [.NET 8 Runtime (Desktop)](https://dotnet.microsoft.c
 
 | Lokasi | Isi |
 |---|---|
-| [`Kasir-Demo.zip`](https://github.com/nasrulaja/toko-berkah-project/raw/main/Kasir-Demo.zip) | Paket siap jalan, di root repo — unduh ini kalau hanya ingin mencoba |
-| [`demo-kasir/`](../demo-kasir/) | Isi paket yang sama tetapi belum dizip (bisa dilihat per file) |
+| [`demo/desktop/Kasir-Demo.zip`](https://github.com/nasrulaja/toko-berkah-project/raw/main/demo/desktop/Kasir-Demo.zip) | Paket siap jalan — unduh ini kalau hanya ingin mencoba |
+| [`demo/desktop/Kasir/`](../demo/desktop/Kasir/) | Isi paket yang sama tetapi belum dizip (bisa dilihat per file) |
 | `Kasir/` | Kode sumber lengkap (untuk diubah/dikembangkan) |
 
 ## Fitur

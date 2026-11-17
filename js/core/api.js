@@ -1,6 +1,7 @@
 /* ==========================================================================
-   TOKO BERKAH — api.js
+   TOKO BERKAH — core/api.js
    Penghubung ke database Supabase (REST/PostgREST).
+   Lokasi: js/core/api.js — dipakai oleh core/db.js.
 
    Peran file ini:
    - Menyimpan alamat & kunci project Supabase.

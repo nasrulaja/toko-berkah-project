@@ -21,7 +21,7 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci, dbSumber, dbGalat } from './db.js?v=20261116q';
+import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci, dbSumber, dbGalat } from './core/db.js?v=20261116q';
 import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116q';
 import { barChart, donut, spark, short } from './charts.js?v=20261116q';
 

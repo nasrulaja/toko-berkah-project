@@ -1,7 +1,8 @@
 /* ==========================================================================
-   TOKO BERKAH — db.js
+   TOKO BERKAH — core/db.js
    Sumber data tunggal: muat/simpan dari localStorage, catat mutasi stok,
    buat transaksi data contoh, dan siapkan data awal saat pertama dipakai.
+   Lokasi: js/core/db.js — diimpor sebagai './core/db.js' dari js/.
    --------------------------------------------------------------------------
    PETA FILE — cari teks "BAGIAN n":
      BAGIAN 1  KUNCI & STATE        nama kunci localStorage + user aktif

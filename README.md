@@ -12,6 +12,8 @@ native Windows), dan versi **Android** yang sedang disiapkan.
 | **Desktop** | âœ… Tersedia | C# WinForms (.NET 8) + SQLite | folder `Toko-Berkah-Dekstop/` |
 | **Android** | âœ… Tersedia (Aplikasi Pemilik) | Kotlin + Jetpack Compose + Supabase | folder `TokoBerkah-Android-Owner/` |
 
+**Semua paket siap pakai ada di satu tempat: [`demo/`](demo/) — APK Android, aplikasi Desktop (zip & folder), lengkap dengan petunjuk pasang.**
+
 ---
 
 ## ðŸ–¥ï¸ Versi Desktop (Windows)
@@ -26,8 +28,8 @@ lengkap ada di [`Toko-Berkah-Dekstop/README.md`](Toko-Berkah-Dekstop/README.md).
 
 | Untuk | Ambil ini | Cara pakai |
 |---|---|---|
-| **Paling mudah** | [`Kasir-Demo.zip`](https://github.com/nasrulaja/toko-berkah-project/raw/main/Kasir-Demo.zip) | Unduh, ekstrak, jalankan `Kasir.exe` |
-| **Tanpa zip** | folder [`demo-kasir/`](demo-kasir/) | Unduh seluruh isi folder, lalu jalankan `Kasir.exe` |
+| **Paling mudah** | [`Kasir-Demo.zip`](https://github.com/nasrulaja/toko-berkah-project/raw/main/demo/desktop/Kasir-Demo.zip) | Unduh, ekstrak, jalankan `Kasir.exe` |
+| **Tanpa zip** | folder [`demo/desktop/Kasir/`](demo/desktop/Kasir/) | Unduh seluruh isi folder, lalu jalankan `Kasir.exe` |
 
 > Wajib **diekstrak dulu**. Jangan jalankan `Kasir.exe` dari dalam ZIP: aplikasi tidak akan menemukan file pendampingnya dan langsung error.
 
@@ -141,14 +143,17 @@ Coil Â· Gradle Kotlin DSL Â· minSdk 24 / targetSdk 34.
 
 ### APK siap pasang
 
-| Arsitektur | APK | Ukuran |
-| --- | --- | --- |
-| arm64-v8a (HP modern) | [`TokoBerkah-Owner-arm64-v8a-debug.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-arm64-v8a-debug.apk) | 27 MB |
-| release, arm64-v8a | [`TokoBerkah-Owner-arm64-v8a-release-unsigned.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-arm64-v8a-release-unsigned.apk) | **8.1 MB** |
-| release, armeabi-v7a | [`TokoBerkah-Owner-armeabi-v7a-release-unsigned.apk`](TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-armeabi-v7a-release-unsigned.apk) | **6.5 MB** |
+Semua APK ada di **[`demo/android/`](demo/android/)**.
 
-APK debug bisa langsung dipasang. APK release berukuran jauh lebih kecil
-(R8 aktif) tetapi masih **unsigned** â€” tanda tangani dulu sebelum dipasang.
+| Jenis | Arsitektur | APK | Ukuran |
+| --- | --- | --- | --- |
+| **Disarankan** (langsung bisa dipasang) | arm64-v8a | [`…-arm64-v8a-debug.apk`](demo/android/TokoBerkah-Owner-arm64-v8a-debug.apk) | 27 MB |
+| debug | armeabi-v7a | [`…-armeabi-v7a-debug.apk`](demo/android/TokoBerkah-Owner-armeabi-v7a-debug.apk) | 25 MB |
+| kecil, perlu ditandatangani | arm64-v8a | [`…-arm64-v8a-release-unsigned.apk`](demo/android/TokoBerkah-Owner-arm64-v8a-release-unsigned.apk) | **8.1 MB** |
+| kecil, perlu ditandatangani | armeabi-v7a | [`…-armeabi-v7a-release-unsigned.apk`](demo/android/TokoBerkah-Owner-armeabi-v7a-release-unsigned.apk) | **6.5 MB** |
+
+APK **debug** sudah bertanda tangan jadi bisa langsung dipasang. APK **release**
+jauh lebih kecil (R8 aktif) tetapi masih *unsigned* — tanda tangani dulu sebelum dipasang.
 
 ### Build
 ```bash
@@ -178,3 +183,4 @@ perbaikan. Untuk perubahan besar, diskusikan dulu lewat Issue.
 | [`docs/PETA-MODUL.md`](docs/PETA-MODUL.md) | Peta modul & struktur kode web |
 | [`Toko-Berkah-Dekstop/README.md`](Toko-Berkah-Dekstop/README.md) | Dokumentasi aplikasi Desktop |
 | [`TokoBerkah-Android-Owner/README.md`](TokoBerkah-Android-Owner/README.md) | Dokumentasi teknis aplikasi Android |
+

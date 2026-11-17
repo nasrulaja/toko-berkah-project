@@ -49,7 +49,7 @@ Total nilai barang masuk dihitung otomatis dari harga beli × jumlah.
 Aplikasi Android **tidak bisa dijalankan langsung di browser** seperti versi
 Desktop (`Kasir.exe`) atau versi Web. Untuk mencobanya di HP:
 
-1. Unduh [`apk/TokoBerkah-Owner-arm64-v8a-debug.apk`](../TokoBerkah-Android-Owner/apk/TokoBerkah-Owner-arm64-v8a-debug.apk)
+1. Unduh [`demo/android/TokoBerkah-Owner-arm64-v8a-debug.apk`](../demo/android/TokoBerkah-Owner-arm64-v8a-debug.apk)
    (27 MB). Bila HP Anda 32-bit, pakai varian `armeabi-v7a`.
 2. Pindahkan ke HP Android, lalu ketuk file-nya
 3. Izinkan **"Instal dari sumber tidak dikenal"** bila diminta
