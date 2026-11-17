@@ -24,6 +24,13 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Konten tidak boleh ketimpa status bar (edge-to-edge)
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
+            val top = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars()).top
+            v.setPadding(v.paddingLeft, top, v.paddingRight, v.paddingBottom)
+            insets
+        }
+
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragmentContainer, CekHargaListFragment())
@@ -56,8 +63,8 @@ class MainActivity : AppCompatActivity() {
                     android.content.Intent().setClassName(
                         "com.tokoberkah.app",
                         "com.tokoberkah.app.StockCheckActivity"
-                    )
-                )
+                    ).addFlags(android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                ).also { overridePendingTransition(0, 0) }
 
             R.id.navMasuk ->
                 Toast.makeText(this, "Halaman Masuk belum tersedia.", Toast.LENGTH_SHORT).show()

@@ -36,6 +36,7 @@
         <activity
             android:name=".StockCheckActivity"
             android:exported="false"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.TokoBerkahPOS" />
 
         <activity
@@ -49,6 +50,7 @@
         <activity
             android:name="com.tokoberkah.pos.MainActivity"
             android:exported="false"
+            android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize"
             tools:node="replace" />
     </application>
