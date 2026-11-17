@@ -18,9 +18,9 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261116q';
-import { load, db, setDB, me, setMe, KS, K, save, seed } from './core/db.js?v=20261116q';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261116q';
+import { splash } from './splash.js?v=20261117a';
+import { load, db, setDB, me, setMe, KS, K, save, seed } from './core/db.js?v=20261117a';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117a';
 import {
   dashboard,
   produk,
@@ -33,13 +33,12 @@ import {
   hasilTutupBuku,
   transaksi,
   pengaturan,
-  penjualan,
   login,
   setShellRef,
   pform,
   saveP,
   kform
-} from './pages.js?v=20261116q';
+} from './pages.js?v=20261117a';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -51,7 +50,6 @@ const PG = {
   'stok-menipis': { t: 'Stok Menipis', s: 'Daftar Produk Perlu Diisi Ulang', html: stokMenipis },
   'tutup-buku': { t: 'Tutup Buku', s: 'Hasil tutup buku (proses dilakukan di Desktop)', html: hasilTutupBuku },
   laporan: { t: 'Laporan', s: 'Analisis penjualan dan laba rugi', html: laporan },
-  penjualan: { t: 'Catat Penjualan', s: 'Input penjualan manual dari web', html: penjualan },
   transaksi: { t: 'Riwayat Transaksi', s: 'Daftar seluruh transaksi penjualan', html: transaksi },
   pengaturan: { t: 'Pengaturan', s: 'Pengaturan aplikasi dan profil', html: pengaturan }
 };
@@ -61,7 +59,6 @@ const NAV = [
     'UTAMA',
     [
       ['dashboard', 'grid', 'Beranda'],
-      ['penjualan', 'cart', 'Catat Penjualan'],
       ['notifikasi', 'bell', 'Notifikasi']
     ]
   ],
@@ -114,7 +111,7 @@ function bottomNav(k) {
       ['stok', 'layers', 'Stok']
     ],
     nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length,
-    moreOn = ['panduan', 'notifikasi', 'stok-menipis', 'penjualan', 'laporan', 'tutup-buku', 'transaksi', 'pengaturan'].includes(k);
+    moreOn = ['panduan', 'notifikasi', 'stok-menipis', 'laporan', 'tutup-buku', 'transaksi', 'pengaturan'].includes(k);
   return `<nav class="bnav" aria-label="Menu utama">${items
     .map(([id, ic, l]) => `<a href="#${id}" class="${id === k ? 'on' : ''}">${ico(ic)}<span>${l}</span></a>`)
     .join('')}<button type="button" data-act="more" class="${moreOn ? 'on' : ''}">${ico('menu')}<span>Lainnya</span>${nLow ? `<em>${nLow}</em>` : ''}</button></nav>`;
@@ -239,7 +236,7 @@ function onClick(e) {
       const nLow = db.produk.filter((p) => p.stok <= p.stok_minimum).length;
       modal(
         'Menu lainnya',
-        `<div class="mlist"><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span>${notifUnread() ? `<b class="b r">${notifUnread()}</b>` : ''}</a><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#penjualan" data-act="x">${ico('cart')}<span>Catat Penjualan</span></a><a href="#laporan" data-act="x">${ico('chart')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('book')}<span>Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#panduan" data-act="x">${ico('help')}<span>Panduan</span></a><a href="#pengaturan" data-act="x">${ico('gear')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
+        `<div class="mlist"><a href="#notifikasi" data-act="x">${ico('bell')}<span>Notifikasi</span>${notifUnread() ? `<b class="b r">${notifUnread()}</b>` : ''}</a><a href="#stok-menipis" data-act="x">${ico('alert')}<span>Stok Menipis</span>${nLow ? `<b class="b r">${nLow}</b>` : ''}</a><a href="#laporan" data-act="x">${ico('chart')}<span>Laporan Penjualan</span></a><a href="#tutup-buku" data-act="x">${ico('book')}<span>Tutup Buku</span></a><a href="#transaksi" data-act="x">${ico('recv')}<span>Riwayat Transaksi</span></a><a href="#panduan" data-act="x">${ico('help')}<span>Panduan</span></a><a href="#pengaturan" data-act="x">${ico('gear')}<span>Pengaturan</span></a><button type="button" data-act="logout">${ico('out')}<span>Keluar</span></button></div>`,
         ''
       );
     }

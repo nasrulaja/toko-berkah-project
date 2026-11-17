@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci, dbSumber, dbGalat } from './core/db.js?v=20261116q';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261116q';
-import { barChart, donut, spark, short } from './charts.js?v=20261116q';
+import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci, dbSumber, dbGalat } from './core/db.js?v=20261117a';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117a';
+import { barChart, donut, spark, short } from './charts.js?v=20261117a';
 
 let S = {};
 
@@ -518,7 +518,6 @@ export function notifikasi() {
 export function panduan() {
   const langkah = [
     ['grid', 'Lihat Beranda', 'Ringkasan toko hari ini: penjualan, laba, stok yang hampir habis, dan barang terlaris. Buka tiap hari untuk melihat kondisi toko.', '#dashboard'],
-    ['cart', 'Catat Penjualan', 'Pilih barang, tentukan jumlah, isi uang yang diterima, lalu simpan. Stok berkurang dan Pendapatan bertambah. Dipakai bila penjualan belum masuk dari aplikasi kasir.', '#penjualan'],
     ['box', 'Isi data Produk', 'Daftarkan barang di Produk & Kategori: nama, harga jual, harga beli, stok, dan isi per pack bila dijual per dus/pack.', '#produk'],
     ['layers', 'Catat Stok', 'Di Manajemen Stok catat barang masuk, barang keluar, atau penyesuaian bila jumlah di rak berbeda dari catatan.', '#stok'],
     ['alert', 'Pantau Stok Menipis', 'Barang yang hampir habis dikumpulkan di satu halaman supaya tahu apa yang harus dibeli lagi.', '#stok-menipis'],
@@ -553,7 +552,6 @@ export function panduan() {
     ['Bagaimana menambah stok setelah belanja barang?', 'Di Manajemen Stok pilih jenis Barang masuk, isi jumlah dan harga beli. Stok bertambah otomatis.'],
     ['Kenapa angka laba terlihat lebih besar dari untung sebenarnya?', 'Laba kotor belum dikurangi biaya toko seperti listrik, gaji, dan sewa.'],
     ['Bagaimana mencari satu produk dengan cepat?', 'Di Produk & Kategori ketik nama atau barcode di kotak Cari, atau pilih kategori dari filter.'],
-    ['Bagaimana menambah Pendapatan dari web?', 'Buka Catat Penjualan, tekan + Tambah pada barang, isi Uang diterima (atau Uang pas), lalu Simpan penjualan. Transaksinya tercatat dengan sumber "web" dan langsung muncul di Beranda, Laporan, dan Riwayat Transaksi.'],
     ['Kenapa penjualan ditolak?', 'Biasanya karena periode hari itu sudah ditutup buku, atau stok barang tidak cukup. Periode yang sudah ditutup tidak bisa diisi penjualan baru.'],
     ['Bagaimana cara tutup buku?', 'Tutup buku dilakukan di aplikasi Desktop: isi uang di laci, sistem membandingkannya dengan total penjualan, lalu menyimpan hasilnya. Di web, buka menu Tutup Buku untuk melihat hasilnya.'],
     ['Uang di laci kurang dari catatan sistem, apa yang terjadi?', 'Saat tutup buku di Desktop, sistem mencatat selisihnya. Di web, selisih tampil sebagai "Kurang" di Riwayat tutup buku dan dijumlahkan di kotak Total uang kurang, sehingga pemilik toko bisa menelusurinya.'],
@@ -807,110 +805,6 @@ export function laporan() {
       ? `<table data-size="5"><tr><th>No</th><th>Pembeli</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([nm, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(nm)}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada pembeli', 'Daftar muncul setelah ada transaksi.')
   }</div></div>`;
-}
-
-/* ==========================================================================
-   BAGIAN 6b — CATAT PENJUALAN (INPUT MANUAL DARI WEB)
-   Pilih barang -> keranjang -> uang diterima -> simpan. Memakai sell() yang
-   sama dengan aplikasi kasir, sehingga stok, laporan, dan notifikasi ikut
-   berubah. Sumber transaksi dicatat "web". Keranjang disimpan di K.
-   ========================================================================== */
-const K = { items: {}, q: '' };
-
-/** Halaman Catat Penjualan. | param: - | return: string HTML */
-export function penjualan() {
-  const total = () => Object.entries(K.items).reduce((a, [id, q]) => a + (prod(+id)?.harga || 0) * q, 0);
-  const daftar = () => {
-    const q = K.q.trim().toLowerCase();
-    const ls = db.produk.filter((p) => !q || (p.nama + ' ' + (p.barcode || '')).toLowerCase().includes(q));
-    return ls.length
-      ? ls
-          .map((p) => {
-            const di = K.items[p.id] || 0,
-              habis = p.stok - di <= 0;
-            return `<div class="pj-i${habis ? ' off' : ''}"><div><b>${esc(p.nama)}</b><small>${rp(p.harga)} · stok ${packTxt(p)}</small></div><button type="button" class="btn sm bp" data-add="${p.id}" ${habis ? 'disabled' : ''} aria-label="Tambah ${esc(p.nama)}">+ Tambah</button></div>`;
-          })
-          .join('')
-      : '<p class="note" style="padding:12px 4px">Produk tidak ditemukan.</p>';
-  };
-  const keranjang = () => {
-    const ids = Object.keys(K.items);
-    if (!ids.length) return '<p class="note" style="padding:12px 4px">Keranjang masih kosong. Tekan "+ Tambah" pada barang di sebelah kiri.</p>';
-    return ids
-      .map((id) => {
-        const p = prod(+id),
-          q = K.items[id];
-        return `<div class="pj-c"><div><b>${esc(p.nama)}</b><small>${rp(p.harga)} × ${q} = <b>${rp(p.harga * q)}</b></small></div><div class="pj-q"><button type="button" data-min="${id}" aria-label="Kurangi">−</button><span>${q}</span><button type="button" data-plus="${id}" aria-label="Tambah" ${q >= p.stok ? 'disabled' : ''}>+</button></div></div>`;
-      })
-      .join('');
-  };
-  setTimeout(() => {
-    const L = $('#pjl'),
-      C = $('#pjk'),
-      T = $('#pjt'),
-      U = $('#pju'),
-      KB = $('#pjkb'),
-      S2 = $('#pjs');
-    if (!L) return;
-    const hitung = () => {
-      const t = total(),
-        u = +U.value || 0;
-      T.textContent = rp(t);
-      KB.textContent = u ? (u >= t ? rp(u - t) : 'Kurang ' + rp(t - u)) : '-';
-      KB.className = u && u < t ? 'bad' : '';
-      S2.disabled = !t;
-    };
-    const gambar = () => {
-      L.innerHTML = daftar();
-      C.innerHTML = keranjang();
-      hitung();
-    };
-    document.addEventListener('click', function h(e) {
-      if (!$('#pjl')) return document.removeEventListener('click', h);
-      const t = e.target.closest('[data-add],[data-plus],[data-min],[data-cash]');
-      if (!t) return;
-      if (t.dataset.add || t.dataset.plus) {
-        const id = +(t.dataset.add || t.dataset.plus),
-          p = prod(id);
-        if ((K.items[id] || 0) < p.stok) K.items[id] = (K.items[id] || 0) + 1;
-        else toast('Stok tidak cukup');
-      } else if (t.dataset.min) {
-        const id = +t.dataset.min;
-        if (--K.items[id] <= 0) delete K.items[id];
-      } else if (t.dataset.cash !== undefined) {
-        U.value = t.dataset.cash === 'pas' ? total() : t.dataset.cash;
-        return hitung();
-      }
-      gambar();
-    });
-    $('#pjq').oninput = (e) => {
-      K.q = e.target.value;
-      L.innerHTML = daftar();
-    };
-    U.oninput = hitung;
-    $('#pjf').onsubmit = (e) => {
-      e.preventDefault();
-      const t = total(),
-        u = +U.value;
-      if (!t) return toast('Pilih barang dulu');
-      if (!(u >= t)) return toast('Uang diterima kurang dari total');
-      const r = sell(Object.entries(K.items).map(([id, q]) => [+id, q]), new Date().toISOString(), 'web', u, 'Pelanggan umum');
-      if (!r) return toast('Penjualan ditolak: periode hari ini sudah ditutup buku');
-      save();
-      K.items = {};
-      K.q = '';
-      toast(`Penjualan ${r.kode} tersimpan · kembalian ${rp(r.kembalian)}`);
-      shellRef();
-    };
-    gambar();
-  });
-  return `<div class="pj"><div class="card"><div class="ch"><h4>Pilih Barang</h4></div><div class="cb"><input id="pjq" type="search" placeholder="Cari nama atau barcode barang" value="${esc(K.q)}" aria-label="Cari barang"><div class="pj-l" id="pjl"></div></div></div>
-  <form class="card" id="pjf"><div class="ch"><h4>Keranjang</h4>${tip('Barang yang dipilih. Stok berkurang dan pendapatan bertambah setelah penjualan disimpan.')}</div><div class="cb"><div id="pjk"></div>
-  <div class="pj-t"><span>Total</span><b id="pjt">Rp0</b></div>
-  <div class="fg"><label for="pju">Uang diterima</label><input id="pju" type="number" min="0" inputmode="numeric" placeholder="Misal 50000"></div>
-  <div class="pj-qc"><button type="button" class="btn sm" data-cash="pas">Uang pas</button><button type="button" class="btn sm" data-cash="20000">20.000</button><button type="button" class="btn sm" data-cash="50000">50.000</button><button type="button" class="btn sm" data-cash="100000">100.000</button></div>
-  <div class="pj-t"><span>Kembalian</span><b id="pjkb">-</b></div>
-  <button class="btn bp" id="pjs" type="submit" disabled style="width:100%">Simpan penjualan</button></div></form></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
