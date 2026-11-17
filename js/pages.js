@@ -603,7 +603,7 @@ export function stokMenipis() {
   const L = low().sort((a, b) => a.stok - b.stok);
   return `<div class="card"><div class="ch"><h4>Produk perlu diisi ulang (${L.length})</h4></div><div class="tw">${
     L.length
-      ? `<table data-size="5"><tr><th>No</th><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p, i) => `<tr><td>${i + 1}</td><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk">Isi ulang</a></td></tr>`).join('')}</table>`
+      ? `<table data-size="5"><tr><th>No</th><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p, i) => `<tr><td>${i + 1}</td><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk?mpid=${p.id}">Isi ulang</a></td></tr>`).join('')}</table>`
       : empty('Semua stok aman', 'Tidak ada barang di bawah stok minimum.')
   }</div></div>`;
 }
@@ -615,7 +615,9 @@ export function stok() {
       pidEl = $('#mpid'),
       jmlEl = $('#mjml'),
       catEl = $('#mcat'),
-      hbEl = $('#mhb');
+      hbEl = $('#mhb'),
+      cariEl = $('#mcari'),
+      hintEl = $('#mhint');
     // sesuaikan isian dengan jenis mutasi: penyesuaian boleh 0 dan wajib alasan; harga beli hanya untuk barang masuk
     const syncForm = () => {
       const j = jenisEl.value;
@@ -626,10 +628,35 @@ export function stok() {
       hbEl.required = j === 'masuk';
       const p = prod(pidEl.value);
       if (p && j === 'masuk') hbEl.value = p.harga_beli;
+      if (hintEl) hintEl.textContent = p ? `Stok sekarang ${packTxt(p)} · minimum ${p.stok_minimum}` : '';
     };
     jenisEl.onchange = syncForm;
     pidEl.onchange = syncForm;
     syncForm();
+
+    /* Pencarian produk: menyaring daftar pilihan agar tidak perlu menggulir panjang.
+       Bila kata kunci hanya cocok dengan satu produk, produk itu langsung terpilih. */
+    if (cariEl) {
+      const cari = () => {
+        const q = cariEl.value.trim().toLowerCase();
+        const hasil = q
+          ? db.produk.filter((p) => `${p.nama} ${p.barcode || ''}`.toLowerCase().includes(q))
+          : db.produk;
+        const kini = pidEl.value;
+        pidEl.innerHTML = hasil.length ? popt({ produk: hasil }, hasil.some((p) => p.id == kini) ? kini : hasil[0].id) : '<option value="">(produk tidak ditemukan)</option>';
+        if (hasil.length === 1) pidEl.value = hasil[0].id;
+        syncForm();
+      };
+      cariEl.oninput = cari;
+      // Enter di kotak cari jangan sampai mengirim form sebelum produk dipilih
+      cariEl.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          cari();
+          pidEl.focus();
+        }
+      };
+    }
     $('#mform').onsubmit = (e) => {
       e.preventDefault();
       const p = prod(pidEl.value),
@@ -667,7 +694,7 @@ export function stok() {
         shellRef();
       };
   });
-  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label>Produk</label><select id="mpid" required>${popt(db)}</select></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (ubah stok langsung)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan</button></form></div></div>
+  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label for="mcari">Produk</label><input id="mcari" type="search" placeholder="Cari nama produk…" autocomplete="off"><select id="mpid" required size="1">${popt(db, S.mpid)}</select><small class="hint" id="mhint"></small></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (ubah stok langsung)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan</button></form></div></div>
   <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length}${semua.length > rec.length ? ' terbaru' : ''})</h4><div class="flt"><select id="fjenis" aria-label="Filter jenis mutasi"><option value="">Semua jenis</option>${Object.entries(jb).map(([k, v]) => `<option value="${k}"${k === fj ? ' selected' : ''}>${v[1]}</option>`).join('')}</select></div></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
   ${rec
     .map((m, i) => {

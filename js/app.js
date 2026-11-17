@@ -39,7 +39,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261117m';
+} from './pages.js?v=20261117r';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
