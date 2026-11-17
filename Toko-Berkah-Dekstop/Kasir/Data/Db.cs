@@ -7,7 +7,7 @@ namespace Kasir;
 
 public static class Db
 {
-    public const string NamaToko = "TOKO KELONTONG SAYA";
+    public const string NamaToko = "TOKO BERKAH";
     public const string AlamatToko = "Jl. Contoh No. 1";
 
     static readonly string DbFile = Path.Combine(AppContext.BaseDirectory, "kasir.db");
