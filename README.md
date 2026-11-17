@@ -1,8 +1,12 @@
 # Toko Berkah — Sistem Stok & Transaksi
 
-Repositori ini berisi **beberapa versi aplikasi Toko Berkah** dalam satu tempat:
-versi **Web** (prototipe stok & transaksi), versi **Desktop** (aplikasi kasir
-native Windows), dan versi **Android** yang sedang disiapkan.
+Repositori ini berisi **dua versi aplikasi Toko Berkah** dalam satu tempat:
+versi **Web** (prototipe stok & transaksi) dan versi **Desktop** (aplikasi kasir
+native Windows).
+
+Untuk versi **Mobile/Android**, **kode sumbernya sudah tidak ada di repositori ini**.
+Yang tersisa hanyalah **APK siap pasang** di [`demo/android/`](demo/android/) — lihat
+[bagian Mobile](#-versi-mobile-android-apk).
 
 ## 📦 Daftar Platform
 
@@ -10,7 +14,7 @@ native Windows), dan versi **Android** yang sedang disiapkan.
 |---|---|---|---|
 | **Web** | ✅ Tersedia | HTML + CSS + JS (ES Module, `localStorage`) | root repo (`index.html`, `js/`, `css/`) |
 | **Desktop** | ✅ Tersedia | C# WinForms (.NET 8) + SQLite | folder `Toko-Berkah-Dekstop/` |
-| **Android** | ✅ Tersedia (Aplikasi Pemilik) | Kotlin + Jetpack Compose + Supabase | folder `TokoBerkah-Android-Owner/` |
+| **Mobile (Android)** | ⚠️ APK saja — kode sumber dihapus | Kotlin + Jetpack Compose + Supabase *(kode tidak lagi di repo)* | APK di `demo/android/` |
 
 **Semua paket siap pakai ada di satu tempat: [`demo/`](demo/) — APK Android, aplikasi Desktop (zip & folder), lengkap dengan petunjuk pasang.**
 
@@ -100,10 +104,18 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - **`css/style.css`** — Gaya utama (variabel warna, sidebar, topbar, kartu, form, tabel, dashboard, modal, login) dalam 9 `BAGIAN`.
 - **`css/glass.css`** — Gaya terpusat efek glassmorphism, GX Rail desktop, mode performa mobile & fallback.
 - **`css/mobile.css`** — Penataan khusus HP (< 992px): bar menu bawah, tabel jadi kartu, modal & form ramah sentuh.
+- **`css/light.css`** — Penyempurnaan tema terang (latar aurora + kaca), dimuat paling akhir; tema gelap tidak disentuh.
+- **`css/loader.css`** — Overlay kaca saat pindah halaman (ring + progress halus), diatur `loader()` di `js/app.js`.
+- **`css/splash.css`** — Layar sambutan (typewriter "TOKO BERKAH") + hiasan halaman login.
+- **`css/pages/dashboard.css`** — Gaya khusus halaman Dashboard.
+- **`css/pages/penjualan.css`** — Gaya khusus halaman Penjualan/Transaksi.
 - **`js/core/db.js`** — Interaksi `localStorage`, simpan/muat basis data, seeding data awal, pencatatan mutasi/transaksi.
+- **`js/core/api.js`** — Penghubung ke database Supabase (REST/PostgREST); menyimpan alamat & kunci project, memuat seluruh data tabel lalu menyusunnya. Dipakai oleh `core/db.js`.
 - **`js/ui.js`** — Utilitas DOM, format Rupiah & tanggal, toast, modal, escape HTML, generator ikon SVG.
 - **`js/pages.js`** — Render seluruh halaman (Dashboard, Produk, Stok, Laporan, Hasil Tutup Buku, Transaksi, Pengaturan, Login).
 - **`js/app.js`** — Titik masuk (*bootstrap*): routing hash URL dan event binding utama.
+- **`js/charts.js`** — Pembuatan grafik untuk dashboard/laporan.
+- **`js/splash.js`** — Logika layar splash saat aplikasi dimuat.
 - **`js/glass-rail.js`** — GX Rail vertikal di desktop dengan fisika *spring* (*rubber banding*, tetesan air).
 
 ### Catatan teknis web
@@ -113,30 +125,29 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - Tidak ada build process — cukup jalankan server statis
 
 ---
-## 📱 Versi Android (Aplikasi Pemilik)
+## 📱 Versi Mobile (Android) — APK
+
+> ⚠️ **Kode sumber aplikasi Android (`TokoBerkah-Android-Owner/`) sudah dihapus dari
+> repositori ini.** Yang tersisa hanya berkas APK jadi di [`demo/android/`](demo/android/),
+> sehingga APK tetap bisa dipasang dan dicoba, tetapi **tidak bisa lagi di-build** dari repo ini.
 
 Aplikasi Android **native untuk pemilik toko** — mengelola harga, stok, dan barang masuk
-langsung dari HP, terhubung ke **backend Supabase yang sama** dengan Web Admin & Kasir Desktop.
+langsung dari HP, terhubung ke **backend Supabase**. Fitur yang tertanam di APK:
 
-📁 **Folder project:** [`TokoBerkah-Android-Owner/`](TokoBerkah-Android-Owner/)
-📖 **Dokumentasi lengkap:** [`TokoBerkah-Android-Owner/README.md`](TokoBerkah-Android-Owner/README.md)
-
-### Fitur
 - **Login Pemilik** — validasi email & sandi, loading, pesan galat, sesi terenkripsi
 - **Cek Harga** — pindai barcode + daftar produk (gambar, EAN, harga, stok, kategori, rak)
 - **Detail Produk & Ubah Harga** — harga jual kasir, indikator naik/turun otomatis, alasan wajib, konfirmasi
 - **Riwayat Harga** — tanggal • jam, harga sebelum ➜ baru, selisih, pemilik yang mengubah
 - **Cek Stok** — status hijau/oranye/merah, sisa stok total, rak depan & gudang, jumlah perlu restok
-- **Barang Masuk** — jumlah (-, +, +5/+10/+20/+50), harga beli, total nilai, estimasi stok; stok tersinkron ke Web Admin tanpa penggandaan
+- **Barang Masuk** — jumlah (-, +, +5/+10/+20/+50), harga beli, total nilai, estimasi stok
 - **Barcode Scanner** — CameraX + ML Kit (EAN-13/8, UPC-A/E, Code128, Code39, QR), senter, input manual
 - **Floating Warning** — notifikasi merah/oranye/hijau yang bisa ditutup
 
-### Teknologi
-Kotlin · Jetpack Compose (Material 3) · MVVM · Navigation Compose · Coroutines & Flow ·
-Retrofit + OkHttp · Room · DataStore + EncryptedSharedPreferences · CameraX + ML Kit ·
-Coil · Gradle Kotlin DSL · minSdk 24 / targetSdk 34.
+Teknologi yang dipakai saat APK ini dibuat: Kotlin · Jetpack Compose (Material 3) · MVVM ·
+Navigation Compose · Coroutines & Flow · Retrofit + OkHttp · Room · DataStore +
+EncryptedSharedPreferences · CameraX + ML Kit · Coil · Gradle Kotlin DSL · minSdk 24 / targetSdk 34.
 
-### Login android
+### Login mobile
 - Surel: `kasir@gmail.com`
 - Kata sandi: `kasir123`
 - Form sudah terisi otomatis; cukup tekan **Masuk ke Toko**.
@@ -156,14 +167,12 @@ APK **debug** sudah bertanda tangan jadi bisa langsung dipasang. APK **release**
 jauh lebih kecil (R8 aktif) tetapi masih *unsigned* — tanda tangani dulu sebelum dipasang.
 
 ### Build
-```bash
-cd TokoBerkah-Android-Owner
-gradlew.bat assembleDebug   # Windows
-./gradlew assembleDebug     # macOS/Linux
-```
+Kode sumber Android sudah tidak ada di repo, jadi `gradlew assembleDebug` **tidak bisa
+dijalankan lagi** dari sini. Untuk membangun ulang APK, siapkan project Android terpisah
+(Kotlin + Compose) dan gunakan APK di atas sebagai acuan perilaku.
 
-> BASE_URL diatur lewat `local.properties` (`BASE_URL=...`) atau `-PBASE_URL=...`,
-> bukan di-hardcode. Lihat README Android untuk detail.
+> Tangkapan layar & alur demo Android tetap tersedia di
+> [`docs/DEMO-ANDROID.md`](docs/DEMO-ANDROID.md).
 
 ---
 
@@ -178,9 +187,9 @@ perbaikan. Untuk perubahan besar, diskusikan dulu lewat Issue.
 
 | Dokumen | Isi |
 |---|---|
+| [`demo/README.md`](demo/README.md) | Petunjuk pasang paket siap pakai (Desktop & Android APK) |
 | [`docs/DEMO-ANDROID.md`](docs/DEMO-ANDROID.md) | Tangkapan layar & alur demo aplikasi Android |
 | [`docs/PRD-LENGKAP.md`](docs/PRD-LENGKAP.md) | Product Requirements Document lengkap |
 | [`docs/PETA-MODUL.md`](docs/PETA-MODUL.md) | Peta modul & struktur kode web |
 | [`Toko-Berkah-Dekstop/README.md`](Toko-Berkah-Dekstop/README.md) | Dokumentasi aplikasi Desktop |
-| [`TokoBerkah-Android-Owner/README.md`](TokoBerkah-Android-Owner/README.md) | Dokumentasi teknis aplikasi Android |
 
