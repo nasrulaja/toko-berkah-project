@@ -11,7 +11,7 @@
      BAGIAN 3  MUTASI STOK          mut(), terkunci()
    ========================================================================== */
 
-import { muatDB, simpanDB } from './api.js?v=20261117h';
+import { muatDB, simpanDB } from './api.js?v=20261117j';
 
 /* ==========================================================================
    BAGIAN 1 — KUNCI & STATE
