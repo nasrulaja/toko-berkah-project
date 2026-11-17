@@ -133,7 +133,7 @@ export function dashboard() {
     kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'dibanding 7 hari lalu'), lnk: '#laporan' }),
     kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', h: 'Harga beli dikali stok semua barang yang masih ada. Artinya uang modal yang tertanam di barang.', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'dibanding 7 hari lalu') + `<small class="blk"><span>Potensi jual${tip('Perkiraan uang yang didapat bila semua stok yang ada terjual habis dengan harga jual sekarang.')}</span><b>${rp(stokJual)}</b></small>`, lnk: '#stok' }),
     kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', h: 'Banyaknya jenis barang yang terdaftar.', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>`, lnk: '#produk' }),
-    kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', h: 'Barang yang stoknya sudah sama dengan atau di bawah batas minimum. Segera isi ulang.', v: L.length, f: `<a href="#stok-menipis" class="lk">Lihat semua</a>`, lnk: '#stok-menipis' })
+    kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', h: 'Barang yang stoknya sudah sama dengan atau di bawah batas minimum. Segera isi ulang.', v: L.length, f: `<small>${L.length ? 'Perlu segera diisi ulang' : 'Semua stok aman'}</small>`, lnk: '#stok-menipis' })
   ].join('');
 
   /* --- Grafik penjualan & laba --- */
