@@ -21,9 +21,9 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci, dbSumber, dbGalat } from './core/db.js?v=20261117a';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117a';
-import { barChart, donut, spark, short } from './charts.js?v=20261117a';
+import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci, dbSumber, dbGalat } from './core/db.js?v=20261117b';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117b';
+import { barChart, donut, spark, short } from './charts.js?v=20261117b';
 
 let S = {};
 
@@ -84,10 +84,11 @@ const lastDays = (m, n, offset = 0) =>
 /** Badge tren persen vs periode sebelumnya. | param: cur, prev, label | return: string HTML */
 const trend = (cur, prev, label) => {
   if (!prev && !cur) return `<small>${label}</small>`;
-  if (!prev) return `<span class="tr up">${ico('up')}Baru</span><small>${label}</small>`;
+  const info = tip(`Persentase perubahan ${label}. Hijau berarti naik, merah berarti turun. Tulisan Baru berarti belum ada data pembanding.`);
+  if (!prev) return `<span class="tr up">${ico('up')}Baru</span>${info}<small>${label}</small>`;
   const pc = Math.round(((cur - prev) / prev) * 100),
     up = pc >= 0;
-  return `<span class="tr ${up ? 'up' : 'dn'}">${ico(up ? 'up' : 'down')}${up ? '+' : ''}${pc}%</span><small>${label}</small>`;
+  return `<span class="tr ${up ? 'up' : 'dn'}">${ico(up ? 'up' : 'down')}${up ? '+' : ''}${pc}%</span>${info}<small>${label}</small>`;
 };
 
 /** Kartu KPI dengan ikon, nilai, tren, dan sparkline. | param: { c, ic, l, v, f, sp } | return: string HTML */
