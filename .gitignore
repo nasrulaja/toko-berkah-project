@@ -1,0 +1,39 @@
+# --- Sistem operasi ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editor / IDE ---
+.idea/
+.vscode/
+*.iml
+*.swp
+*~
+
+# --- Android / Gradle ---
+.gradle/
+build/
+local.properties
+captures/
+*.hprof
+*.log
+*.err
+    !gradle/wrapper/gradle-wrapper.jar
+
+# --- .NET / Visual Studio ---
+bin/
+obj/
+*.user
+*.suo
+.vs/
+
+# --- Node ---
+node_modules/
+
+# --- Sementara / catatan pribadi ---
+*.tmp
+t1.log
+t2.log
+t3.log
+t2.err
+t3.err
