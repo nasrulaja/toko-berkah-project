@@ -3,18 +3,24 @@ package com.tokoberkah.app
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.tokoberkah.app.data.DummyData
 import com.tokoberkah.app.data.Product
 import com.tokoberkah.app.databinding.ActivityStockCheckBinding
+import com.tokoberkah.pos.data.Categories
+import com.tokoberkah.pos.ui.TagFlow
 
 /**
  * Layar 3: Cek Stok.
- * Menampilkan daftar produk + status stok, tombol buka Pemindai Barcode,
- * dan bottom navigation (Cek Harga / Masuk = toast "Halaman belum tersedia").
+ * Menampilkan daftar produk + status stok + tag kategori,
+ * tombol Filter (dialog multi-select kategori — revisi guru),
+ * tombol Restok / Tambah ke Barang Masuk, dan bottom navigation.
  */
 class StockCheckActivity : AppCompatActivity() {
 
@@ -24,6 +30,9 @@ class StockCheckActivity : AppCompatActivity() {
     private var visibleProducts: List<Product> = DummyData.products
     private var scanFilterActive = false
     private var restockFilterActive = false
+
+    /** Tag kategori terpilih pada tombol Filter (urut sesuai desain). */
+    private var selectedTags: List<String> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,6 +57,9 @@ class StockCheckActivity : AppCompatActivity() {
             restockFilterActive = !restockFilterActive
             render()
         }
+
+        // Tombol Filter -> dialog tag kategori (multi-select)
+        binding.chipFilter.setOnClickListener { showFilterDialog() }
 
         binding.btnCloseScanResult.setOnClickListener {
             scanFilterActive = false
@@ -87,22 +99,86 @@ class StockCheckActivity : AppCompatActivity() {
             if (product != null) {
                 scanFilterActive = true
                 visibleProducts = listOf(product)
-                binding.scanResultBanner.visibility = android.view.View.VISIBLE
+                binding.scanResultBanner.visibility = View.VISIBLE
                 binding.scanResultText.text =
                     getString(R.string.ean_format, product.ean) + " — " + product.name
             }
         }
     }
 
+    // ===== Dialog "Filter produk — kategori" (Figma 193:2) =====
+
+    private fun showFilterDialog() {
+        val temp = selectedTags.toMutableList()
+        val dialogView = layoutInflater.inflate(R.layout.dialog_filter_kategori, null)
+        val container = dialogView.findViewById<LinearLayout>(R.id.tagContainer)
+        val maxW = resources.displayMetrics.widthPixels - TagFlow.dp(this, 96)
+
+        fun paint() {
+            val chips = TagFlow.fill(
+                container = container,
+                tags = Categories.ALL,
+                maxLineWidthPx = maxW,
+                chipBgRes = R.drawable.bg_tag_chip,
+                chipTextColor = getColor(R.color.tag_chip_text),
+                textSizeSp = 13f
+            )
+            chips.forEachIndexed { index, chip ->
+                val tag = Categories.ALL[index]
+                val active = tag in temp
+                chip.setBackgroundResource(
+                    if (active) R.drawable.bg_tag_chip_selected else R.drawable.bg_tag_chip
+                )
+                chip.setTextColor(getColor(if (active) R.color.text_primary else R.color.tag_chip_text))
+                chip.setOnClickListener {
+                    if (!temp.remove(tag)) temp.add(tag)
+                    paint()
+                }
+            }
+        }
+        paint()
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .create()
+        dialog.show()
+        dialog.window?.setLayout(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        dialogView.findViewById<View>(R.id.btnReset).setOnClickListener {
+            temp.clear()
+            paint()
+        }
+        dialogView.findViewById<View>(R.id.btnApply).setOnClickListener {
+            // Simpan dalam urutan master desain
+            selectedTags = Categories.ALL.filter { it in temp }
+            dialog.dismiss()
+            render()
+        }
+    }
+
+    // ===== Render daftar =====
+
     private fun render() {
         val base = if (scanFilterActive) visibleProducts else DummyData.products
-        val list = if (restockFilterActive) base.filter { it.needsRestock } else base
+        val restocked = if (restockFilterActive) base.filter { it.needsRestock } else base
+        val list = if (selectedTags.isEmpty()) restocked
+        else restocked.filter { p -> p.categories.any { it in selectedTags } }
 
         // Header count
         val restockCount = base.count { it.needsRestock }
         binding.itemCount.text = getString(R.string.stock_items_format, base.size)
         binding.chipRestockText.text = getString(R.string.stock_restock_format, restockCount)
         binding.chipRestock.alpha = if (restockFilterActive) 1f else 0.75f
+
+        // Label tombol Filter: "Filter" -> "Sembako" -> "Sembako +1"
+        binding.chipFilterText.text = when (selectedTags.size) {
+            0 -> getString(R.string.stock_filter)
+            1 -> selectedTags.first()
+            else -> getString(R.string.stock_filter_more, selectedTags.first(), selectedTags.size - 1)
+        }
 
         // Isi daftar produk
         binding.productList.removeAllViews()
@@ -113,69 +189,106 @@ class StockCheckActivity : AppCompatActivity() {
             binding.productList.addView(card)
         }
 
-        binding.emptyState.visibility =
-            if (list.isEmpty()) android.view.View.VISIBLE else android.view.View.GONE
+        val empty = list.isEmpty()
+        binding.emptyState.visibility = if (empty) View.VISIBLE else View.GONE
+        if (empty) {
+            binding.emptyText.text = getString(
+                if (selectedTags.isNotEmpty()) R.string.stock_filter_empty
+                else R.string.stock_empty
+            )
+        }
     }
 
-    private fun bindCard(card: android.view.View, product: Product) {
-        card.findViewById<android.widget.ImageView>(R.id.productImage)
+    private fun bindCard(card: View, product: Product) {
+        card.findViewById<ImageView>(R.id.productImage)
             .setImageResource(product.imageRes)
 
         card.findViewById<TextView>(R.id.productName).text = product.name
         card.findViewById<TextView>(R.id.productEan).text = product.ean
 
-        // Badge status
-        val badge = card.findViewById<LinearLayout>(R.id.badgeStatus)
-        val badgeIcon = card.findViewById<android.widget.ImageView>(R.id.badgeIcon)
-        val badgeDot = card.findViewById<android.view.View>(R.id.badgeDot)
-        val badgeText = card.findViewById<TextView>(R.id.badgeText)
-        when {
-            product.isOutOfStock -> {
-                badge.setBackgroundResource(R.drawable.bg_badge_out)
-                badgeIcon.setImageResource(R.drawable.ic_status_out)
-                badgeIcon.visibility = android.view.View.VISIBLE
-                badgeDot.visibility = android.view.View.GONE
-                badgeText.text = getString(R.string.stock_status_out)
-                badgeText.setTextColor(getColor(R.color.error_dark))
-            }
-            product.needsRestock -> {
-                badge.setBackgroundResource(R.drawable.bg_badge_low)
-                badgeIcon.setImageResource(R.drawable.ic_warn_small)
-                badgeIcon.visibility = android.view.View.VISIBLE
-                badgeDot.visibility = android.view.View.GONE
-                badgeText.text = getString(R.string.stock_status_low)
-                badgeText.setTextColor(getColor(R.color.warning_badge_text))
-            }
-            else -> {
-                badge.setBackgroundResource(R.drawable.bg_badge_ok)
-                badgeIcon.visibility = android.view.View.GONE
-                badgeDot.visibility = android.view.View.VISIBLE
-                badgeText.text = getString(R.string.stock_status_safe)
-                badgeText.setTextColor(getColor(R.color.on_success))
-            }
-        }
+        // Baris status (baris sendiri) + tag kategori (di bawahnya, wrap max 4)
+        val tagRows = card.findViewById<LinearLayout>(R.id.tagRows)
+        TagFlow.fill(
+            container = tagRows,
+            tags = product.categories.take(Categories.MAX_PER_PRODUCT),
+            maxLineWidthPx = TagFlow.maxLineWidth(this),
+            chipBgRes = R.drawable.bg_tag_chip,
+            chipTextColor = getColor(R.color.tag_chip_text)
+        )
+        tagRows.addView(createStatusPill(product), 0)
 
         // Stok total
         card.findViewById<TextView>(R.id.stockNumber).text = product.totalStock.toString()
         card.findViewById<TextView>(R.id.stockUnit).text = product.unit
 
-        // Lokasi
-        card.findViewById<TextView>(R.id.locShelfValue).text =
-            "${product.shelfStock} Buah"
-        card.findViewById<TextView>(R.id.locWarehouseValue).text =
-            "${product.warehouseStock} Buah"
+        // Tombol aksi: Restok (stok menipis/habis) vs + (stok sehat)
+        val bottomRow = card.findViewById<LinearLayout>(R.id.bottomRow)
+        val lastIncomingRow = card.findViewById<LinearLayout>(R.id.lastIncomingRow)
+        val btnRestok = card.findViewById<TextView>(R.id.btnRestok)
+        val btnAdd = card.findViewById<LinearLayout>(R.id.btnAdd)
 
-        // Baris terakhir masuk (khusus stok habis / menipis)
-        val boxLast = card.findViewById<LinearLayout>(R.id.boxLastIncoming)
-        if (product.isOutOfStock || product.needsRestock) {
-            boxLast.visibility = android.view.View.VISIBLE
+        if (product.needsRestock) {
+            bottomRow.visibility = View.VISIBLE
+            btnRestok.visibility = View.VISIBLE
+            lastIncomingRow.visibility = View.VISIBLE
             card.findViewById<TextView>(R.id.lastIncomingText).text =
                 getString(R.string.stock_last_incoming_format, product.lastIncoming)
-            card.findViewById<TextView>(R.id.urgencyText).visibility =
-                if (product.isOutOfStock) android.view.View.VISIBLE else android.view.View.GONE
+            btnRestok.setOnClickListener { openBarangMasuk(product) }
+            btnAdd.visibility = View.GONE
         } else {
-            boxLast.visibility = android.view.View.GONE
+            bottomRow.visibility = View.GONE
+            btnAdd.visibility = View.VISIBLE
+            btnAdd.setOnClickListener { openBarangMasuk(product) }
         }
+    }
+
+    /** Pill status: baris pertama sebelum tag kategori. */
+    private fun createStatusPill(product: Product): TextView {
+        val pill = TextView(this)
+        pill.text = when {
+            product.isOutOfStock -> getString(R.string.stock_status_out)
+            product.needsRestock -> getString(R.string.stock_status_low)
+            else -> getString(R.string.stock_status_safe)
+        }
+        pill.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11f)
+        pill.typeface = android.graphics.Typeface.DEFAULT_BOLD
+        pill.setPadding(
+            TagFlow.dp(this, 10), TagFlow.dp(this, 4),
+            TagFlow.dp(this, 10), TagFlow.dp(this, 4)
+        )
+        pill.background = getDrawable(
+            when {
+                product.isOutOfStock -> R.drawable.bg_badge_out
+                product.needsRestock -> R.drawable.bg_badge_low
+                else -> R.drawable.bg_badge_ok
+            }
+        )
+        pill.setTextColor(
+            getColor(
+                when {
+                    product.isOutOfStock -> R.color.error_dark
+                    product.needsRestock -> R.color.warning_badge_text
+                    else -> R.color.on_success
+                }
+            )
+        )
+        pill.layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT
+        ).apply { bottomMargin = TagFlow.dp(this@StockCheckActivity, 8) }
+        return pill
+    }
+
+    /** Buka halaman Barang Masuk dengan produk ini terisi otomatis. */
+    private fun openBarangMasuk(product: Product) {
+        startActivity(
+            Intent(this, com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity::class.java)
+                .putExtra(com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity.EXTRA_SCANNED_EAN, product.ean)
+                .putExtra(com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity.EXTRA_NAME, product.name)
+                .putExtra(com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity.EXTRA_IMAGE, product.imageRes)
+                .putExtra(com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity.EXTRA_STOCK, product.totalStock)
+                .putExtra(com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity.EXTRA_UNITS, product.unitsPerBox)
+        )
     }
 
     companion object {

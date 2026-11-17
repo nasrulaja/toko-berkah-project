@@ -38,4 +38,17 @@
     <string name="masuk_hint_title">Produk Baru Belum Terdaftar?</string>
     <string name="masuk_hint_body">Jika barcode belum dikenali, daftarkan nama\nproduk &amp; harga modal melalui Web Admin Toko\nBerkah di komputer kasir.</string>
     <string name="masuk_saved">Barang masuk disimpan</string>
+
+    <!-- Barang Masuk — reviisi: Isi Per Dus + Harga Jual per Buah -->
+    <string name="masuk_isi_per_dus">Isi Per Dus</string>
+    <string name="masuk_isi_format">%1$d Dus = %2$d Buah</string>
+    <string name="masuk_harga_jual">Harga Jual per Buah</string>
+    <string name="masuk_stok_after_unit">Stok setelah disimpan</string>
+    <string name="masuk_total_label">SISA STOK TOTAL</string>
+    <string name="masuk_status_out">Habis</string>
+    <string name="masuk_status_low">Stok Menipis</string>
+    <string name="masuk_status_ok">Stok Aman</string>
+    <string name="masuk_last_incoming">Terakhir Masuk: %1$s</string>
+    <string name="masuk_edit_isi">Ubah isi per dus</string>
+    <string name="masuk_restock_title">Produk perlu restock</string>
 </resources>

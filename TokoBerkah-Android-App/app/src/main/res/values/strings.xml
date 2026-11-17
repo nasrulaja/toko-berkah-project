@@ -76,6 +76,20 @@
     <string name="stock_scan_result_banner">Menampilkan produk hasil scan</string>
     <string name="stock_close_scan_result">Tutup hasil scan</string>
 
+    <!-- ===== Filter kategori (tombol "simple" + fitur dari guru) ===== -->
+    <string name="stock_filter">Filter</string>
+    <string name="stock_filter_more">%1$s +%2$d</string>
+    <string name="stock_filter_empty">Belum ada produk dengan tag ini</string>
+    <string name="stock_filter_title">Filter produk</string>
+    <string name="stock_filter_subtitle">Tampilkan produk berdasarkan tag.</string>
+    <string name="stock_filter_kategori">Kategori</string>
+    <string name="stock_filter_hint">Bisa pilih lebih dari satu kategori.</string>
+    <string name="stock_filter_reset">Reset</string>
+    <string name="stock_filter_apply">Terapkan filter</string>
+    <string name="stock_action_restock">Restok</string>
+    <string name="stock_add_qty">Tambah jumlah</string>
+    <string name="stock_empty">Tidak ada produk untuk ditampilkan</string>
+
     <!-- ===== Format harga ===== -->
     <string name="price_format">Rp %1$s</string>
     <string name="ean_format">EAN: %1$s</string>

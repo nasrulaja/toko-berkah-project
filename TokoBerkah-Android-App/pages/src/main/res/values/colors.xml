@@ -35,6 +35,17 @@
     <color name="soft_btn_bg">#E4EFFF</color>
     <color name="highlight_bg">#EEF4FF</color>
 
+    <!-- Status stok + tag kategori (Figma reviisi) -->
+    <color name="status_low">#FFDCC2</color>
+    <color name="status_out">#FFDAD6</color>
+    <color name="status_ok">#6FFBBE</color>
+    <color name="status_low_text">#2E1500</color>
+    <color name="status_out_text">#93000A</color>
+    <color name="status_ok_text">#002113</color>
+    <color name="status_ok_dot">#006947</color>
+    <color name="tag_chip_bg">#C3E9FC</color>
+    <color name="tag_chip_text">#123C56</color>
+
     <color name="ic_launcher_bg">#3FB8FF</color>
     <!-- Barang Masuk -->
     <color name="masuk_btn_simpan">#86C5EA</color>

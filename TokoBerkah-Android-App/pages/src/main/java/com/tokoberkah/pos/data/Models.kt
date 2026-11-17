@@ -22,14 +22,27 @@ data class PriceChange(
 data class Product(
     val ean: String,
     val name: String,
-    val category: String,
+    /** Tag kategori produk, maksimal [Categories.MAX_PER_PRODUCT]. */
+    val categories: List<String>,
     val stock: Int,
     val location: String,
     @DrawableRes val imageRes: Int,
     val badge: String,
     var price: Int,
+    /** Isi satu dus (konversi Dus -> Buah) pada halaman Barang Masuk. */
+    var unitsPerBox: Int = 40,
+    /** Kapan terakhir produk ini masuk (teks bebas, kosong = sembunyikan baris). */
+    val lastIncoming: String = "",
     val history: MutableList<PriceChange> = mutableListOf()
-)
+) {
+    /** Tag utama, dipakai chip pada kartu Cek Harga. */
+    val category: String
+        get() = categories.firstOrNull().orEmpty()
+
+    /** Perlu restock jika stok menipis (<= 5) atau habis. */
+    val needsRestock: Boolean
+        get() = stock <= 5
+}
 
 /** Groups digits with Indonesian thousands separators: 34000 -> "34.000". */
 fun Long.grouped(): String {

@@ -58,6 +58,13 @@
     <!-- ===== Chip "Perlu Restok" ===== -->
     <color name="chip_blue">#DAEAFF</color>
 
+    <!-- ===== Tag kategori produk (Figma: #C3E9FC / #123C56) ===== -->
+    <color name="tag_chip_bg">#C3E9FC</color>
+    <color name="tag_chip_text">#123C56</color>
+    <color name="tag_chip_selected">#3FB8FF</color>
+    <color name="tag_chip_dialog_hint">#536B7A</color>
+    <color name="tag_chip_reset_bg">#EDF6FC</color>
+
     <!-- ===== Layar Scan Barcode (gelap) ===== -->
     <color name="scan_background">#15324D</color>
     <color name="scan_overlay">#6615324D</color>

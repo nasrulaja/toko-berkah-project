@@ -4,29 +4,57 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.DrawableRes
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.tokoberkah.pos.R
 import com.tokoberkah.pos.data.Product
 import com.tokoberkah.pos.data.ProductRepository
 import com.tokoberkah.pos.data.grouped
 import com.tokoberkah.pos.databinding.ActivityBarangMasukBinding
+import com.tokoberkah.pos.ui.TagFlow
 
 /**
  * PAGE 6 — Barang Masuk (restock entry).
- * Dua state sesuai Figma: scan prompt kosong (130:340),
- * lalu kartu entri produk setelah barcode dipindai (7:1062).
+ *
+ * State sesuai revisi Figma:
+ * - Awal: daftar "Produk perlu restock" (kartu 130:340 baru) + tombol pindai.
+ * - Kartu entri produk (7:1062) dengan Isi Per Dus & Harga Jual per Buah,
+ *   dibuka lewat kartu restock, hasil scan, atau tombol Restok dari Cek Stok.
  */
 class BarangMasukActivity : AppCompatActivity() {
 
     companion object {
         private const val REQUEST_SCAN = 5501
-        private const val EXTRA_SCANNED_EAN = "scanned_ean"
+
+        /** Dipakai scanner & tombol Restok/Tambah dari halaman Cek Stok. */
+        const val EXTRA_SCANNED_EAN = "scanned_ean"
+
+        /** Fallback ketika EAN belum ada di katalog pages. */
+        const val EXTRA_NAME = "extra_name"
+        const val EXTRA_IMAGE = "extra_image_res"
+        const val EXTRA_STOCK = "extra_stock"
+        const val EXTRA_UNITS = "extra_units_per_box"
     }
 
+    /** Data untuk satu kartu entri (sumber boleh null untuk produk luar katalog). */
+    private data class Entry(
+        val ean: String,
+        val name: String,
+        val pack: String,
+        val stock: Int,
+        @DrawableRes val imageRes: Int,
+        var unitsPerBox: Int,
+        val source: Product?
+    )
+
     private lateinit var binding: ActivityBarangMasukBinding
-    private var product: Product? = null
+    private var entry: Entry? = null
     private var qty = 10
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,13 +69,11 @@ class BarangMasukActivity : AppCompatActivity() {
             insets
         }
 
-        findViewById<android.widget.TextView>(R.id.tvBreadcrumb).text =
+        findViewById<TextView>(R.id.tvBreadcrumb).text =
             getString(R.string.nav_masuk_full)
 
         // Tab Masuk aktif di bottom nav
         binding.navIncoming.isSelected = true
-
-        handleScanIntent(intent)
 
         binding.btnScan.setOnClickListener {
             startActivityForResult(
@@ -80,11 +106,16 @@ class BarangMasukActivity : AppCompatActivity() {
             override fun afterTextChanged(s: Editable?) = renderSummary()
         })
 
+        // Ubah "Isi Per Dus" — bisa diedit & diubah lagi nanti.
+        // TODO(supabase): sinkronkan nilai ke tabel produk di Web Admin.
+        binding.chipIsiPerDus.setOnClickListener { showIsiPerDusDialog() }
+
         binding.btnSave.setOnClickListener {
-            val p = product ?: return@setOnClickListener
+            val e = entry ?: return@setOnClickListener
+            saveSellPrice(e)
             Toast.makeText(
                 this,
-                "${getString(R.string.masuk_saved)}: $qty ${getString(R.string.masuk_unit)} ${p.name}",
+                "${getString(R.string.masuk_saved)}: $qty ${getString(R.string.masuk_unit)} ${e.name}",
                 Toast.LENGTH_SHORT
             ).show()
             reset()
@@ -108,21 +139,58 @@ class BarangMasukActivity : AppCompatActivity() {
             )
             overridePendingTransition(0, 0)
         }
+
+        if (savedInstanceState == null) handleIncomingIntent(intent)
+        renderRestockList()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleScanIntent(intent)
+        handleIncomingIntent(intent)
+        renderRestockList()
     }
 
-    /** Menerima hasil scan langsung dari intent (mis. shortcut ke halaman ini). */
-    private fun handleScanIntent(intent: Intent?) {
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_SCAN && resultCode == RESULT_OK) {
+            handleIncomingIntent(data)
+        }
+    }
+
+    /** Menerima EAN dari scanner atau dari tombol Restok/Tambah di Cek Stok. */
+    private fun handleIncomingIntent(intent: Intent?) {
         val ean = intent?.getStringExtra(EXTRA_SCANNED_EAN) ?: return
         intent.removeExtra(EXTRA_SCANNED_EAN)
-        val found = ProductRepository.byEan(ean)
+
+        val known = ProductRepository.byEan(ean)
             ?: if (ean.length == 12) ProductRepository.byEan("0$ean") else null
-        if (found != null) {
-            showEntry(found)
+
+        if (known != null) {
+            showEntry(Entry(
+                ean = known.ean,
+                name = known.name,
+                pack = known.badge,
+                stock = known.stock,
+                imageRes = known.imageRes,
+                unitsPerBox = known.unitsPerBox,
+                source = known
+            ))
+            return
+        }
+
+        // Produk dari halaman Cek Stok (dummy berbeda) — pakai data intent
+        val name = intent.getStringExtra(EXTRA_NAME)
+        if (name != null) {
+            showEntry(Entry(
+                ean = ean,
+                name = name,
+                pack = "",
+                stock = intent.getIntExtra(EXTRA_STOCK, 0),
+                imageRes = intent.getIntExtra(EXTRA_IMAGE, 0),
+                unitsPerBox = intent.getIntExtra(EXTRA_UNITS, 40),
+                source = null
+            ))
         } else {
             Toast.makeText(
                 this,
@@ -132,49 +200,154 @@ class BarangMasukActivity : AppCompatActivity() {
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_SCAN && resultCode == RESULT_OK) {
-            val ean = data?.getStringExtra(EXTRA_SCANNED_EAN)
-            val found = ean?.let {
-                ProductRepository.byEan(it)
-                    ?: if (it.length == 12) ProductRepository.byEan("0$it") else null
+    // ===== State awal: daftar produk perlu restock =====
+
+    private fun renderRestockList() {
+        val list = ProductRepository.restockList()
+        binding.restockList.removeAllViews()
+        val inflater = LayoutInflater.from(this)
+        list.forEach { product ->
+            val card = inflater.inflate(R.layout.item_restock_card, binding.restockList, false)
+            bindRestockCard(card, product)
+            card.setOnClickListener { showEntry(fromProduct(product)) }
+            binding.restockList.addView(card)
+        }
+
+        val none = list.isEmpty()
+        binding.restockTitle.visibility = if (none) View.GONE else View.VISIBLE
+        binding.restockList.visibility = if (none) View.GONE else View.VISIBLE
+        binding.emptyState.visibility = if (none) View.VISIBLE else View.GONE
+    }
+
+    private fun fromProduct(p: Product) = Entry(
+        ean = p.ean,
+        name = p.name,
+        pack = p.badge,
+        stock = p.stock,
+        imageRes = p.imageRes,
+        unitsPerBox = p.unitsPerBox,
+        source = p
+    )
+
+    private fun bindRestockCard(card: View, p: Product) {
+        card.findViewById<android.widget.ImageView>(R.id.imgProduct)
+            .setImageResource(p.imageRes)
+        card.findViewById<TextView>(R.id.tvName).text = p.name
+        card.findViewById<TextView>(R.id.tvEan).text = "EAN: ${p.ean}"
+        card.findViewById<TextView>(R.id.tvStockTotal).text = p.stock.toString()
+
+        val pill = card.findViewById<TextView>(R.id.statusPill)
+        when {
+            p.stock == 0 -> {
+                pill.setBackgroundResource(R.drawable.bg_status_out)
+                pill.text = getString(R.string.masuk_status_out)
+                pill.setTextColor(getColor(R.color.status_out_text))
             }
-            if (found != null) {
-                showEntry(found)
-            } else {
-                Toast.makeText(
-                    this,
-                    "Produk tidak ditemukan! Barcode: $ean",
-                    Toast.LENGTH_SHORT
-                ).show()
+            p.needsRestock -> {
+                pill.setBackgroundResource(R.drawable.bg_status_low)
+                pill.text = getString(R.string.masuk_status_low)
+                pill.setTextColor(getColor(R.color.status_low_text))
             }
+            else -> {
+                pill.setBackgroundResource(R.drawable.bg_status_ok)
+                pill.text = getString(R.string.masuk_status_ok)
+                pill.setTextColor(getColor(R.color.status_ok_text))
+            }
+        }
+
+        TagFlow.fill(
+            container = card.findViewById(R.id.tagFlow),
+            tags = p.categories,
+            maxLineWidthPx = TagFlow.maxLineWidth(this),
+            chipBgRes = R.drawable.bg_tag_chip,
+            chipTextColor = getColor(R.color.tag_chip_text)
+        )
+
+        val lastRow = card.findViewById<View>(R.id.lastIncomingRow)
+        if (p.lastIncoming.isBlank()) {
+            lastRow.visibility = View.GONE
+        } else {
+            lastRow.visibility = View.VISIBLE
+            card.findViewById<TextView>(R.id.tvLastIncoming).text =
+                getString(R.string.masuk_last_incoming, p.lastIncoming)
         }
     }
 
-    private fun showEntry(p: Product) {
-        product = p
+    // ===== Kartu entri =====
+
+    private fun showEntry(e: Entry) {
+        entry = e
         qty = 10
 
-        binding.imgProduct.setImageResource(p.imageRes)
-        binding.tvProductName.text = p.name
-        binding.tvProductPack.text = "Kemasan: ${p.badge}"
-        binding.tvStockBadge.text = "Stok: ${p.stock} ${getString(R.string.masuk_unit)}"
-        binding.tvEan.text = p.ean
+        if (e.imageRes != 0) binding.imgProduct.setImageResource(e.imageRes)
+        binding.tvProductName.text = e.name
+        if (e.pack.isBlank()) {
+            binding.tvProductPack.visibility = View.GONE
+        } else {
+            binding.tvProductPack.visibility = View.VISIBLE
+            binding.tvProductPack.text = "Kemasan: ${e.pack}"
+        }
+        binding.tvStockBadge.text = "Stok: ${e.stock} ${getString(R.string.masuk_unit)}"
+        binding.tvEan.text = e.ean
         binding.etBuyPrice.text.clear()
+        binding.etSellPrice.setText(e.source?.price?.toString().orEmpty())
 
+        binding.restockTitle.visibility = View.GONE
+        binding.restockList.visibility = View.GONE
         binding.emptyState.visibility = View.GONE
         binding.entryCard.visibility = View.VISIBLE
+
+        renderIsiPerDus()
         renderQty()
+        binding.masukScroll.post { binding.masukScroll.smoothScrollTo(0, 0) }
     }
 
     private fun reset() {
-        product = null
+        entry = null
         qty = 10
         binding.etBuyPrice.text.clear()
+        binding.etSellPrice.text.clear()
         binding.entryCard.visibility = View.GONE
-        binding.emptyState.visibility = View.VISIBLE
+        renderRestockList()
+    }
+
+    private fun renderIsiPerDus() {
+        val e = entry ?: return
+        binding.tvIsiPerDus.text =
+            getString(R.string.masuk_isi_format, 1, e.unitsPerBox)
+    }
+
+    /** Dialog edit "Isi Per Dus" (bisa dibuka ulang kapan saja). */
+    private fun showIsiPerDusDialog() {
+        val e = entry ?: return
+        val input = EditText(this).apply {
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+            setText(e.unitsPerBox.toString())
+            setSelection(text.length)
+        }
+        val pad = TagFlow.dp(this, 20)
+        AlertDialog.Builder(this)
+            .setTitle(R.string.masuk_isi_per_dus)
+            .setMessage(getString(R.string.masuk_isi_format, 1, e.unitsPerBox))
+            .setView(input, pad, pad / 2, pad, 0)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                val value = input.text.toString().toIntOrNull()
+                if (value != null && value > 0) {
+                    e.unitsPerBox = value
+                    e.source?.unitsPerBox = value
+                    renderIsiPerDus()
+                    renderSummary()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
+    /** Simpan "Harga Jual per Buah" ke produk sumber (dummy, in-memory). */
+    private fun saveSellPrice(e: Entry) {
+        val value = binding.etSellPrice.text.toString().toIntOrNull() ?: return
+        val target = e.source ?: return
+        if (value > 0 && value != target.price) target.price = value
     }
 
     private fun renderQty() {
@@ -183,10 +356,18 @@ class BarangMasukActivity : AppCompatActivity() {
     }
 
     private fun renderSummary() {
-        val p = product ?: return
-        val after = p.stock + qty
+        val e = entry ?: return
+
+        // Kalkulasi satuan Dus
+        val after = e.stock + qty
         binding.tvStockAfter.text = "$after ${getString(R.string.masuk_unit)}"
         binding.tvStockDelta.text = "(+$qty)"
+
+        // Kalkulasi satuan Buah (dari Isi Per Dus)
+        val addedUnits = qty * e.unitsPerBox
+        binding.tvStockAfterUnit.text = "${after * e.unitsPerBox} Buah"
+        binding.tvStockDeltaUnit.text = "(+$addedUnits)"
+
         val buyPrice = binding.etBuyPrice.text.toString().toIntOrNull() ?: 0
         binding.tvTotal.text = "Rp ${(qty * buyPrice).grouped()}"
     }

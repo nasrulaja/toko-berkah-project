@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tombol "Terapkan filter" pada dialog (Figma: #38B6FA, r12) -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33001D34">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" />
+            <solid android:color="#38B6FA" />
+        </shape>
+    </item>
+</ripple>

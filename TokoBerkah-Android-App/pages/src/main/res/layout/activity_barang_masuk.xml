@@ -10,6 +10,7 @@
     <include layout="@layout/view_store_header" />
 
     <ScrollView
+        android:id="@+id/masukScroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -24,66 +25,85 @@
             android:paddingEnd="16dp"
             android:paddingBottom="24dp">
 
-            <!-- ===== EMPTY STATE: scan prompt (Figma 130:340) ===== -->
+            <!-- ===== Tombol pindai (selalu terlihat, struktur & warna = Cek Stok) ===== -->
+            <LinearLayout
+                android:id="@+id/btnScan"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_masuk_scan"
+                android:clickable="true"
+                android:elevation="6dp"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp">
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="@drawable/bg_masuk_scan_circle"
+                    android:contentDescription="@null"
+                    android:padding="7dp"
+                    android:src="@drawable/ic_barcode"
+                    android:tint="@color/white" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/plus_jakarta_bold"
+                        android:text="@string/scan_button"
+                        android:textColor="@color/white"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/scan_hint"
+                        android:textColor="#DDFFFFFF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ===== State awal: daftar produk yang perlu restock ===== -->
+            <TextView
+                android:id="@+id/restockTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="@font/plus_jakarta_bold"
+                android:text="@string/masuk_restock_title"
+                android:textColor="@color/navy"
+                android:textSize="15sp" />
+
+            <LinearLayout
+                android:id="@+id/restockList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+
+            <!-- ===== EMPTY STATE: scan prompt (Figma 130:340, jika tak ada produk restock) ===== -->
             <LinearLayout
                 android:id="@+id/emptyState"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
 
-                <!-- Hero scan button (struktur & warna disamakan dengan halaman Cek Stok) -->
-                <LinearLayout
-                    android:id="@+id/btnScan"
-                    android:layout_width="match_parent"
-                    android:layout_height="60dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_masuk_scan"
-                    android:clickable="true"
-                    android:elevation="6dp"
-                    android:focusable="true"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp">
-
-                    <ImageView
-                        android:layout_width="36dp"
-                        android:layout_height="36dp"
-                        android:background="@drawable/bg_masuk_scan_circle"
-                        android:contentDescription="@null"
-                        android:padding="7dp"
-                        android:src="@drawable/ic_barcode"
-                        android:tint="@color/white" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/plus_jakarta_bold"
-                            android:text="@string/scan_button"
-                            android:textColor="@color/white"
-                            android:textSize="15sp" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="@string/scan_hint"
-                            android:textColor="#DDFFFFFF"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Empty area with centered hint text -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="400dp"
+                    android:layout_height="320dp"
                     android:gravity="center"
                     android:orientation="vertical">
 
@@ -195,6 +215,56 @@
                         android:textColor="@color/gray_text"
                         android:textSize="12sp"
                         tools:text="8998866200114" />
+                </LinearLayout>
+
+                <!-- Isi Per Dus (bisa diubah) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/masuk_isi_per_dus"
+                        android:textColor="@color/navy"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:id="@+id/chipIsiPerDus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_masuk_ean"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingStart="10dp"
+                        android:paddingTop="5dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="5dp">
+
+                        <TextView
+                            android:id="@+id/tvIsiPerDus"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/plus_jakarta_bold"
+                            android:textColor="@color/blue_text"
+                            android:textSize="13sp"
+                            tools:text="1 Dus = 40 Buah" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/masuk_edit_isi"
+                            android:textColor="@color/gray_muted"
+                            android:textSize="10sp" />
+                    </LinearLayout>
                 </LinearLayout>
 
                 <!-- Jumlah Masuk -->
@@ -377,13 +447,6 @@
                         android:textColor="@color/navy"
                         android:textSize="14sp"
                         android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/masuk_opsional"
-                        android:textColor="@color/gray_text"
-                        android:textSize="11sp" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -421,6 +484,61 @@
                         android:textColor="@color/navy"
                         android:textColorHint="@color/gray_muted"
                         android:hint="0"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <!-- Harga Jual per Buah -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/masuk_harga_jual"
+                        android:textColor="@color/navy"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_masuk_input"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="12dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="6dp"
+                        android:fontFamily="@font/plus_jakarta_bold"
+                        android:text="Rp"
+                        android:textColor="@color/gray_text"
+                        android:textSize="16sp" />
+
+                    <EditText
+                        android:id="@+id/etSellPrice"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:fontFamily="@font/plus_jakarta_bold"
+                        android:hint="0"
+                        android:inputType="number"
+                        android:maxLength="12"
+                        android:padding="0dp"
+                        android:singleLine="true"
+                        android:textColor="@color/navy"
+                        android:textColorHint="@color/gray_muted"
                         android:textSize="16sp" />
                 </LinearLayout>
 
@@ -488,6 +606,49 @@
                             android:textColor="@color/blue_text"
                             android:textSize="16sp"
                             tools:text="Rp 1.125.000" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Kalkulasi satuan Buah (Isi Per Dus) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_info_banner"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/masuk_stok_after_unit"
+                            android:textColor="@color/gray_text"
+                            android:textSize="12sp" />
+
+                        <TextView
+                            android:id="@+id/tvStockAfterUnit"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/plus_jakarta_bold"
+                            android:textColor="@color/navy"
+                            android:textSize="14sp"
+                            tools:text="400 Buah" />
+
+                        <TextView
+                            android:id="@+id/tvStockDeltaUnit"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:fontFamily="@font/plus_jakarta_bold"
+                            android:textColor="@color/blue_text"
+                            android:textSize="14sp"
+                            tools:text="(+400)" />
                     </LinearLayout>
                 </LinearLayout>
 
