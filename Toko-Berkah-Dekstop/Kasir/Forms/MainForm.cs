@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 
 namespace Kasir;
 
@@ -22,7 +22,7 @@ public class MainForm : Form
         Ui.Dpi(this);
         Text = "Kasir - " + Db.NamaToko;
         ClientSize = new Size(1000, 620);
-        MinimumSize = new Size(960, 560);
+        MinimumSize = new Size(880, 500); // cukup kecil agar muat di layar berskala 125%/150%
         StartPosition = FormStartPosition.CenterScreen;
         Font = new Font("Segoe UI", 10.5f);
         KeyPreview = true;
@@ -41,7 +41,7 @@ public class MainForm : Form
                 case Keys.F12: e.Handled = true; Bayar(); break;
             }
         };
-        Shown += (s, e) => { Ui.FitColumn(lv, 1); login.Reset(); };
+        Shown += (s, e) => { KecilkanKeLayar(); FitKolom(); login.Reset(); };
 
         // Wajib tutup buku sebelum aplikasi boleh ditutup (tombol X, Alt+F4, atau Close()).
         FormClosing += (s, e) => CegahTutup(e);
@@ -182,14 +182,14 @@ public class MainForm : Form
         };
 
         // ---- panel kanan
-        var kanan = new Panel { Dock = DockStyle.Right, Width = 330, Padding = new Padding(10) };
+        var kanan = new Panel { Dock = DockStyle.Right, Width = 350, Padding = new Padding(10) };
         var kiri = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
         Controls.Add(kiri);
         Controls.Add(kanan);
         Controls.Add(lblStatus); // ditambahkan terakhir agar bilah status tetap di bawah
 
         // ---- input barang (atas)
-        var atas = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 44, WrapContents = false };
+        var atas = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = false };
         atas.Controls.Add(new Label { Text = "Kode / Barcode / Nama:", AutoSize = true, Margin = new Padding(0, 10, 4, 0) });
         entKode = new TextBox { Font = new Font("Segoe UI", 14f), Width = 170 };
         entKode.KeyDown += (s, e) =>
@@ -218,7 +218,7 @@ public class MainForm : Form
         atas.Controls.Add(btnTambah);
 
         // ---- tombol bawah
-        var bawah = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 40, Padding = new Padding(0, 6, 0, 0) };
+        var bawah = new FlowLayoutPanel { Dock = DockStyle.Bottom, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Padding = new Padding(0, 6, 0, 0) };
         var btnQty = new Button { Text = "Ubah Jumlah (dobel klik)", AutoSize = true };
         btnQty.Click += (s, e) => UbahQty();
         var btnHapus = new Button { Text = "Hapus Item (Del)", AutoSize = true };
@@ -245,7 +245,7 @@ public class MainForm : Form
         lv.Columns.Add("Jumlah", Ui.Px(this, 70), HorizontalAlignment.Center);
         lv.Columns.Add("Subtotal", Ui.Px(this, 160), HorizontalAlignment.Right);
         Ui.RowHeight(lv, Ui.Px(this, 32)); // baris lebih tinggi/lega seperti versi Python
-        lv.Resize += (s, e) => Ui.FitColumn(lv, 1);
+        lv.Resize += (s, e) => FitKolom();
         lv.DoubleClick += (s, e) => UbahQty();
         lv.KeyDown += (s, e) =>
         {
@@ -263,10 +263,10 @@ public class MainForm : Form
             Dock = DockStyle.Fill,
             FlowDirection = FlowDirection.TopDown,
             WrapContents = false,
-            AutoScroll = false,
+            AutoScroll = true, // layar pendek: panel kanan bisa digulir, tombol tidak terpotong
         };
         kanan.Controls.Add(stack);
-        int w = 305;
+        int w = 285;
 
         stack.Controls.Add(new Label { Text = "TOTAL", AutoSize = true, Font = new Font("Segoe UI", 12f) });
         lblTotal = new Label
@@ -358,6 +358,33 @@ public class MainForm : Form
         Height = tinggi,
         UseVisualStyleBackColor = false,
     };
+
+    // ------------------------------------------------------------ penyesuaian layar
+    // Kalau jendela lebih besar dari area kerja layar (mis. laptop berskala 150%),
+    // kecilkan supaya bagian bawah tidak tertutup taskbar.
+    void KecilkanKeLayar()
+    {
+        var area = Screen.FromControl(this).WorkingArea;
+        int w = Math.Min(Width, area.Width), h = Math.Min(Height, area.Height);
+        if (w == Width && h == Height) return;
+        Size = new Size(w, h);
+        Location = new Point(area.Left + (area.Width - w) / 2, area.Top + (area.Height - h) / 2);
+    }
+
+    // Lebar kolom keranjang dibagi menurut persen lebar daftar, jadi tidak meluber
+    // di skala layar mana pun. Kolom Nama Barang mendapat sisanya.
+    void FitKolom()
+    {
+        if (lv == null || lv.Columns.Count < 5) return;
+        int total = lv.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+        if (total < 300) return;
+        int kode = total * 15 / 100, harga = total * 17 / 100, jumlah = total * 12 / 100, sub = total * 20 / 100;
+        lv.Columns[0].Width = kode;
+        lv.Columns[2].Width = harga;
+        lv.Columns[3].Width = jumlah;
+        lv.Columns[4].Width = sub;
+        lv.Columns[1].Width = total - kode - harga - jumlah - sub;
+    }
 
     // ------------------------------------------------------------ logika keranjang
     long Total() => keranjang.Values.Sum(i => i.Harga * i.Qty);
@@ -537,18 +564,12 @@ public class MainForm : Form
         SetStatus("Menyinkronkan ke Supabase…", Color.DimGray);
         try
         {
-            // Unduh master produk/kategori dari web dulu, baru kirim data lokal.
-            // Tanpa langkah pertama, kategori & pencarian tidak pernah ikut web.
-            var (okMasuk, pesanMasuk) = await Task.Run(() => Db.SinkronMasuk());
-            if (!okMasuk) SetStatus("Offline — memakai data lokal", Color.DarkOrange);
-
             var (ok, pesan) = await Task.Run(() => Db.SinkronKeluar(pengguna));
-            if (ok) SetStatus(okMasuk ? pesanMasuk + " " + pesan : pesan, Color.SeaGreen);
+            if (ok) SetStatus(pesan, Color.SeaGreen);
             else SetStatus("Offline — data tersimpan lokal (" + Db.JumlahAntrian() + " menunggu)", Color.DarkOrange);
 
             if (tampilkanHasil)
-                MessageBox.Show(okMasuk ? pesanMasuk + "\n" + pesan : "Gagal mengunduh dari Supabase.",
-                    ok ? "Sinkron berhasil" : "Sinkron gagal",
+                MessageBox.Show(pesan, ok ? "Sinkron berhasil" : "Sinkron gagal",
                     MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
         }
         finally { sedangSinkron = false; }
