@@ -18,7 +18,6 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261117q';
 import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117m';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
 import {
@@ -486,4 +485,5 @@ if (me && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   setTimeout(() => loader(false), LOAD_FEEDBACK_MS);
 }
 
-splash(); // layar sambutan: "TOKO BERKAH" diketik, lalu masuk ke halaman
+// Splash kini statis di index.html (bukan lagi dibuat dari app.js): tampil
+// sebelum skrip ini jalan, jadi tidak menunggu modul selesai dimuat.
