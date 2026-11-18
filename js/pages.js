@@ -144,7 +144,7 @@ export function dashboard() {
   const kpis1 = [
     kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'dibanding kemarin'), sp: spark(w7.map((x) => x.sales)), lnk: '#laporan?lp=hari' }),
     kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'dibanding kemarin'), sp: spark(w7.map((x) => x.count)), lnk: '#transaksi?tp=hari' }),
-    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'dibanding kemarin'), sp: spark(w7.map((x) => x.profit)), lnk: '#laporan?lp=hari' }),
+    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya operasional toko seperti listrik.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'dibanding kemarin'), sp: spark(w7.map((x) => x.profit)), lnk: '#laporan?lp=hari' }),
     kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Nilai satu transaksi paling besar pada hari ini. Dihitung per hari, bukan per pembeli.', v: rp(belanjaMax), f: `<small>${trxHariIni.length ? `Dari ${trxHariIni.length} transaksi hari ini` : 'Belum ada transaksi hari ini'}</small>`, lnk: '#transaksi?tp=hari&tu=total' })
   ].join('');
   const kpis2 = [
@@ -550,7 +550,7 @@ export function panduan() {
   ];
   const istilah = [
     ['Omzet', 'Total uang dari penjualan, sebelum dikurangi apa pun.'],
-    ['Laba kotor', 'Omzet dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain (listrik, gaji, sewa).'],
+    ['Laba kotor', 'Omzet dikurangi harga beli barang yang terjual. Belum dikurangi biaya operasional toko (listrik, sewa).'],
     ['Margin laba', 'Laba dibanding omzet, dalam persen. Makin besar makin untung per rupiah penjualan.'],
     ['Nilai stok (modal)', 'Harga beli dikali stok semua barang yang masih ada. Uang modal yang sedang tertanam di barang.'],
     ['Potensi jual', 'Perkiraan uang bila semua stok yang ada terjual dengan harga jual sekarang.'],
@@ -559,7 +559,7 @@ export function panduan() {
     ['Mutasi stok', 'Setiap perubahan jumlah stok: terjual, barang masuk, barang keluar, atau penyesuaian.'],
     ['Penyesuaian', 'Mengoreksi stok agar sama dengan hitungan nyata di rak (misal hasil stok opname). Wajib diberi alasan.'],
     ['Pendapatan', 'Total uang yang masuk dari penjualan pada periode itu (sama dengan omzet).'],
-    ['Pengeluaran (modal)', 'Harga beli barang yang sudah terjual pada periode itu. Bukan biaya listrik, gaji, atau sewa.'],
+    ['Pengeluaran (modal)', 'Harga beli barang yang sudah terjual pada periode itu. Bukan biaya listrik atau sewa.'],
     ['Penjualan hari ini', 'Jumlah transaksi (struk) hari ini, bukan jumlah rupiah. Rupiahnya ada di Pendapatan hari ini.'],
     ['Total belanja terbesar', 'Nilai satu transaksi terbesar pada hari itu.'],
     ['Tutup buku', 'Penutupan akhir periode yang dilakukan di aplikasi Desktop: uang di laci dibandingkan dengan total penjualan sistem, lalu transaksi periode itu dikunci. Web hanya menampilkan hasilnya.'],
@@ -572,7 +572,7 @@ export function panduan() {
   const tanya = [
     ['Jumlah stok di sistem berbeda dengan di rak. Bagaimana memperbaikinya?', 'Buka Manajemen Stok, pilih jenis Penyesuaian, isi stok sebenarnya di rak, dan tulis alasannya.'],
     ['Bagaimana menambah stok setelah belanja barang?', 'Di Manajemen Stok pilih jenis Barang masuk, isi jumlah dan harga beli. Stok bertambah otomatis.'],
-    ['Kenapa angka laba terlihat lebih besar dari untung sebenarnya?', 'Laba kotor belum dikurangi biaya toko seperti listrik, gaji, dan sewa.'],
+    ['Kenapa angka laba terlihat lebih besar dari untung sebenarnya?', 'Laba kotor belum dikurangi biaya operasional toko seperti listrik dan sewa.'],
     ['Bagaimana mencari satu produk dengan cepat?', 'Di Produk & Kategori ketik nama atau barcode di kotak Cari, atau pilih kategori dari filter.'],
     ['Kenapa penjualan ditolak?', 'Biasanya karena periode hari itu sudah ditutup buku, atau stok barang tidak cukup. Periode yang sudah ditutup tidak bisa diisi penjualan baru.'],
     ['Bagaimana cara tutup buku?', 'Tutup buku dilakukan di aplikasi Desktop: isi uang di laci, sistem membandingkannya dengan total penjualan, lalu menyimpan hasilnya. Di web, buka menu Tutup Buku untuk melihat hasilnya.'],
