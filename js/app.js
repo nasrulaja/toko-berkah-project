@@ -20,7 +20,7 @@
 
 import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117m';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
-import { bukaScan } from './core/scan.js?v=20261118e';
+import { bukaScan } from './core/scan.js?v=20261118f';
 import {
   terapkanFilter,
   dashboard,

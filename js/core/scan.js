@@ -115,6 +115,37 @@ function penyambungSimulasi() {
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
+/** Bunyikan "tit" singkat saat barcode berhasil terbaca.
+ *  Memakai Web Audio (tanpa berkas suara). Gagal senyap bila browser
+ *  memblokir audio — bunyi hanya tambahan, bukan syarat. */
+function bunyiTit() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    // Satu AudioContext dipakai ulang; membuat baru tiap scan lama-lama dibatasi browser.
+    const ac = (bunyiTit._ac ||= new AC());
+    if (ac.state === 'suspended') ac.resume().catch(() => {});
+    const t0 = ac.currentTime;
+    const osc = ac.createOscillator();
+    const vol = ac.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1180, t0); // "tit" agak tinggi biar jelas
+    // Volume naik-turun cepat supaya terdengar "tit", bukan "tuuut".
+    vol.gain.setValueAtTime(0.0001, t0);
+    vol.gain.exponentialRampToValueAtTime(0.22, t0 + 0.012);
+    vol.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.15);
+    osc.connect(vol).connect(ac.destination);
+    osc.start(t0);
+    osc.stop(t0 + 0.16);
+    osc.onended = () => {
+      try {
+        osc.disconnect();
+        vol.disconnect();
+      } catch (e) {}
+    };
+  } catch (e) {}
+}
+
 /** Buka jendela scan; onKode(kode) dipanggil sekali bila kode diterima. | param: onKode (fungsi) | return: void */
 export function bukaScan(onKode) {
   tutupScan();
@@ -138,6 +169,7 @@ export function bukaScan(onKode) {
   const selesai = (kode) => {
     kode = String(kode || '').trim();
     if (!kode) return inp.focus();
+    bunyiTit(); // tanda berhasil terbaca
     tutupScan();
     onKode(kode);
   };
