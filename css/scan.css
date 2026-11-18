@@ -1,0 +1,43 @@
+/* ==========================================================================
+   TOKO BERKAH — scan.css
+   Tombol Scan di kolom barcode/pencarian + jendela scan (js/core/scan.js).
+   ========================================================================== */
+.scn { display: flex; gap: 8px; align-items: stretch; width: 100%; }
+.scn > input { flex: 1 1 auto; min-width: 0; }
+.scn-b { flex: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.scn-b svg { width: 16px; height: 16px; }
+.flt .scn { flex: 1 1 220px; min-width: 0; }
+.flt .scn > input { width: auto; flex: 1 1 auto; }
+
+.scn-ov { position: fixed; inset: 0; z-index: 400; display: grid; place-items: center; padding: 16px; background: rgba(9, 44, 76, 0.5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); animation: scn-in 0.2s ease both; }
+@keyframes scn-in { from { opacity: 0; } }
+.scn-box { width: min(440px, 100%); max-height: 92vh; overflow: auto; padding: 18px; border-radius: 24px; background: color-mix(in srgb, var(--card, #fff) 88%, transparent); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 24px 70px rgba(9, 44, 76, 0.35); -webkit-backdrop-filter: blur(22px) saturate(170%); backdrop-filter: blur(22px) saturate(170%); animation: scn-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes scn-up { from { opacity: 0; transform: translateY(16px) scale(0.97); } }
+.scn-h { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.scn-h h3 { margin: 0; font-size: 18px; color: var(--hd); }
+.scn-view { position: relative; height: 150px; margin-bottom: 12px; border-radius: 18px; overflow: hidden; background: linear-gradient(160deg, #0d3b66, #14507f); }
+.scn-view::before { content: ''; position: absolute; inset: 28px 34px; background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 3px, transparent 3px 7px, rgba(255, 255, 255, 0.55) 7px 8px, transparent 8px 13px, rgba(255, 255, 255, 0.55) 13px 17px, transparent 17px 20px); opacity: 0.35; border-radius: 4px; }
+.scn-c { position: absolute; width: 26px; height: 26px; border: 3px solid #5ccbff; }
+.scn-c.a { left: 18px; top: 18px; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+.scn-c.b { right: 18px; top: 18px; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
+.scn-c.c { left: 18px; bottom: 18px; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
+.scn-c.d { right: 18px; bottom: 18px; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+.scn-line { position: absolute; left: 22px; right: 22px; top: 22px; height: 3px; border-radius: 2px; background: linear-gradient(90deg, transparent, #7be0ff, transparent); box-shadow: 0 0 14px 3px rgba(92, 203, 255, 0.7); animation: scn-sapu 2.2s ease-in-out infinite; }
+@keyframes scn-sapu { 50% { transform: translateY(100px); } }
+.scn-st { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-weight: 700; color: var(--hd); }
+.scn-dot { width: 9px; height: 9px; border-radius: 50%; background: #f59e0b; animation: scn-kedip 1.2s ease-in-out infinite; }
+@keyframes scn-kedip { 50% { opacity: 0.3; } }
+.scn-mode { margin: 0 0 14px; font-size: 13px; color: var(--mt, #5b7188); }
+.scn-m label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--hd); }
+.scn-r { display: flex; gap: 8px; }
+.scn-r input { flex: 1; min-width: 0; }
+.scn-s { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--bd); }
+.scn-s > span { font-size: 12.5px; font-weight: 700; color: var(--mt, #5b7188); }
+body.scn-on { overflow: hidden; }
+@media (prefers-reduced-motion: reduce) { .scn-line, .scn-dot, .scn-box, .scn-ov { animation: none; } }
+.scn-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.scn-ov.kam-on .scn-view::before { display: none; }
+.scn-ov.kam-on .scn-view { height: 230px; }
+.scn-ov.kam-on .scn-dot { background: #22c55e; animation: none; }
+@keyframes scn-sapu-k { 50% { transform: translateY(185px); } }
+.scn-ov.kam-on .scn-line { animation-name: scn-sapu-k; }

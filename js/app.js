@@ -20,7 +20,7 @@
 
 import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117m';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
-import { pindaiBarcode } from './scan.js?v=20261118c';
+import { bukaScan } from './core/scan.js?v=20261118e';
 import {
   terapkanFilter,
   dashboard,
@@ -225,8 +225,24 @@ setShellRef(shell);
    tambah/ubah produk, tambah/ubah/hapus kategori, dan detail transaksi.
    ========================================================================== */
 
+/** Tombol Scan: isi kolom target dengan kode hasil scan. | param: tombol [data-scan] | return: void */
+function pakaiScan(btn) {
+  const t = document.querySelector(btn.dataset.scan);
+  if (!t) return;
+  bukaScan((kode) => {
+    t.value = kode;
+    t.dispatchEvent(new Event('input', { bubbles: true }));
+    const p = db.produk.find((x) => String(x.barcode) === kode);
+    if (t.name === 'barcode') toast(p ? 'Barcode sudah dipakai: ' + p.nama : 'Barcode terisi: ' + kode, p ? 'err' : 'ok');
+    else toast(p ? 'Ditemukan: ' + p.nama : 'Barcode belum terdaftar', p ? 'ok' : 'err');
+    t.focus();
+  });
+}
+
 function onClick(e) {
   {
+    const sc = e.target.closest('[data-scan]');
+    if (sc) return pakaiScan(sc);
     const b = e.target.closest('[data-act]');
     if (!b) return;
     const a = b.dataset.act,
@@ -253,16 +269,6 @@ function onClick(e) {
       } catch (e) {}
       route();
     } else if (a === 'addp') modal('Tambah produk', pform(), 'Simpan', (d) => saveP(d));
-    else if (a === 'scanbc') {
-      // Isi kolom barcode pada form produk yang sedang terbuka.
-      pindaiBarcode((kode) => {
-        const kolom = $('#ov input[name="barcode"]');
-        if (kolom) {
-          kolom.value = kode;
-          kolom.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      });
-    }
     else if (a === 'editp') {
       const p = prod(id);
       modal('Ubah produk', pform(p), 'Simpan', (d) => saveP(d, p));

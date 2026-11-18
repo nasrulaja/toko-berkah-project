@@ -24,7 +24,8 @@ data class Product(
     val name: String,
     /** Tag kategori produk, maksimal [Categories.MAX_PER_PRODUCT]. */
     val categories: List<String>,
-    val stock: Int,
+    /** Total stok satuan jual — boleh berubah saat barang masuk disimpan. */
+    var stock: Int,
     val location: String,
     @DrawableRes val imageRes: Int,
     val badge: String,

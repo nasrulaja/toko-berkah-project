@@ -112,7 +112,7 @@ class BarangMasukActivity : AppCompatActivity() {
 
         binding.btnSave.setOnClickListener {
             val e = entry ?: return@setOnClickListener
-            saveSellPrice(e)
+            applySave(e)
             Toast.makeText(
                 this,
                 "${getString(R.string.masuk_saved)}: $qty ${getString(R.string.masuk_unit)} ${e.name}",
@@ -214,9 +214,20 @@ class BarangMasukActivity : AppCompatActivity() {
         }
 
         val none = list.isEmpty()
-        binding.restockTitle.visibility = if (none) View.GONE else View.VISIBLE
-        binding.restockList.visibility = if (none) View.GONE else View.VISIBLE
-        binding.emptyState.visibility = if (none) View.VISIBLE else View.GONE
+        applyVisibility(none)
+    }
+
+    /**
+     * Satu state per layar: daftar restock ATAU kartu entri —
+     * keduanya tidak boleh terlihat bersamaan (tab masuk memanggil
+     * [renderRestockList] lewat onNewIntent saat kartu entri terbuka).
+     */
+    private fun applyVisibility(none: Boolean = ProductRepository.restockList().isEmpty()) {
+        val open = entry != null
+        binding.restockTitle.visibility = if (open || none) View.GONE else View.VISIBLE
+        binding.restockList.visibility = if (open || none) View.GONE else View.VISIBLE
+        binding.emptyState.visibility = if (!open && none) View.VISIBLE else View.GONE
+        binding.entryCard.visibility = if (open) View.VISIBLE else View.GONE
     }
 
     private fun fromProduct(p: Product) = Entry(
@@ -292,10 +303,7 @@ class BarangMasukActivity : AppCompatActivity() {
         binding.etBuyPrice.text.clear()
         binding.etSellPrice.setText(e.source?.price?.toString().orEmpty())
 
-        binding.restockTitle.visibility = View.GONE
-        binding.restockList.visibility = View.GONE
-        binding.emptyState.visibility = View.GONE
-        binding.entryCard.visibility = View.VISIBLE
+        applyVisibility()
 
         renderIsiPerDus()
         renderQty()
@@ -307,7 +315,6 @@ class BarangMasukActivity : AppCompatActivity() {
         qty = 10
         binding.etBuyPrice.text.clear()
         binding.etSellPrice.text.clear()
-        binding.entryCard.visibility = View.GONE
         renderRestockList()
     }
 
@@ -343,11 +350,18 @@ class BarangMasukActivity : AppCompatActivity() {
             .show()
     }
 
-    /** Simpan "Harga Jual per Buah" ke produk sumber (dummy, in-memory). */
-    private fun saveSellPrice(e: Entry) {
-        val value = binding.etSellPrice.text.toString().toIntOrNull() ?: return
+    /**
+     * Simpan barang masuk: stok bertambah [qty] Dus dan
+     * "Harga Jual per Buah" diperbarui (produk dari katalog pages).
+     * TODO(supabase): sinkronkan stok & harga ke tabel produk.
+     */
+    private fun applySave(e: Entry) {
         val target = e.source ?: return
-        if (value > 0 && value != target.price) target.price = value
+        target.stock += qty
+        val sellPrice = binding.etSellPrice.text.toString().toIntOrNull()
+        if (sellPrice != null && sellPrice > 0 && sellPrice != target.price) {
+            target.price = sellPrice
+        }
     }
 
     private fun renderQty() {

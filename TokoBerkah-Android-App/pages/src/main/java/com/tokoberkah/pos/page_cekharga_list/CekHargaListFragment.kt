@@ -27,6 +27,8 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
     private var _binding: FragmentCekhargaListBinding? = null
     private val binding get() = _binding!!
 
+    private var listAdapter: androidx.recyclerview.widget.RecyclerView.Adapter<*>? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         _binding = FragmentCekhargaListBinding.bind(view)
         setBreadcrumb(getString(R.string.nav_cek_harga))
@@ -43,8 +45,14 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
         }
 
         binding.rvProducts.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvProducts.adapter =
-            ProductListAdapter(ProductRepository.all()) { openDetail(it) }
+        listAdapter = ProductListAdapter(ProductRepository.all()) { openDetail(it) }
+        binding.rvProducts.adapter = listAdapter
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Harga bisa saja berubah dari halaman Ubah Harga / Barang Masuk
+        listAdapter?.notifyDataSetChanged()
     }
 
     @Deprecated("Deprecated in Java")
