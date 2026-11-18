@@ -466,7 +466,7 @@ export function dashboard() {
 
   <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Selengkapnya</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
     rec.slice(0, 5).map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
-    `<tr><td colspan="6">${empty('Belum ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
+    `<tr><td colspan="6">${empty('Tidak ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
   }</table></div></div>
   <div class="tip" id="tip" hidden></div></div>`;
 }
