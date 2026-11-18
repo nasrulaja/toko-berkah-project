@@ -151,8 +151,9 @@ export async function muatDB() {
         nama: u.nama,
         email: u.email,
         username: String(u.email || '').split('@')[0],
-        // DB hanya menyimpan hash; kata sandi asli tidak bisa dibaca.
-        pass: null,
+        // DB hanya menyimpan hash sandi dan sengaja tidak dikirim ke browser; nama kolomnya
+        // `pw` (dipakai form login). Login sungguhan diverifikasi di server (backend/src/auth.js).
+        pw: '',
         role_id: u.role_id,
         bisa_kelola_barang: !!r.bisa_kelola_barang,
         bisa_transaksi: !!r.bisa_transaksi
@@ -329,7 +330,7 @@ export async function simpanDB(data) {
         transaksi_id: m.transaksi_id ?? null,
         catatan: m.catatan || null,
         waktu: m.waktu,
-        user_id: m.user_id || 1
+        user_id: m.user_id || null
       }));
     await insert('stok_mutasi', mutBaru);
 

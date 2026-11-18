@@ -18,7 +18,7 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117m';
+import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261118a';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
 import { bukaScan } from './core/scan.js?v=20261118f';
 import {
@@ -94,10 +94,16 @@ const cur = () => {
   return Object.prototype.hasOwnProperty.call(PG, h) ? h : 'dashboard';
 };
 
+/** Halaman terakhir yang dibangun (hash tanpa "?"), untuk membedakan pindah halaman dari
+ *  sekadar gambar ulang setelah data berubah. | param: - | return: string */
+let halamanLalu = null;
+
 function shell() {
   const k = cur(),
     p = PG[k],
-    navK = k === 'barang-masuk' ? 'stok' : k; // #barang-masuk menyorot menu Manajemen Stok
+    navK = k === 'barang-masuk' ? 'stok' : k, // #barang-masuk menyorot menu Manajemen Stok
+    pindah = halamanLalu !== k; // true = benar-benar pindah halaman, false = gambar ulang
+  halamanLalu = k;
   $('#app').innerHTML =
     `<aside class="side" id="sd"><div class="logo"><i class="lgi"><img src="assets/logo-ikon.png" alt=""></i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === navK ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'notifikasi' && notifUnread() ? `<span class="b r" style="margin-left:auto">${notifUnread() > 99 ? '99+' : notifUnread()}</span>` : ''}${id === 'stok-menipis' && db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
 <div class="main"><header class="top"><span class="brand"><i class="lgi"><img src="assets/logo-ikon.png" alt=""></i><b>${p.t}</b></span><span class="tdate">${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span><span class="sp"></span><a class="ic bell" href="#notifikasi" title="Notifikasi" aria-label="Notifikasi">${ico('bell')}${notifUnread() ? `<em>${notifUnread() > 99 ? '99+' : notifUnread()}</em>` : ''}</a><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
@@ -105,6 +111,8 @@ function shell() {
   labelTables();
   paginate();
   slideN();
+  // pindah halaman = gulir ke atas. Gambar ulang setelah simpan data tidak boleh melompat.
+  if (pindah) window.scrollTo(0, 0);
 }
 
 /** Bar menu bawah khusus HP (rail kaca disembunyikan di layar kecil). | param: k (menu aktif) | return: string HTML */
@@ -323,7 +331,6 @@ function route() {
     return;
   }
   shell();
-  window.scrollTo(0, 0);
   tour();
 }
 

@@ -11,7 +11,7 @@
      BAGIAN 3  MUTASI STOK          mut(), terkunci()
    ========================================================================== */
 
-import { muatDB, simpanDB } from './api.js?v=20261117m';
+import { muatDB, simpanDB } from './api.js?v=20261118a';
 
 /* ==========================================================================
    BAGIAN 1 — KUNCI & STATE
@@ -120,6 +120,9 @@ export function save() {
 export function mut(p, jenis, jml, o = {}) {
   const b = p.stok;
   p.stok += jml;
+  // id user bisa berupa teks untuk akun demo ('demo'); kolom user_id di Supabase bertipe
+  // bigint, jadi hanya kirim bila benar-benar angka — selain itu biarkan null.
+  const uid = Number(me?.id);
   db.mutasi.push({
     id: ++db.n,
     produk_id: p.id,
@@ -131,7 +134,7 @@ export function mut(p, jenis, jml, o = {}) {
     transaksi_id: o.tid ?? null,
     catatan: o.cat || '',
     waktu: o.w || new Date().toISOString(),
-    user_id: me?.id || 1
+    user_id: Number.isFinite(uid) && uid > 0 ? uid : null
   });
 }
 

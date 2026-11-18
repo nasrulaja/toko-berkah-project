@@ -21,14 +21,21 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, terkunci, dbGalat } from './core/db.js?v=20261117m';
+import { db, me, save, mut, KS, setMe, terkunci, dbGalat } from './core/db.js?v=20261118a';
 import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117m';
 import { barChart, donut, spark, short } from './charts.js?v=20261117m';
 
 let S = {};
 
 /** Mengisi filter halaman dari tautan (mis. #laporan?lp=hari) sebelum halaman digambar. | param: o (objek kunci-nilai) | return: void */
-export const terapkanFilter = (o) => Object.assign(S, o);
+export const terapkanFilter = (o) => {
+  // halaman stok: ?mpid=<id> memilih produk langsung di kotak produk (dipakai tautan "Isi ulang")
+  if (o.mpid !== undefined) {
+    S.mpid = prod(o.mpid) ? o.mpid : '';
+    delete o.mpid;
+  }
+  return Object.assign(S, o);
+};
 
 /** Nama bulan singkat untuk label filter. | param: - | return: array 12 nama */
 const NAMA_BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -151,6 +158,114 @@ const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { wee
 
 /** Batas atas datepicker: hari ini (tidak perlu memilih tanggal masa depan). | param: - | return: string YYYY-MM-DD */
 const hariIniKunci = () => tglKunci(Date.now());
+
+/** Combobox produk: satu kotak cari yang sekaligus jadi pemilih produk (menggantikan kotak cari + select terpisah).
+ *  Daftar pilihan muncul di bawah kotak; cocok bila nama atau barcode memuat kata kunci.
+ *  Produk yang benar-benar terpilih disimpan di atribut data-pilih pada kotak.
+ *  param: idAwalan ('mp'), nilai terpilih | return: string HTML */
+const kotakProduk = (idAwalan, terpilih) => {
+  const p = terpilih ? prod(terpilih) : null;
+  return `<div class="pk" id="${idAwalan}-k" data-pilih="${p ? p.id : ''}">
+    <input type="search" id="${idAwalan}cari" role="combobox" aria-expanded="false" aria-controls="${idAwalan}-l" aria-autocomplete="list"
+      placeholder="Cari nama atau barcode…" autocomplete="off" value="${p ? esc(p.nama) : ''}">
+    <button type="button" class="btn pk-b" id="${idAwalan}btn" data-scan="#${idAwalan}cari" aria-label="Scan barcode">${ico('scan')}Scan</button>
+    <div class="pk-l" id="${idAwalan}-l" role="listbox" hidden></div>
+    <input type="hidden" id="${idAwalan}id" value="${p ? p.id : ''}">
+  </div>`;
+};
+
+/** Pasang perilaku combobox produk: ketik untuk menyaring, klik/Enter untuk memilih, Esc untuk menutup.
+ *  Produk aktif disimpan di kotak (data-pilih), bukan di teks, jadi mengetik tidak menghapus pilihan
+ *  sampai produk lain dipilih. param: idAwalan, saatPilih (fn(produk)) | return: - */
+const pasangProduk = (idAwalan, saatPilih) => {
+  setTimeout(() => {
+    const kotak = document.querySelector('#' + idAwalan + '-k'),
+      cari = document.querySelector('#' + idAwalan + 'cari'),
+      daftar = document.querySelector('#' + idAwalan + '-l'),
+      simpan = document.querySelector('#' + idAwalan + 'id');
+    if (!kotak || !cari || !daftar || !simpan) return;
+    const aktif = () => prod(kotak.dataset.pilih);
+    let sorot = -1,
+      hasil = [];
+    const tutup = () => {
+      daftar.hidden = true;
+      cari.setAttribute('aria-expanded', 'false');
+      sorot = -1;
+    };
+    // pulihkan teks kotak ke nama produk aktif (atau kosong bila belum ada)
+    const pulih = () => {
+      const p = aktif();
+      cari.value = p ? p.nama : '';
+      tutup();
+    };
+    const gambar = () => {
+      const q = cari.value.trim().toLowerCase();
+      hasil = (q ? db.produk.filter((x) => `${x.nama} ${x.barcode || ''}`.toLowerCase().includes(q)) : db.produk).slice(0, 50);
+      daftar.innerHTML = hasil.length
+        ? hasil
+            .map(
+              (x, i) =>
+                `<div class="pk-o${x.id == kotak.dataset.pilih ? ' on' : ''}${i === sorot ? ' sorot' : ''}" role="option" data-id="${x.id}"><span class="pk-n">${esc(x.nama)}</span><span class="pk-s">stok ${x.stok}${x.barcode ? ' · ' + esc(x.barcode) : ''}</span></div>`
+            )
+            .join('')
+        : `<div class="pk-o pk-kosong" aria-disabled="true">Produk tidak ditemukan</div>`;
+      daftar.hidden = false;
+      cari.setAttribute('aria-expanded', 'true');
+      daftar.querySelector('.pk-o.sorot')?.scrollIntoView({ block: 'nearest' });
+    };
+    // pilih produk: isi kotak dengan nama, simpan id, lalu beri tahu pemanggil
+    const pilih = (id) => {
+      const p = prod(id);
+      if (!p) return;
+      kotak.dataset.pilih = p.id;
+      simpan.value = p.id;
+      cari.value = p.nama;
+      tutup();
+      saatPilih(p);
+    };
+    cari.oninput = () => {
+      sorot = 0;
+      gambar();
+    };
+    cari.onfocus = () => gambar();
+    cari.onkeydown = (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (daftar.hidden) return gambar();
+        e.preventDefault();
+        sorot = e.key === 'ArrowDown' ? Math.min(sorot + 1, hasil.length - 1) : Math.max(sorot - 1, 0);
+        gambar();
+      } else if (e.key === 'Enter') {
+        // Enter saat daftar terbuka: pilih yang disorot, jangan kirim form
+        if (!daftar.hidden && hasil.length) {
+          e.preventDefault();
+          pilih(hasil[Math.max(0, sorot)].id);
+        }
+      } else if (e.key === 'Escape') {
+        pulih();
+      }
+    };
+    daftar.onmousedown = (e) => {
+      const o = e.target.closest('.pk-o');
+      if (!o || !o.dataset.id) return;
+      e.preventDefault(); // jangan sampai kotak kehilangan fokus sebelum dipilih
+      pilih(o.dataset.id);
+    };
+    // klik di luar: tutup daftar, buang kata kunci yang tak terpakai, kenalkan lagi produk aktif
+    document.addEventListener('mousedown', (e) => {
+      if (kotak.contains(e.target) || daftar.hidden) return;
+      pulih();
+    });
+    if (!aktif() && simpan.value) pulih();
+  }, 0);
+};
+
+/** Simpan sesudah mutasi stok: halaman dibangun ulang penuh (data diambil lagi dari Supabase),
+ *  jadi kotak produk diisi ulang dengan produk yang baru diubah, bukan mengandalkan keadaan lama.
+ *  param: id produk, pesan | return: - */
+function simpanLaluTampilkan(idProduk, pesan) {
+  S.mpid = String(idProduk || '');
+  simpan(pesan);
+}
 
 /** Periode yang dipilih sepenuhnya berada di masa depan? Dipakai untuk memilih kata pada keadaan kosong.
  *  Dianggap masa depan bila tanggal mulainya sesudah hari ini (rentang terbalik sudah ditukar oleh rentangTanggal).
@@ -784,7 +899,6 @@ export function stok() {
       jmlEl = $('#mjml'),
       catEl = $('#mcat'),
       hbEl = $('#mhb'),
-      cariEl = $('#mcari'),
       hintEl = $('#mhint');
     // sesuaikan isian dengan jenis mutasi: penyesuaian boleh 0 dan wajib alasan; harga beli hanya untuk barang masuk
     const syncForm = () => {
@@ -799,39 +913,18 @@ export function stok() {
       if (hintEl) hintEl.textContent = p ? `Stok sekarang ${packTxt(p)} · minimum ${p.stok_minimum}` : '';
     };
     jenisEl.onchange = syncForm;
-    pidEl.onchange = syncForm;
     syncForm();
 
-    /* Pencarian produk: menyaring daftar pilihan agar tidak perlu menggulir panjang.
-       Bila kata kunci hanya cocok dengan satu produk, produk itu langsung terpilih. */
-    if (cariEl) {
-      const cari = () => {
-        const q = cariEl.value.trim().toLowerCase();
-        const hasil = q
-          ? db.produk.filter((p) => `${p.nama} ${p.barcode || ''}`.toLowerCase().includes(q))
-          : db.produk;
-        const kini = pidEl.value;
-        pidEl.innerHTML = hasil.length ? popt({ produk: hasil }, hasil.some((p) => p.id == kini) ? kini : hasil[0].id) : '<option value="">(produk tidak ditemukan)</option>';
-        if (hasil.length === 1) pidEl.value = hasil[0].id;
-        syncForm();
-      };
-      cariEl.oninput = cari;
-      // Enter di kotak cari jangan sampai mengirim form sebelum produk dipilih
-      cariEl.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          cari();
-          pidEl.focus();
-        }
-      };
-    }
+    /* Produk: kotak cari dan pemilih jadi satu (combobox). Mengetik menyaring daftar;
+       memilih produk mengisi id dan menyegarkan isian lain. */
+    pasangProduk('mp', syncForm);
     $('#mform').onsubmit = (e) => {
       e.preventDefault();
       const p = prod(pidEl.value),
         j = jenisEl.value,
         q = +jmlEl.value,
         cat = catEl.value.trim();
-      if (!p || !Number.isInteger(q)) return toast('Isi data dengan benar');
+      if (!p || !Number.isInteger(q)) return toast(p ? 'Isi data dengan benar' : 'Pilih produk dulu');
       if (j === 'masuk') {
         const hb = +hbEl.value;
         if (q < 1 || !(hb >= 0)) return toast('Isi jumlah dan harga beli dengan benar');
@@ -848,7 +941,7 @@ export function stok() {
         if (q === p.stok) return toast('Stok sudah sama, tidak ada perubahan');
         mut(p, 'penyesuaian', q - p.stok, { cat });
       }
-      simpan('Stok diperbarui');
+      simpanLaluTampilkan(p.id, 'Stok diperbarui');
     };
   }, 0);
   const fj = jb[S.mj] ? S.mj : '',
@@ -862,7 +955,7 @@ export function stok() {
         shellRef();
       };
   });
-  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label for="mcari">Produk</label><div class="scn"><input id="mcari" type="search" placeholder="Cari nama atau barcode…" autocomplete="off"><button type="button" class="btn scn-b" data-scan="#mcari" aria-label="Scan barcode">${ico('scan')}Scan</button></div><select id="mpid" required size="1">${popt(db, S.mpid)}</select><small class="hint" id="mhint"></small></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (ubah stok langsung)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan</button></form></div></div>
+  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label for="mpcari">Produk</label>${kotakProduk('mp', S.mpid)}<small class="hint" id="mhint"></small></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (ubah stok langsung)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan</button></form></div></div>
   <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length}${semua.length > rec.length ? ' terbaru' : ''})</h4><div class="flt"><select id="fjenis" aria-label="Filter jenis mutasi"><option value="">Semua jenis</option>${Object.entries(jb).map(([k, v]) => `<option value="${k}"${k === fj ? ' selected' : ''}>${v[1]}</option>`).join('')}</select></div></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
   ${rec
     .map((m, i) => {
