@@ -512,6 +512,25 @@
     flex: 1 1 calc(50% - 4px);
     text-align: center;
   }
+  /* Datepicker di HP: dua kolom tanggal, tombol di baris bawah */
+  .rgx {
+    flex: 1 1 100%;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px;
+  }
+  .rgx input[type='date'] {
+    flex: 1 1 calc(50% - 20px);
+    min-width: 0;
+    width: auto;
+  }
+  .rgx-s {
+    flex: 0 0 auto;
+  }
+  .rgx .btn {
+    flex: 1 1 calc(50% - 3px);
+  }
 }
 
 /* HP: daftar notifikasi — nomor, ikon, dan teks sebaris; waktu di baris bawah */

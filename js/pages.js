@@ -99,16 +99,98 @@ const rentangPeriode = (tf) => {
   }
 };
 
+/** Format tanggal jadi YYYY-MM-DD untuk <input type="date">. | param: ms atau Date | return: string */
+const tglKunci = (ms) => {
+  const d = ms instanceof Date ? ms : new Date(ms),
+    p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+};
+
+/** Rentang dari dua tanggal pilihan pengguna (YYYY-MM-DD), akhir inklusif.
+ *  Akhir digeser ke 00:00 hari berikutnya karena semua perbandingan memakai batas eksklusif.
+ *  param: dari, sampai (string YYYY-MM-DD) | return: { awal, akhir } */
+const rentangTanggal = (dari, sampai) => {
+  const baca = (s) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+    if (!m) return null;
+    const y = Number(m[1]),
+      mo = Number(m[2]) - 1,
+      d = Number(m[3]),
+      t = new Date(y, mo, d);
+    // Tolak tanggal yang "dibalap" JS, misal 2026-13-45 -> 2027-02-14
+    if (isNaN(t) || t.getFullYear() !== y || t.getMonth() !== mo || t.getDate() !== d) return null;
+    return t;
+  };
+  let a = baca(dari),
+    b = baca(sampai);
+  if (!a && !b) return { awal: 0 };
+  if (!a) return { awal: 0, akhir: new Date(b.getFullYear(), b.getMonth(), b.getDate() + 1).getTime() }; // hanya "sampai": mulai dari awal data
+  if (!b) b = a; // hanya "dari" diisi: satu hari itu saja
+  if (b < a) [a, b] = [b, a]; // terbalik: tukar supaya tetap masuk akal
+  return { awal: a.getTime(), akhir: new Date(b.getFullYear(), b.getMonth(), b.getDate() + 1).getTime() };
+};
+
+/** Rentang aktif untuk halaman laporan/riwayat. Kunci 'rentang' memakai tanggal pilihan pengguna;
+ *  selain itu memakai periode cepat. | param: kunci, dari, sampai | return: { awal, akhir } */
+const rentangAktif = (kunci, dari, sampai) => (kunci === 'rentang' ? rentangTanggal(dari, sampai) : rentangPeriode(kunci));
+
 /** Batas awal periode dalam ms (untuk perbandingan sederhana). | param: tf (kunci periode) | return: ms */
 const awalPeriode = (tf) => rentangPeriode(tf).awal;
 
 /** Saring transaksi sesuai periode. Memakai batas akhir juga, supaya "bulan kemarin" tidak ikut bulan ini. | param: daftar (array), tf (kunci periode) | return: array */
-const dalamPeriode = (daftar, tf) => {
-  const { awal, akhir } = rentangPeriode(tf);
+const dalamPeriode = (daftar, tf, dari, sampai) => {
+  const { awal, akhir } = rentangAktif(tf, dari, sampai);
   return daftar.filter((x) => {
     const w = new Date(x.waktu).getTime();
     return w >= awal && (akhir === undefined || w < akhir);
   });
+};
+
+/** Tanggal panjang untuk ditampilkan: "Senin, 9 November 2026". | param: kunci YYYY-MM-DD | return: string */
+const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+/** Batas atas datepicker: hari ini (tidak perlu memilih tanggal masa depan). | param: - | return: string YYYY-MM-DD */
+const hariIniKunci = () => tglKunci(Date.now());
+
+/** HTML datepicker "dari - sampai" + tombol Terapkan/Reset. Ikon & teks disesuaikan nama kontrol.
+ *  param: idAwalan ('rd'/'td'), dari, sampai, aktif (bool) | return: string HTML */
+const kotakTanggal = (idAwalan, dari, sampai, aktif) => `<span class="rgx${aktif ? ' on' : ''}" data-rgx>
+  <input type="date" id="${idAwalan}1" value="${esc(dari || '')}" max="${hariIniKunci()}" aria-label="Tanggal mulai">
+  <span class="rgx-s">s/d</span>
+  <input type="date" id="${idAwalan}2" value="${esc(sampai || '')}" max="${hariIniKunci()}" aria-label="Tanggal akhir">
+  <button class="btn sm" data-act="${idAwalan}go">Terapkan</button>
+  ${aktif ? `<button class="btn sm gh" data-act="${idAwalan}rst">Reset</button>` : ''}
+</span>`;
+
+/** Pasang kejadian pada datepicker: tombol Terapkan/Reset dan Enter pada input.
+ *  param: idAwalan, simpan (fn(dari, sampai) untuk menetapkan), batal (fn() untuk reset), render () | return: - */
+const pasangTanggal = (idAwalan, simpan, batal, render) => {
+  // Semua query dilakukan DI DALAM setTimeout: pada saat fungsi ini dipanggil,
+  // HTML baru belum terpasang, jadi referensi yang diambil lebih awal akan basi.
+  setTimeout(() => {
+    const i1 = document.querySelector('#' + idAwalan + '1'),
+      i2 = document.querySelector('#' + idAwalan + '2');
+    const terapkan = () => {
+      const a = i1?.value || '',
+        b = i2?.value || '';
+      if (!a && !b) return toast('Pilih tanggal dulu');
+      simpan(a, b);
+      render();
+    };
+    const go = document.querySelector('[data-act="' + idAwalan + 'go"]'),
+      rst = document.querySelector('[data-act="' + idAwalan + 'rst"]');
+    if (go) go.onclick = terapkan;
+    if (rst) rst.onclick = () => { batal(); render(); };
+    [i1, i2].forEach((el) => {
+      if (!el) return;
+      el.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); terapkan(); } };
+      // isi otomatis tanggal kedua bila masih kosong, supaya sekali pilih sudah langsung bisa Terapkan
+      el.onchange = () => {
+        if (i1?.value && i2 && !i2.value) i2.value = i1.value;
+        if (i2?.value && i1 && !i1.value) i1.value = i2.value;
+      };
+    });
+  }, 0);
 };
 
 const prod = (id) => db.produk.find((x) => x.id == id);
@@ -783,7 +865,6 @@ export function stok() {
 /** Hasil tutup buku (hanya tampilan): ringkasan dan riwayat per periode. Proses tutup buku dilakukan di aplikasi Desktop. | param: - | return: string HTML */
 export function hasilTutupBuku() {
   const sel = (n) => (n === 0 ? ['g', 'Sesuai'] : n < 0 ? ['r', 'Kurang ' + rp(-n)] : ['o', 'Lebih ' + rp(n)]);
-  const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const jn = { harian: 'Harian', bulanan: 'Bulanan', tahunan: 'Tahunan' };
   const rec = [...db.tutup].sort((a, b) => (a.waktu < b.waktu ? 1 : -1)),
     selisihHari = db.tutup.filter((x) => x.selisih !== 0).length,
@@ -803,20 +884,32 @@ export function hasilTutupBuku() {
 export function laporan() {
   /* --- Filter periode: menyaring SEMUA angka & tabel di halaman ini --- */
   const opsi = opsiPeriode(); // periode tetap + daftar bulan yang ada datanya
-  const tf = opsi.some(([k]) => k === S.lp) ? S.lp : 'semua';
-  const batas = awalPeriode(tf);
-  const labelPeriode =
-    {
-      semua: 'seluruh data',
-      hari: 'hari ini',
-      '7hari': '7 hari terakhir',
-      '30hari': '30 hari terakhir',
-      bulan: 'bulan ini',
-      bulankmr: 'bulan kemarin',
-      tahun: 'tahun ini'
-    }[tf] || labelBulanKunci(tf);
+  // 'rentang' = mode datepicker (tanggal pilihan sendiri). Kunci lain = periode cepat.
+  const tf = S.lp === 'rentang' ? 'rentang' : opsi.some(([k]) => k === S.lp) ? S.lp : 'semua';
+  const pakaiRentang = tf === 'rentang',
+    dari = S.lpDari || '',
+    sampai = S.lpSampai || '';
+  // Batas dipakai untuk label jumlah hari; penyaringan memakai dalamPeriode()
+  const batas = pakaiRentang ? rentangTanggal(dari, sampai).awal : awalPeriode(tf);
+  const labelTanggal = () => {
+    const f = (s) => (s ? tglId(s.replace(/-/g, '-')) : '');
+    if (dari && sampai && dari !== sampai) return f(dari) + ' s/d ' + f(sampai);
+    if (dari || sampai) return f(dari || sampai);
+    return 'tanggal pilihan';
+  };
+  const labelPeriode = pakaiRentang
+    ? labelTanggal()
+    : {
+        semua: 'seluruh data',
+        hari: 'hari ini',
+        '7hari': '7 hari terakhir',
+        '30hari': '30 hari terakhir',
+        bulan: 'bulan ini',
+        bulankmr: 'bulan kemarin',
+        tahun: 'tahun ini'
+      }[tf] || labelBulanKunci(tf);
   // transaksi yang lolos filter; idOk dipakai untuk menyaring detail
-  const trx = dalamPeriode(db.transaksi, tf),
+  const trx = dalamPeriode(db.transaksi, tf, dari, sampai),
     idOk = new Set(trx.map((t) => t.id));
 
   const totJual = trx.reduce((a, t) => a + t.total, 0);
@@ -845,7 +938,6 @@ export function laporan() {
     h.c++;
     h.v += t.total;
   });
-  const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const ramai = [...perTgl.entries()].sort((a, b) => b[1].c - a[1].c || b[1].v - a[1].v).slice(0, 5),
     urutHari = [1, 2, 3, 4, 5, 6, 0].map((i) => ({ n: namaHari[i], ...perHari[i] })),
     maxHari = Math.max(1, ...urutHari.map((h) => h.c)),
@@ -866,17 +958,43 @@ export function laporan() {
     if (e)
       e.onchange = () => {
         S.lp = e.value;
+        // begitu mode "Pilih tanggal" dipilih, langsung isi tanggal default (bulan ini) supaya tidak kosong
+        if (S.lp === 'rentang' && !S.lpDari && !S.lpSampai) {
+          S.lpDari = tglKunci(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+          S.lpSampai = hariIniKunci();
+        }
         shellRef();
       };
   });
-  // Dropdown: "Periode cepat" + kelompok "Pilih bulan" (hanya bulan yang ada datanya).
+  // Datepicker: rentang tanggal pilihan sendiri
+  pasangTanggal(
+    'rd',
+    (a, b) => {
+      S.lp = 'rentang';
+      S.lpDari = a;
+      S.lpSampai = b;
+    },
+    () => {
+      S.lp = 'semua';
+      S.lpDari = '';
+      S.lpSampai = '';
+    },
+    shellRef
+  );
+  // Dropdown: "Periode cepat" + "Pilih bulan" (hanya bulan yang ada datanya) + pintasan "Pilih tanggal".
   const opsiTetap = opsi.filter(([k]) => !String(k).startsWith('bl:')),
     opsiBulan = opsi.filter(([k]) => String(k).startsWith('bl:')),
     opsiHtml = ([k, v]) => `<option value="${k}"${k === tf ? ' selected' : ''}>${v}</option>`,
     fltBar = `<div class="flt"><select id="flp" aria-label="Filter periode laporan"><optgroup label="Periode cepat">${opsiTetap
       .map(opsiHtml)
-      .join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}</select></div>`;
-  return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b> — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
+      .join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}<option value="rentang"${pakaiRentang ? ' selected' : ''}>Pilih tanggal (dari–sampai)</option></select>${kotakTanggal(
+      'rd',
+      dari,
+      sampai,
+      pakaiRentang
+    )}</div>`;
+  const infoHari = pakaiRentang && dari && sampai ? ` (${Math.round((rentangTanggal(dari, sampai).akhir - rentangTanggal(dari, sampai).awal) / 864e5)} hari)` : '';
+  return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b>${infoHari} — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
   <div class="card"><div class="ch"><h4>Transaksi terbanyak</h4></div><div class="tw">${
     ramai.length
@@ -901,15 +1019,23 @@ export function laporan() {
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function transaksi() {
   const opsi = opsiPeriode(),
-    tp = opsi.some(([k]) => k === S.tp) ? S.tp : 'semua',
+    tp = S.tp === 'rentang' ? 'rentang' : opsi.some(([k]) => k === S.tp) ? S.tp : 'semua',
+    pakaiRentang = tp === 'rentang',
+    dari = S.tpDari || '',
+    sampai = S.tpSampai || '',
     tu = S.tu === 'total' ? 'total' : 'baru',
-    batas = awalPeriode(tp),
+    batas = pakaiRentang ? rentangTanggal(dari, sampai).awal : awalPeriode(tp),
     semua = [...db.transaksi].reverse(),
-    rec = dalamPeriode(semua, tp).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
+    rec = dalamPeriode(semua, tp, dari, sampai).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
     nKunci = rec.filter(terkunci).length,
     // Label periode: huruf kecil hanya untuk periode tetap ("bulan ini"),
     // sedangkan nama bulan dibiarkan apa adanya ("Okt 2026").
     label = (() => {
+      if (pakaiRentang) {
+        const f = (s) => (s ? tglId(s) : '');
+        if (dari && sampai && dari !== sampai) return f(dari) + ' s/d ' + f(sampai);
+        return f(dari || sampai) || 'tanggal pilihan';
+      }
       const tetap = { semua: 'seluruh data', hari: 'hari ini', '7hari': '7 hari terakhir', '30hari': '30 hari terakhir', bulan: 'bulan ini', bulankmr: 'bulan kemarin', tahun: 'tahun ini' };
       return tetap[tp] || labelBulanKunci(tp) || 'semua data';
     })();
@@ -922,6 +1048,10 @@ export function transaksi() {
     if (f)
       f.onchange = () => {
         S.tp = f.value;
+        if (S.tp === 'rentang' && !S.tpDari && !S.tpSampai) {
+          S.tpDari = tglKunci(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+          S.tpSampai = hariIniKunci();
+        }
         shellRef();
       };
     if (u)
@@ -930,7 +1060,26 @@ export function transaksi() {
         shellRef();
       };
   }, 0);
-  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${tp === 'semua' ? rec.length : rec.length + ' dari ' + semua.length})</h4><div class="flt"><select id="ftp" aria-label="Filter periode transaksi"><optgroup label="Periode cepat">${opsiTetap.map(opsiHtml).join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}</select><select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>.${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
+  pasangTanggal(
+    'td',
+    (a, b) => {
+      S.tp = 'rentang';
+      S.tpDari = a;
+      S.tpSampai = b;
+    },
+    () => {
+      S.tp = 'semua';
+      S.tpDari = '';
+      S.tpSampai = '';
+    },
+    shellRef
+  );
+  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${tp === 'semua' ? rec.length : rec.length + ' dari ' + semua.length})</h4><div class="flt"><select id="ftp" aria-label="Filter periode transaksi"><optgroup label="Periode cepat">${opsiTetap.map(opsiHtml).join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}<option value="rentang"${pakaiRentang ? ' selected' : ''}>Pilih tanggal (dari–sampai)</option></select>${kotakTanggal(
+    'td',
+    dari,
+    sampai,
+    pakaiRentang
+  )}<select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>.${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
   ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('') || `<tr><td colspan="6">Belum ada transaksi pada periode ini.</td></tr>`}</table></div></div>`;
 }
 

@@ -324,6 +324,35 @@ label {
   width: auto;
   min-width: 150px;
 }
+/* Datepicker rentang tanggal: "dari s/d sampai" + tombol Terapkan/Reset */
+.rgx {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px dashed #cfd8e3;
+  border-radius: 9px;
+  background: #f7fafc;
+}
+.rgx.on {
+  border-style: solid;
+  border-color: #3db5ff;
+  background: #f0f9ff;
+}
+.rgx-s {
+  font-size: 12px;
+  color: #667085;
+  white-space: nowrap;
+}
+.rgx input[type='date'] {
+  min-width: 132px;
+  padding: 7px 8px;
+  font-size: 13px;
+}
+.rgx .btn {
+  padding: 6px 10px;
+  white-space: nowrap;
+}
 .tw {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
