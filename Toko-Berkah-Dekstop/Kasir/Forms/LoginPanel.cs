@@ -17,15 +17,32 @@ public class LoginPanel : Panel
         BackColor = Color.White;
         var biru = Color.FromArgb(0x00, 0x7B, 0xC4);
 
-        // ---- logo: lingkaran biru
-        var logo = new Panel { Size = new Size(Ui.Px(tuan, 64), Ui.Px(tuan, 64)), Anchor = AnchorStyles.None, Margin = new Padding(0, 0, 0, Ui.Px(tuan, 8)) };
-        logo.Paint += (s, e) =>
+        // ---- logo toko (gambar ditanam di program); kalau tidak ditemukan, pakai lingkaran biru
+        Control logo;
+        var gambar = LogoToko.Muat();
+        if (gambar != null)
         {
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            int t = Ui.Px(tuan, 7);
-            using var pena = new Pen(biru, t);
-            e.Graphics.DrawEllipse(pena, t / 2, t / 2, logo.Width - t - 1, logo.Height - t - 1);
-        };
+            logo = new PictureBox
+            {
+                Image = gambar,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Size = new Size(Ui.Px(tuan, 240), Ui.Px(tuan, 89)),
+                Anchor = AnchorStyles.None,
+                Margin = new Padding(0, 0, 0, Ui.Px(tuan, 10)),
+            };
+        }
+        else
+        {
+            var lingkaran = new Panel { Size = new Size(Ui.Px(tuan, 64), Ui.Px(tuan, 64)), Anchor = AnchorStyles.None, Margin = new Padding(0, 0, 0, Ui.Px(tuan, 8)) };
+            lingkaran.Paint += (s, e) =>
+            {
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                int t = Ui.Px(tuan, 7);
+                using var pena = new Pen(biru, t);
+                e.Graphics.DrawEllipse(pena, t / 2, t / 2, lingkaran.Width - t - 1, lingkaran.Height - t - 1);
+            };
+            logo = lingkaran;
+        }
 
         var judul = new Label { Text = "MASUK KASIR", Dock = DockStyle.Fill, AutoSize = true, TextAlign = ContentAlignment.MiddleCenter, Font = new Font("Segoe UI", 18f, FontStyle.Bold), ForeColor = Color.FromArgb(0x22, 0x22, 0x22) };
         var toko = new Label { Text = Db.NamaToko, Dock = DockStyle.Fill, AutoSize = true, TextAlign = ContentAlignment.MiddleCenter, ForeColor = Color.Gray, Margin = new Padding(3, 0, 3, Ui.Px(tuan, 16)) };

@@ -45,6 +45,7 @@ public class StrukForm : Form
         // jadi tidak terpotong dan tidak ada scrollbar kosong.
         var isi = new Label
         {
+            Dock = DockStyle.Top,
             AutoSize = true,
             UseMnemonic = false,
             Font = new Font("Courier New", 10f),
@@ -56,6 +57,22 @@ public class StrukForm : Form
         var kotak = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, AutoScroll = true };
         kotak.Controls.Add(isi);
 
+        // logo toko di bagian paling atas struk (ditambah setelah isi, jadi di-dock paling atas)
+        Panel logoPanel = null;
+        var gambar = LogoToko.Muat();
+        if (gambar != null)
+        {
+            logoPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = Ui.Px(this, 92),
+                BackColor = Color.White,
+                Padding = new Padding(Ui.Px(this, 14), Ui.Px(this, 14), Ui.Px(this, 14), 0),
+            };
+            logoPanel.Controls.Add(new PictureBox { Dock = DockStyle.Fill, Image = gambar, SizeMode = PictureBoxSizeMode.Zoom, BackColor = Color.White });
+            kotak.Controls.Add(logoPanel);
+        }
+
         var tutup = new Button { Text = "Tutup (Enter)", Dock = DockStyle.Bottom, Height = Ui.Px(this, 42) };
         tutup.Click += (s, a) => Close();
 
@@ -65,7 +82,7 @@ public class StrukForm : Form
 
         var pref = isi.PreferredSize;
         int tinggiMax = Ui.Px(this, 640);
-        int tinggi = pref.Height + tutup.Height;
+        int tinggi = pref.Height + tutup.Height + (logoPanel != null ? logoPanel.Height : 0);
         bool scroll = tinggi > tinggiMax;
         ClientSize = new Size(
             pref.Width + (scroll ? SystemInformation.VerticalScrollBarWidth : 0),
