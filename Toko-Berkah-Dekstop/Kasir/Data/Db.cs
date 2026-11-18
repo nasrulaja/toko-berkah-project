@@ -213,7 +213,8 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
     }
 
     // Kirim isi antrian (transaksi + detail, stok_mutasi, tutup_buku).
-    static int KirimAntrian(int userId)
+    // Mengembalikan jumlah yang berhasil dikirim beserta daftar yang gagal.
+    static (int terkirim, List<string> gagal) KirimAntrian(int userId)
     {
         var antrian = new List<(long Id, string Entitas, string RefId, JsonObject Isi)>();
         using (var c = Open())
@@ -226,28 +227,53 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
         }
 
         int n = 0;
+        var gagal = new List<string>();
         foreach (var a in antrian)
         {
-            switch (a.Entitas)
+            try
             {
-                case "transaksi":
-                    {
-                        // transaksi harus masuk dulu supaya dapat id Supabase,
-                        // baru detail-nya boleh dikirim.
+                switch (a.Entitas)
+                {
+                    case "transaksi":
+                        {
+                            // transaksi harus masuk dulu supaya dapat id Supabase,
+                            // baru detail-nya boleh dikirim.
+                            a.Isi["user_id"] = userId;
+                            var res = PostTransaksiUnik(a.Isi);
+                            if (res.Count > 0)
+                                KirimDetailTransaksi(a.RefId, res[0]["id"]!.GetValue<int>());
+                            break;
+                        }
+                    case "tutup_buku":
                         a.Isi["user_id"] = userId;
-                        var res = PostTransaksiUnik(a.Isi);
-                        if (res.Count > 0)
-                            KirimDetailTransaksi(a.RefId, res[0]["id"]!.GetValue<int>());
+                        try
+                        {
+                            Supa.Post("tutup_buku", new JsonArray { a.Isi }, ambilId: false);
+                        }
+                        catch (Exception e) when (e.Message.Contains("23505"))
+                        {
+                            // Tutup buku tanggal ini sudah ada di server (mis. dikirim
+                            // dari perangkat lain). Perbarui angkanya, jangan gagal terus.
+                            var tanggal = a.Isi["tanggal"]?.ToString() ?? "";
+                            var isi = (JsonObject)a.Isi.DeepClone();
+                            isi.Remove("tanggal");
+                            Supa.Patch($"tutup_buku?tanggal=eq.{Uri.EscapeDataString(tanggal)}", isi);
+                        }
                         break;
-                    }
-                case "tutup_buku":
-                    a.Isi["user_id"] = userId;
-                    Supa.Post("tutup_buku", new JsonArray { a.Isi }, ambilId: false);
-                    break;
-                case "stok_mutasi":
-                    a.Isi["user_id"] = userId;
-                    Supa.Post("stok_mutasi", new JsonArray { a.Isi }, ambilId: false);
-                    break;
+                    case "stok_mutasi":
+                        a.Isi["user_id"] = userId;
+                        Supa.Post("stok_mutasi", new JsonArray { a.Isi }, ambilId: false);
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                // JANGAN hapus baris antrian kalau pengiriman gagal: data penjualan
+                // harus tetap tersimpan untuk dikirim nanti. Satu baris gagal juga
+                // tidak boleh menggagalkan baris lain (mis. tutup_buku tanggal yang
+                // sudah ada di server tidak boleh menahan transaksi berikutnya).
+                gagal.Add($"{a.Entitas} ({a.RefId}): {Ringkas(e.Message)}");
+                continue;
             }
 
             using var c = Open();
@@ -257,7 +283,14 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
             cmd.ExecuteNonQuery();
             n++;
         }
-        return n;
+        return (n, gagal);
+    }
+
+    // Ambil inti pesan galat agar bisa ditampilkan singkat ke pengguna.
+    static string Ringkas(string pesan)
+    {
+        var s = pesan.Replace("\r", " ").Replace("\n", " ").Trim();
+        return s.Length > 160 ? s[..160] + "..." : s;
     }
 
     // Supabase mewajibkan kode_transaksi unik. Kalau kode dari desktop sudah
@@ -279,12 +312,36 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
                 }
                 catch (Exception e) when (e.Message.Contains("23505"))
                 {
-                    nomor++; // kode sudah dipakai, coba nomor berikutnya
+                    // Kode ini SUDAH ADA di server. Bisa dua sebab:
+                    //  (a) memang dipakai transaksi lain -> pakai nomor berikutnya;
+                    //  (b) ini transaksi KITA yang sebenarnya sudah terkirim, lalu
+                    //      responsnya timeout sehingga Supa.Post mengulang kirim.
+                    //      Kalau dibiarkan, satu struk tercatat dua kali di web.
+                    // Kasus (b) dikenali dari waktu + total yang sama persis,
+                    // dan itu berarti tidak perlu dikirim lagi.
+                    var sudahAda = CariTransaksiSama(isi);
+                    if (sudahAda.Count > 0) return sudahAda;
+
+                    nomor++; // kasus (a): coba nomor urut berikutnya
                 }
             }
             throw new Exception("Gagal membuat kode transaksi unik.");
         }
         return Supa.Post("transaksi", new JsonArray { isi });
+    }
+
+    // Cari transaksi di Supabase yang waktu & totalnya sama dengan isi antrian.
+    // Dipakai untuk mencegah satu struk tercatat dua kali saat kiriman diulang.
+    static List<JsonObject> CariTransaksiSama(JsonObject isi)
+    {
+        var waktu = isi["waktu"]?.ToString();
+        var total = isi["total"]?.ToString();
+        if (string.IsNullOrEmpty(waktu) || string.IsNullOrEmpty(total)) return new();
+
+        var baris = Supa.Get($"transaksi?select=id,kode_transaksi,waktu,total" +
+                             $"&waktu=eq.{Uri.EscapeDataString(waktu)}&total=eq.{total}");
+        // Hanya percaya kalau benar-benar ada satu baris yang identik.
+        return baris.Count == 1 ? baris : new();
     }
 
     // Barcode/nama lokal -> id produk Supabase. Dipakai agar detail transaksi
@@ -590,9 +647,18 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
             int userId = Supa.UserIdUntuk(emailKasir);
             int nProduk = KirimProdukBaru();
             int nUbah = KirimPerubahanProduk();
-            int nAntri = KirimAntrian(userId);
+            var (nAntri, gagal) = KirimAntrian(userId);
 
             int total = nProduk + nUbah + nAntri;
+
+            // Kalau ada antrian yang gagal, jangan bilang "semua tersinkron":
+            // sisa antrian masih tersimpan lokal dan akan dicoba lagi nanti.
+            if (gagal.Count > 0)
+                return (false,
+                    $"{total} data terkirim, tetapi {gagal.Count} data belum bisa dikirim " +
+                    $"dan masih tersimpan di komputer ini:\n\n- " +
+                    string.Join("\n- ", gagal));
+
             return (true, total == 0 ? "Semua data sudah tersinkron." : $"{total} data tersinkron ke Supabase.");
         }
         catch (Exception e)
