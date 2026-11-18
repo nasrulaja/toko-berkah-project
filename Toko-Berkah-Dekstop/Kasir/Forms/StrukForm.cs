@@ -8,6 +8,17 @@ public class StrukForm : Form
     {
         const int w = 34;
         string Tengah(string s) => s.Length >= w ? s : new string(' ', (w - s.Length) / 2) + s;
+        // "Rp" selalu di kolom yang sama, digit rata kanan di belakangnya (lebar 11 = sampai 999.999.999).
+        string Uang(long v) => "Rp" + v.ToString("#,##0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.').PadLeft(11);
+        // Teks kiri + angka rata kanan: angka selalu berakhir di kolom ke-w, berapa pun digitnya.
+        // Kalau tidak muat satu baris, angka pindah ke baris bawah (tetap rata kanan).
+        string Kanan(string kiri, string kanan)
+        {
+            int spasi = w - kiri.Length - kanan.Length;
+            return spasi >= 1
+                ? kiri + new string(' ', spasi) + kanan
+                : kiri + "\n" + kanan.PadLeft(w);
+        }
 
         // waktu di database "2026-11-13 13:35:12" -> tampil "13/11/2026" + jam
         var wkt = DateTime.ParseExact(waktu, "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
@@ -23,13 +34,12 @@ public class StrukForm : Form
         foreach (var i in items)
         {
             baris.Add(i.Nama.Length > w ? i.Nama[..w] : i.Nama);
-            var kiri = $"  {i.Qty} x {Db.Rp(i.Harga)}";
-            baris.Add(kiri + Db.Rp(i.Qty * i.Harga).PadLeft(Math.Max(0, w - kiri.Length)));
+            baris.Add(Kanan($"  {i.Qty} x {Db.Rp(i.Harga)}", Uang(i.Qty * i.Harga)));
         }
         baris.Add(new string('-', w));
-        baris.Add("TOTAL".PadRight(12) + Db.Rp(total).PadLeft(w - 12));
-        baris.Add("BAYAR".PadRight(12) + Db.Rp(uang).PadLeft(w - 12));
-        baris.Add("KEMBALI".PadRight(12) + Db.Rp(kembali).PadLeft(w - 12));
+        baris.Add(Kanan("TOTAL", Uang(total)));
+        baris.Add(Kanan("BAYAR", Uang(uang)));
+        baris.Add(Kanan("KEMBALI", Uang(kembali)));
         baris.Add(new string('-', w));
         baris.Add(Tengah("Terima kasih"));
         baris.Add(Tengah("Selamat belanja lagi"));

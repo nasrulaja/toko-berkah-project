@@ -219,7 +219,7 @@ public class MainForm : Form
 
         // ---- tombol bawah
         var bawah = new FlowLayoutPanel { Dock = DockStyle.Bottom, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Padding = new Padding(0, 6, 0, 0) };
-        var btnQty = new Button { Text = "Ubah Jumlah (dobel klik)", AutoSize = true };
+        var btnQty = new Button { Text = "Ubah Jumlah (Dobel Klik)", AutoSize = true };
         btnQty.Click += (s, e) => UbahQty();
         var btnHapus = new Button { Text = "Hapus Item (Del)", AutoSize = true };
         btnHapus.Click += (s, e) => HapusItem();

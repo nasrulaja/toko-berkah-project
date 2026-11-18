@@ -57,7 +57,7 @@ public class LaporanForm : Form
             filter.Controls.Add(b);
             return b;
         }
-        var btnExcel = Tombol("Download Excel", Unduh);
+        var btnExcel = Tombol("Unduh Excel", Unduh);
         btnExcel.Margin = new Padding(Ui.Px(this, 24), 1, 3, 3);
 
         // ---- ringkasan: empat kotak angka
