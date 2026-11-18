@@ -9,7 +9,8 @@ import com.tokoberkah.app.databinding.ActivityLoginBinding
 
 /**
  * Layar 1: Login Toko Berkah.
- * Kredensial dummy: pemilik@tokoberkah.com / tokoberkah123 (sudah terisi).
+ * Kredensial lokal pemilik@tokoberkah.com / tokoberkah123 tetap berlaku (offline).
+ * Kredensial lain diverifikasi ke backend (POST /api/auth/login).
  */
 class LoginActivity : AppCompatActivity() {
 
@@ -57,13 +58,35 @@ class LoginActivity : AppCompatActivity() {
         }
 
         if (email == VALID_EMAIL && password == VALID_PASSWORD) {
-            startActivity(Intent(this, StockCheckActivity::class.java))
-            finish()
-        } else {
-            binding.errorPassword.visibility = View.VISIBLE
-            binding.errorPassword.text = getString(R.string.login_error_invalid)
-            Toast.makeText(this, R.string.login_error_invalid, Toast.LENGTH_SHORT).show()
+            enterApp()
+            return
         }
+
+        // Kredensial lain: verifikasi ke backend (thread latar)
+        binding.btnLogin.isEnabled = false
+        Thread {
+            val hasil = com.tokoberkah.pos.data.api.ApiClient.login(email, password)
+            runOnUiThread {
+                binding.btnLogin.isEnabled = true
+                when (hasil) {
+                    com.tokoberkah.pos.data.api.ApiClient.LoginResult.OK -> enterApp()
+                    com.tokoberkah.pos.data.api.ApiClient.LoginResult.DITOLAK -> {
+                        binding.errorPassword.visibility = View.VISIBLE
+                        binding.errorPassword.text = getString(R.string.login_error_invalid)
+                        Toast.makeText(this, R.string.login_error_invalid, Toast.LENGTH_SHORT).show()
+                    }
+                    com.tokoberkah.pos.data.api.ApiClient.LoginResult.OFFLINE -> {
+                        binding.errorPassword.visibility = View.VISIBLE
+                        binding.errorPassword.text = getString(R.string.login_error_offline)
+                    }
+                }
+            }
+        }.start()
+    }
+
+    private fun enterApp() {
+        startActivity(Intent(this, StockCheckActivity::class.java))
+        finish()
     }
 
     companion object {

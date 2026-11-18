@@ -43,6 +43,51 @@ object ApiClient {
     var lastError: String? = null
         private set
 
+    /** Hasil percobaan login ke backend. */
+    enum class LoginResult { OK, DITOLAK, OFFLINE }
+
+    /**
+     * Login nyata (POST /api/auth/login) — token pengguna dipakai untuk semua
+     * panggilan berikutnya. DIPANGGIL DI THREAD LATAR.
+     * DITOLAK = server menolak sandi; OFFLINE = server tak terjangkau.
+     */
+    @Synchronized
+    fun login(email: String, password: String): LoginResult {
+        val payload = JSONObject().put("email", email).put("password", password)
+        for (i in BASES.indices) {
+            val idx = (baseIndex + i) % BASES.size
+            try {
+                http.newCall(
+                    Request.Builder()
+                        .url(BASES[idx] + "auth/login")
+                        .method("POST", payload.toString().toRequestBody(JSON))
+                        .build()
+                ).execute().use { res ->
+                    baseIndex = idx
+                    if (res.isSuccessful) {
+                        val t = try {
+                            JSONObject(res.body?.string() ?: "").optString("token")
+                        } catch (e: Exception) {
+                            ""
+                        }
+                        if (t.isEmpty()) {
+                            lastError = "respons login tidak valid"
+                            return LoginResult.OFFLINE
+                        }
+                        token = t
+                        return LoginResult.OK
+                    }
+                    if (res.code == 401) return LoginResult.DITOLAK
+                    lastError = "HTTP ${res.code}"
+                    return LoginResult.OFFLINE
+                }
+            } catch (e: Exception) {
+                lastError = e.message ?: "jaringan tidak tersedia"
+            }
+        }
+        return LoginResult.OFFLINE
+    }
+
     /** GET terautentikasi; null bila gagal. */
     fun get(path: String): String? {
         val t = ensureToken() ?: return null

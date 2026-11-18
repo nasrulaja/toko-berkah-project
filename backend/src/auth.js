@@ -1,7 +1,10 @@
-/* Login & token — hash sandi mengikuti format desktop (Toko-Berkah-Dekstop):
-   "base64(garam):base64(hash)" PBKDF2-SHA256, 100.000 iterasi, 32 byte.
+/* Login & token — hash sandi mengikuti format yang dipakai di database:
+   - bcrypt ("$2a$...", dipakai tabel users saat ini)
+   - "base64(garam):base64(hash)" PBKDF2-SHA256, 100.000 iterasi, 32 byte
+     (format lama Toko-Berkah-Dekstop — tetap didukung)
    Token: JWT sederhana (HMAC-SHA256) tanpa pustaka tambahan. */
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const { JWT_SECRET, SERVICE_KEY } = require('./config');
 const { get, ApiError } = require('./supabase');
 
@@ -9,9 +12,11 @@ const PBKDF2_ITER = 100000;
 const PBKDF2_LEN = 32;
 const TOKEN_TTL_MS = 12 * 60 * 60 * 1000; // 12 jam
 
-/** Cocokkan sandi dengan hash "garam:hash" (PBKDF2-SHA256). */
+/** Cocokkan sandi: bcrypt ("$2a$...") atau format lama "garam:hash" (PBKDF2-SHA256). */
 function verifyPassword(sandi, stored) {
-  const bagian = String(stored || '').split(':');
+  const h = String(stored || '');
+  if (h.startsWith('$2')) return bcrypt.compareSync(String(sandi), h);
+  const bagian = h.split(':');
   if (bagian.length !== 2) return false;
   let garam, benar;
   try {

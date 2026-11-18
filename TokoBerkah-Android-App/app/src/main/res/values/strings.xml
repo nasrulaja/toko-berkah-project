@@ -36,6 +36,7 @@
     <string name="login_button">Masuk ke Toko</string>
     <string name="login_error_empty">Email dan kata sandi wajib diisi</string>
     <string name="login_error_invalid">Email atau kata sandi salah</string>
+    <string name="login_error_offline">Tidak ada koneksi ke server. Periksa jaringan lalu coba lagi.</string>
 
     <!-- ===== 2. Pemindai Barcode ===== -->
     <string name="scan_title">Pemindai Barcode</string>
