@@ -52,6 +52,8 @@
 }
 .tb3-splash.tb3-skip{animation:tb3-out .3s ease forwards}
 .tb3-splash.tb3-done{display:none}
+/* Sudah login: splash disembunyikan sejak paint pertama (dipasang skrip paling atas) */
+.tb3-off .tb3-splash{display:none}
 .tb3-splash *{box-sizing:border-box}
 @keyframes tb3-out{to{clip-path:circle(0% at 50% 50%);visibility:hidden}}
 .tb3-blob{position:absolute;border-radius:50%}
@@ -135,6 +137,13 @@
 }
     </style>
 
+    <!-- Penanda "sudah login": dipasang sebelum <body> dilukis agar splash tidak
+         sempat berkedip saat halaman di-reload. Kunci sesi = KS di js/core/db.js. -->
+    <script>
+      try{ if (localStorage.getItem('berkah_session')) document.documentElement.classList.add('tb3-off'); }catch(e){}
+    </script>
+  </head>
+
   <body>
     <!-- ====================================================================
          BAGIAN 2 ΓÇö BADAN DOKUMEN
@@ -185,10 +194,16 @@
 
     <!-- SPLASH: tutup otomatis setelah animasi selesai, atau lewati dengan klik. -->
     <script>
-    /* SPLASH 3D: kunci scroll -> jalan animasi -> lepas (klik = lewati, FPS rendah = mode lite/ultra) */
+    /* SPLASH 3D: hanya tampil sebelum login (belum ada sesi tersimpan).
+       Sudah login -> splash disembunyikan seketika, halaman langsung siap.
+       Klik = lewati, FPS rendah = mode lite/ultra. */
     (function(){
       var s=document.getElementById('tb3-splash');if(!s)return;
       var h=document.documentElement,sc=document.getElementById('tb3-scene'),t;
+      // penanda sesi dari js/core/db.js (KS). Ada isinya = user sudah login.
+      var sudah=false;
+      try{sudah=!!localStorage.getItem('berkah_session')}catch(e){}
+      if(sudah){s.remove();return}
       h.classList.add('tb3-lock');
       // deteksi perangkat: HP / RAM kecil / CPU sedikit langsung pakai mode lite
       var lv=((navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory||8)<=4||innerWidth<700)?1:0;
