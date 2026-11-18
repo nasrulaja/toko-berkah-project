@@ -1,0 +1,99 @@
+/* ==========================================================================
+   TOKO BERKAH — login.css
+   Halaman login (aurora, merek/logo, kartu, tombol biru permen) dan logo di bar atas.
+   Dipisah dari splash lama (css/splash.css) yang diganti splash 3D di index.html.
+   ========================================================================== */
+
+@keyframes sp-float { 50% { transform: translateY(-22px) scale(1.04); } }
+/* --- Halaman login: aurora, bola kaca melayang, merek, chip fitur --- */
+.lg { background: transparent !important; }
+.lg-o { position: absolute; z-index: 0; border-radius: 50%; pointer-events: none; background: linear-gradient(145deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.12)); border: 1px solid rgba(255, 255, 255, 0.75); box-shadow: 0 18px 50px rgba(31, 94, 150, 0.16), inset 0 1px 0 #fff; -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); animation: sp-float 8s ease-in-out infinite; }
+.lg-o1 { width: 190px; height: 190px; left: 9%; top: 14%; }
+.lg-o2 { width: 110px; height: 110px; right: 14%; top: 20%; animation-delay: -3s; }
+.lg-o3 { width: 250px; height: 250px; right: 8%; bottom: -50px; animation-delay: -5s; }
+.lg-brand { display: grid; justify-items: center; gap: 6px; margin-bottom: 18px; text-align: center; }
+.lg-logo { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 20px; color: #05263d; background: linear-gradient(160deg, #7fd2ff, #2c9fe6); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 10px 26px rgba(44, 159, 230, 0.42); }
+.lg-logo svg { width: 32px; height: 32px; }
+.lg-brand b { margin-top: 6px; font-size: 24px; font-weight: 800; letter-spacing: 0.14em; color: #0d3b66; }
+.lg-brand span:last-child { font-size: 13.5px; font-weight: 600; color: #3b6486; }
+.lg-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
+.lg-chips li { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; color: #0d3b66; background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(255, 255, 255, 0.9); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(31, 94, 150, 0.1); }
+.lg-chips svg { width: 15px; height: 15px; }
+.lg-ft { margin: 14px 0 0; text-align: center; font-size: 12px; color: #6b8aa6; }
+.lg-c { flex-direction: column; }
+
+@media (max-width: 640px) {
+  .lg-o1 { width: 120px; height: 120px; left: -30px; }
+  .lg-o2 { display: none; }
+  .lg-o3 { width: 170px; height: 170px; right: -40px; }
+  .sp-o1 { width: 130px; height: 130px; }
+  .sp-o2 { display: none; }
+  .sp-o3 { width: 190px; height: 190px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sp-o, .lg-o, .sp-card, .sp-caret { animation: none; }
+}
+.lg-c > * { width: 100%; max-width: 400px; }
+
+/* --- Perapian login: muat satu layar, tanpa gulir, hiasan lebih halus --- */
+.lg-c { padding: 20px 16px; gap: 0; }
+.lg-brand { margin-bottom: 14px; gap: 4px; }
+.lg-logo { width: 52px; height: 52px; border-radius: 17px; }
+.lg-logo svg { width: 28px; height: 28px; }
+.lg-brand b { margin-top: 4px; font-size: 22px; }
+.lg-brand span:last-child { font-size: 13px; }
+.lg-card { padding: 26px 26px 24px; }
+.lg-card .lg-t { margin-bottom: 2px; }
+.lg-chips { flex-wrap: nowrap; gap: 6px; max-width: 460px; margin-top: 16px; }
+.lg-chips li { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+.lg-c > .lg-chips { max-width: 460px; }
+.lg-ft { margin-top: 10px; }
+/* bola kaca: lebih tipis, bertepi lembut, tidak tampak seperti piringan putih */
+.lg-o, .sp-o { background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.08) 70%); border-color: rgba(255, 255, 255, 0.55); box-shadow: 0 14px 40px rgba(31, 94, 150, 0.1); }
+@media (max-width: 480px) {
+  .lg-chips li { padding: 6px 8px; font-size: 11.5px; gap: 4px; }
+  .lg-chips svg { width: 13px; height: 13px; }
+}
+.lg-c { box-sizing: border-box; min-height: 100vh; min-height: 100dvh; } .lg { min-height: 100vh; min-height: 100dvh; }
+body:has(.lg) { padding-bottom: 0 !important; }
+
+/* logo monogram "TB" menggantikan ikon toko; tanpa bola kaca */
+.sp-logo, .lg-logo { font-weight: 800; letter-spacing: 0.04em; color: #fff; text-shadow: 0 1px 2px rgba(9, 44, 76, 0.3); background: linear-gradient(160deg, #4cb8f5, #1b7fcf); }
+.sp-logo { font-size: 30px; }
+.lg-logo { font-size: 21px; }
+.lg-o, .sp-o { display: none !important; }
+
+/* --- Tombol Masuk: biru permen (candy) mengilap --- */
+.lg .lg-card .lg-b {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 70, 140, 0.45);
+  background: linear-gradient(180deg, #7fdcff 0%, #35b6ff 45%, #0f8fe8 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -3px 6px rgba(0, 90, 180, 0.35),
+    0 10px 22px rgba(15, 143, 232, 0.45),
+    0 2px 4px rgba(15, 143, 232, 0.3);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.lg .lg-card .lg-b:hover { filter: brightness(1.06) saturate(1.1); transform: translateY(-1px); }
+.lg .lg-card .lg-b:active { transform: translateY(1px) scale(0.99); box-shadow: inset 0 2px 6px rgba(0, 90, 180, 0.4), 0 4px 10px rgba(15, 143, 232, 0.35); }
+
+/* Di layar sempit: rapatkan huruf & padding agar kartu tidak melebihi layar */
+
+
+/* --- Logo Toko Berkah (gambar) --- */
+@keyframes sp-logo { from { opacity: 0; transform: translateY(10px) scale(0.8) rotate(-6deg); } }
+.lg-brand { margin-bottom: 14px; }
+.lg-img { width: min(240px, 62vw); height: auto; filter: drop-shadow(0 8px 18px rgba(44, 159, 230, 0.25)); animation: sp-logo 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+/* ikon kecil di sidebar & header HP: tanpa kotak, tampil apa adanya */
+.logo i.lgi, .brand i.lgi { background: transparent !important; box-shadow: none !important; border: 0 !important; width: 38px; height: 38px; }
+i.lgi img { width: 100%; height: 100%; object-fit: contain; display: block; }
+@media (prefers-reduced-motion: reduce) { .sp-img, .lg-img { animation: none; } }
+
+/* Logo di bar atas (semua ukuran layar): hanya ikon, judul halaman ada di bawahnya */
+.top .brand { display: inline-flex !important; margin-right: 10px; }
+.top .brand b { display: none; }
+.top .brand i.lgi { width: 48px; height: 48px; margin: -6px 0; }
