@@ -30,19 +30,47 @@ let S = {};
 /** Mengisi filter halaman dari tautan (mis. #laporan?lp=hari) sebelum halaman digambar. | param: o (objek kunci-nilai) | return: void */
 export const terapkanFilter = (o) => Object.assign(S, o);
 
-/** Daftar periode filter dan batas awalnya (ms). | param: tf (kunci periode) | return: ms awal periode */
+/** Daftar periode filter. | param: - | return: array [kunci, label] */
 const PERIODE = [
   ['semua', 'Semua data'],
   ['hari', 'Hari ini'],
   ['7hari', '7 hari terakhir'],
   ['30hari', '30 hari terakhir'],
   ['bulan', 'Bulan ini'],
+  ['bulankmr', 'Bulan kemarin'],
   ['tahun', 'Tahun ini']
 ];
-const awalPeriode = (tf) => {
+/** Batas awal & akhir periode (ms). Akhir bersifat eksklusif (boleh undefined = tanpa batas). | param: tf (kunci periode) | return: { awal, akhir } */
+const rentangPeriode = (tf) => {
   const k = new Date(),
-    h = new Date(k.getFullYear(), k.getMonth(), k.getDate()).getTime();
-  return { semua: 0, hari: h, '7hari': h - 6 * 864e5, '30hari': h - 29 * 864e5, bulan: new Date(k.getFullYear(), k.getMonth(), 1).getTime(), tahun: new Date(k.getFullYear(), 0, 1).getTime() }[tf];
+    th = k.getFullYear(),
+    bl = k.getMonth(),
+    h = new Date(th, bl, k.getDate()).getTime(),
+    // Bulan kemarin: 1 .. akhir bulan lalu. Akhir bulan lalu = tanggal 0 bulan ini,
+    // jadi otomatis benar walau kemarin Januari, atau Februari saat tahun kabisat.
+    awalKmr = new Date(th, bl - 1, 1).getTime(),
+    akhirKmr = new Date(th, bl, 1).getTime();
+  switch (tf) {
+    case 'hari': return { awal: h, akhir: h + 864e5 };
+    case '7hari': return { awal: h - 6 * 864e5 };
+    case '30hari': return { awal: h - 29 * 864e5 };
+    case 'bulan': return { awal: new Date(th, bl, 1).getTime(), akhir: new Date(th, bl + 1, 1).getTime() };
+    case 'bulankmr': return { awal: awalKmr, akhir: akhirKmr };
+    case 'tahun': return { awal: new Date(th, 0, 1).getTime(), akhir: new Date(th + 1, 0, 1).getTime() };
+    default: return { awal: 0 };
+  }
+};
+
+/** Batas awal periode dalam ms (untuk perbandingan sederhana). | param: tf (kunci periode) | return: ms */
+const awalPeriode = (tf) => rentangPeriode(tf).awal;
+
+/** Saring transaksi sesuai periode. Memakai batas akhir juga, supaya "bulan kemarin" tidak ikut bulan ini. | param: daftar (array), tf (kunci periode) | return: array */
+const dalamPeriode = (daftar, tf) => {
+  const { awal, akhir } = rentangPeriode(tf);
+  return daftar.filter((x) => {
+    const w = new Date(x.waktu).getTime();
+    return w >= awal && (akhir === undefined || w < akhir);
+  });
 };
 
 const prod = (id) => db.produk.find((x) => x.id == id);
@@ -736,7 +764,7 @@ export function hasilTutupBuku() {
 
 export function laporan() {
   /* --- Filter periode: menyaring SEMUA angka & tabel di halaman ini --- */
-  const tf = ['semua', 'hari', '7hari', '30hari', 'bulan', 'tahun'].includes(S.lp) ? S.lp : 'semua';
+  const tf = PERIODE.some(([k]) => k === S.lp) ? S.lp : 'semua';
   const batas = awalPeriode(tf);
   const labelPeriode = {
     semua: 'seluruh data',
@@ -744,10 +772,11 @@ export function laporan() {
     '7hari': '7 hari terakhir',
     '30hari': '30 hari terakhir',
     bulan: 'bulan ini',
+    bulankmr: 'bulan kemarin',
     tahun: 'tahun ini'
   }[tf];
   // transaksi yang lolos filter; idOk dipakai untuk menyaring detail
-  const trx = db.transaksi.filter((t) => new Date(t.waktu).getTime() >= batas),
+  const trx = dalamPeriode(db.transaksi, tf),
     idOk = new Set(trx.map((t) => t.id));
 
   const totJual = trx.reduce((a, t) => a + t.total, 0);
@@ -844,7 +873,7 @@ export function transaksi() {
     tu = S.tu === 'total' ? 'total' : 'baru',
     batas = awalPeriode(tp),
     semua = [...db.transaksi].reverse(),
-    rec = semua.filter((t) => new Date(t.waktu).getTime() >= batas).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
+    rec = dalamPeriode(semua, tp).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
     nKunci = rec.filter(terkunci).length,
     label = PERIODE.find(([k]) => k === tp)[1].toLowerCase();
   setTimeout(() => {
