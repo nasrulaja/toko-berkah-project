@@ -60,20 +60,37 @@ public static class Supa
         siap = true;
     }
 
+    // Jalankan aksi HTTP dengan percobaan ulang.
+    // Koneksi pertama sering ditutup paksa oleh jaringan/proxy
+    // ("An existing connection was forcibly closed by the remote host"),
+    // sehingga tanpa retry sinkronisasi terlihat gagal padahal server normal.
+    static T Coba<T>(Func<T> aksi)
+    {
+        const int maks = 3;
+        for (int i = 1; ; i++)
+        {
+            try { return aksi(); }
+            catch (Exception e) when (i < maks && (e is HttpRequestException || e is IOException))
+            {
+                Thread.Sleep(300 * i); // jeda singkat sebelum mencoba lagi
+            }
+        }
+    }
+
     // GET -> daftar baris JSON.
-    public static List<JsonObject> Get(string path)
+    public static List<JsonObject> Get(string path) => Coba(() =>
     {
         PastikanSekali();
         using var r = Req(HttpMethod.Get, path);
         using var res = Http.Send(r);
         var txt = new StreamReader(res.Content.ReadAsStream()).ReadToEnd();
-        if (!res.IsSuccessStatusCode) throw new Exception($"{(int)res.StatusCode} {txt}");
+        if (!res.IsSuccessStatusCode) throw new Exception($"{((int)res.StatusCode)} {txt}");
         var arr = JsonNode.Parse(txt) as JsonArray ?? new JsonArray();
         return arr.OfType<JsonObject>().ToList();
-    }
+    });
 
     // Kirim satu atau banyak baris. return=representation supaya id barunya terbaca.
-    public static List<JsonObject> Post(string tabel, JsonArray rows, bool ambilId = true)
+    public static List<JsonObject> Post(string tabel, JsonArray rows, bool ambilId = true) => Coba(() =>
     {
         PastikanSekali();
         using var r = Req(HttpMethod.Post, tabel);
@@ -81,14 +98,14 @@ public static class Supa
         r.Content = new StringContent(rows.ToJsonString(), Encoding.UTF8, "application/json");
         using var res = Http.Send(r);
         var txt = new StreamReader(res.Content.ReadAsStream()).ReadToEnd();
-        if (!res.IsSuccessStatusCode) throw new Exception($"{(int)res.StatusCode} {txt}");
+        if (!res.IsSuccessStatusCode) throw new Exception($"{((int)res.StatusCode)} {txt}");
         if (!ambilId || string.IsNullOrWhiteSpace(txt)) return new();
         var arr = JsonNode.Parse(txt) as JsonArray ?? new JsonArray();
         return arr.OfType<JsonObject>().ToList();
-    }
+    });
 
     // PATCH untuk memperbarui baris yang sudah ada (mis. stok & harga produk).
-    public static void Patch(string path, JsonObject body)
+    public static void Patch(string path, JsonObject body) => Coba<object?>(() =>
     {
         PastikanSekali();
         using var r = Req(HttpMethod.Patch, path);
@@ -96,8 +113,9 @@ public static class Supa
         r.Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
         using var res = Http.Send(r);
         var txt = new StreamReader(res.Content.ReadAsStream()).ReadToEnd();
-        if (!res.IsSuccessStatusCode) throw new Exception($"{(int)res.StatusCode} {txt}");
-    }
+        if (!res.IsSuccessStatusCode) throw new Exception($"{((int)res.StatusCode)} {txt}");
+        return null;
+    });
 
     // Uji koneksi untuk halaman Pengaturan / status di pojok jendela.
     public static (bool ok, string pesan) Uji()

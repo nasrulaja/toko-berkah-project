@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 using Microsoft.Data.Sqlite;
@@ -596,8 +597,13 @@ UPDATE produk SET kategori='Bahan Pokok' WHERE kode IN ('8991004','8991005','899
         }
         catch (Exception e)
         {
-            // Offline / server tidak terjangkau: data tetap aman di antrian lokal.
-            return (false, e.Message);
+            // Bedakan gangguan jaringan dari kesalahan lain (mis. tabel lokal belum siap).
+            // Sebelumnya semua kegagalan dilabeli "Offline" sehingga menyesatkan.
+            bool jaringan = e is HttpRequestException || e is TaskCanceledException
+                            || e is IOException || e.InnerException is SocketException;
+            return (false, jaringan
+                ? "Tidak dapat menghubungi Supabase (jaringan): " + e.Message
+                : "Sinkronisasi gagal: " + e.Message);
         }
     }
 

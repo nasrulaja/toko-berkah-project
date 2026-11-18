@@ -565,13 +565,20 @@ public class MainForm : Form
         SetStatus("Menyinkronkan ke Supabase…", Color.DimGray);
         try
         {
+            // Tarik dulu produk & kategori terbaru dari web, baru kirim data lokal.
+            // Tanpa langkah ini daftar produk desktop tetap kosong walau online.
+            var (okMasuk, pesanMasuk) = await Task.Run(() => Db.SinkronMasuk());
+
             var (ok, pesan) = await Task.Run(() => Db.SinkronKeluar(pengguna));
             if (ok) SetStatus(pesan, Color.SeaGreen);
-            else SetStatus("Offline — data tersimpan lokal (" + Db.JumlahAntrian() + " menunggu)", Color.DarkOrange);
+            else SetStatus(pesan, Color.DarkOrange);
 
             if (tampilkanHasil)
-                MessageBox.Show(pesan, ok ? "Sinkron berhasil" : "Sinkron gagal",
+                MessageBox.Show(okMasuk ? pesan : pesanMasuk + "\n\n" + pesan,
+                    ok ? "Sinkron berhasil" : "Sinkron gagal",
                     MessageBoxButtons.OK, ok ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+
+            if (okMasuk) Refresh2();
         }
         finally { sedangSinkron = false; }
     }
