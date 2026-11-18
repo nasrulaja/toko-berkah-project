@@ -45,6 +45,7 @@ export const dt = (iso) =>
 export const IC = {
   home: 'M3 11l9-8 9 8M5 10v10h14V10',
   box: 'M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8',
+  scan: 'M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3M7 12h10',
   tag: 'M3 12V3h9l9 9-9 9zM7.5 7.5h.01',
   alert: 'M12 3l10 18H2zM12 10v5M12 18h.01',
   in: 'M12 3v12m0 0l-4-4m4 4l4-4M4 17v4h16v-4',
