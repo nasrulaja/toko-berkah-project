@@ -147,4 +147,49 @@ object ProductRepository {
             )
         )
     }
+
+    /**
+     * Perbarui katalog dari baris backend (GET /api/products) — dipanggil di
+     * UI thread setelah selesai diunduh di thread latar. Mutasi in-place supaya
+     * adapter yang sudah memegang daftar ini ikut melihat perubahan.
+     *
+     * Stok & harga selalu dari server; gambar/lokasi/isi dus/riwayat lama
+     * dipakai ulang bila EAN-nya cocok dengan data dummy.
+     */
+    @Synchronized
+    fun applyRemote(rows: List<com.tokoberkah.pos.data.api.RemoteProduct>) {
+        if (rows.isEmpty()) return
+        val oldByEan = products.associateBy { it.ean }
+        val fresh = rows.map { r ->
+            val old = oldByEan[r.ean]
+            Product(
+                ean = r.ean,
+                name = r.name,
+                categories = when {
+                    r.category != null -> Categories.of(r.category)
+                    old != null -> old.categories
+                    else -> emptyList()
+                },
+                stock = r.stock,
+                location = old?.location ?: "Rak -",
+                imageRes = old?.imageRes ?: imageFor(r.category),
+                badge = old?.badge ?: "",
+                price = r.price,
+                unitsPerBox = old?.unitsPerBox ?: 40,
+                lastIncoming = old?.lastIncoming ?: "",
+                history = old?.history ?: mutableListOf()
+            ).also { it.serverId = r.id }
+        }
+        products.clear()
+        products.addAll(fresh)
+        recentEans.retainAll(fresh.map { it.ean }.toSet())
+    }
+
+    /** Gambar perkiraan untuk produk baru (belum ada di data dummy). */
+    private fun imageFor(category: String?): Int = when (category) {
+        "Mie Instan" -> R.drawable.img_indomie
+        "Sembako", "Bumbu Dapur" -> R.drawable.img_bimoli
+        "Susu & Kopi", "Minuman" -> R.drawable.img_kopi
+        else -> R.drawable.img_gula
+    }
 }

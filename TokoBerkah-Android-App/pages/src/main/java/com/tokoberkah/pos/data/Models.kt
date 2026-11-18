@@ -34,7 +34,9 @@ data class Product(
     var unitsPerBox: Int = 40,
     /** Kapan terakhir produk ini masuk (teks bebas, kosong = sembunyikan baris). */
     val lastIncoming: String = "",
-    val history: MutableList<PriceChange> = mutableListOf()
+    val history: MutableList<PriceChange> = mutableListOf(),
+    /** ID baris di database (Supabase) — null bila belum tersinkron. */
+    var serverId: Int? = null
 ) {
     /** Tag utama, dipakai chip pada kartu Cek Harga. */
     val category: String

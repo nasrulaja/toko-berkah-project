@@ -25,4 +25,13 @@ router.get('/me', requireAuth, (req, res) => {
   });
 });
 
+/**
+ * POST /api/auth/device — token untuk aplikasi Android tanpa login.
+ * Sementara sampai SUPABASE_SERVICE_ROLE_KEY tersedia dan login penuh aktif
+ * (backend/README.md). Bukan keamanan produksi: ancaman utama tetap RLS di Supabase.
+ */
+router.post('/device', (req, res) => {
+  res.json({ token: signToken({ id: 0, nama: 'Aplikasi Android' }) });
+});
+
 module.exports = router;

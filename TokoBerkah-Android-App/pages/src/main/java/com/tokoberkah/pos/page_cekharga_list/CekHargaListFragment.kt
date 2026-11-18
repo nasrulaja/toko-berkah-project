@@ -53,6 +53,16 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
         super.onResume()
         // Harga bisa saja berubah dari halaman Ubah Harga / Barang Masuk
         listAdapter?.notifyDataSetChanged()
+
+        // Sinkronkan katalog dari backend (thread latar, terapkan di UI thread)
+        Thread {
+            val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts() ?: return@Thread
+            activity?.runOnUiThread {
+                if (_binding == null) return@runOnUiThread
+                ProductRepository.applyRemote(rows)
+                listAdapter?.notifyDataSetChanged()
+            }
+        }.start()
     }
 
     @Deprecated("Deprecated in Java")

@@ -27,6 +27,7 @@ class StockCheckActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStockCheckBinding
 
     /** Semua produk / hanya hasil scan (saat kembali dari scanner). */
+    private var products: List<Product> = DummyData.products
     private var visibleProducts: List<Product> = DummyData.products
     private var scanFilterActive = false
     private var restockFilterActive = false
@@ -63,7 +64,7 @@ class StockCheckActivity : AppCompatActivity() {
 
         binding.btnCloseScanResult.setOnClickListener {
             scanFilterActive = false
-            visibleProducts = DummyData.products
+            visibleProducts = products
             render()
         }
 
@@ -88,6 +89,50 @@ class StockCheckActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         render()
+        // Sinkronkan dari backend: harga/stok terbaru (web/desktop) tampil di sini.
+        refreshFromServer()
+    }
+
+    /**
+     * Unduh katalog dari backend (thread latar), petakan ke model halaman ini,
+     * lalu render ulang di UI thread. Bila server mati, data dummy tetap dipakai.
+     */
+    private fun refreshFromServer() {
+        Thread {
+            val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts() ?: return@Thread
+            val mapped = rows.map { mapFromServer(it) }
+            runOnUiThread {
+                products = mapped
+                if (!scanFilterActive) visibleProducts = mapped
+                render()
+            }
+        }.start()
+    }
+
+    /** Petakan baris backend ke model produk halaman Cek Stok. */
+    private fun mapFromServer(r: com.tokoberkah.pos.data.api.RemoteProduct): Product {
+        val old = DummyData.findByEan(r.ean)
+        val cat = r.category
+        return Product(
+            ean = r.ean,
+            name = r.name,
+            price = r.price,
+            unit = old?.unit ?: "Pcs",
+            shelfStock = r.stock,
+            warehouseStock = 0,
+            lastIncoming = old?.lastIncoming ?: "",
+            imageRes = old?.imageRes ?: imageFor(cat),
+            categories = if (cat != null) listOf(cat) else old?.categories ?: emptyList(),
+            unitsPerBox = old?.unitsPerBox ?: 40
+        )
+    }
+
+    /** Gambar perkiraan untuk produk yang belum ada di data dummy. */
+    private fun imageFor(category: String?): Int = when (category) {
+        "Mie Instan" -> R.drawable.product_indomie
+        "Sembako", "Bumbu Dapur" -> R.drawable.product_bimoli
+        "Susu & Kopi", "Minuman" -> R.drawable.product_kopi
+        else -> R.drawable.product_beras
     }
 
     @Deprecated("Deprecated in Java")
@@ -95,7 +140,7 @@ class StockCheckActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_SCAN && resultCode == RESULT_OK) {
             val ean = data?.getStringExtra(EXTRA_SCANNED_EAN)
-            val product = ean?.let { DummyData.findByEan(it) }
+            val product = ean?.let { e -> products.find { it.ean == e } ?: DummyData.findByEan(e) }
             if (product != null) {
                 scanFilterActive = true
                 visibleProducts = listOf(product)
@@ -162,7 +207,7 @@ class StockCheckActivity : AppCompatActivity() {
     // ===== Render daftar =====
 
     private fun render() {
-        val base = if (scanFilterActive) visibleProducts else DummyData.products
+        val base = if (scanFilterActive) visibleProducts else products
         val restocked = if (restockFilterActive) base.filter { it.needsRestock } else base
         val list = if (selectedTags.isEmpty()) restocked
         else restocked.filter { p -> p.categories.any { it in selectedTags } }
@@ -230,7 +275,8 @@ class StockCheckActivity : AppCompatActivity() {
         if (product.needsRestock) {
             bottomRow.visibility = View.VISIBLE
             btnRestok.visibility = View.VISIBLE
-            lastIncomingRow.visibility = View.VISIBLE
+            // Baris terakhir masuk hanya bila ada catatannya
+            lastIncomingRow.visibility = if (product.lastIncoming.isEmpty()) View.GONE else View.VISIBLE
             card.findViewById<TextView>(R.id.lastIncomingText).text =
                 getString(R.string.stock_last_incoming_format, product.lastIncoming)
             btnRestok.setOnClickListener { openBarangMasuk(product) }
