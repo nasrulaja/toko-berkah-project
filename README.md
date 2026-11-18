@@ -109,9 +109,9 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - **`css/pages/dashboard.css`** — Gaya khusus halaman Dashboard.
 - **`css/pages/penjualan.css`** — Gaya khusus halaman Penjualan/Transaksi.
 - **`js/core/db.js`** — Interaksi `localStorage`, simpan/muat basis data, seeding data awal, pencatatan mutasi/transaksi.
-- **`js/core/api.js`** — Penghubung ke database Supabase (REST/PostgREST); menyimpan alamat & kunci project, memuat seluruh data tabel lalu menyusunnya. Dipakai oleh `core/db.js`.
+- **`js/core/api.js`** — Penghubung ke database Supabase (REST/PostgREST); menyimpan alamat & kunci project, memuat seluruh data tabel lalu menyusunnya. Dipakai oleh `core/db.js`. Ikut membaca kolom `transaksi.status` (`berhasil`/`gagal`) dan menyediakan `ubahStatusTransaksi()`.
 - **`js/ui.js`** — Utilitas DOM, format Rupiah & tanggal, toast, modal, escape HTML, generator ikon SVG.
-- **`js/pages.js`** — Render seluruh halaman (Dashboard, Produk, Stok, Laporan, Hasil Tutup Buku, Transaksi, Pengaturan, Login).
+- **`js/pages.js`** — Render seluruh halaman (Dashboard, Produk, Stok, Laporan, Hasil Tutup Buku, Transaksi, Pengaturan, Login). Transaksi berstatus `gagal` tetap tampil di riwayat (dengan lencana merah) tetapi tidak dihitung pada omzet, laba, jumlah penjualan, grafik, maupun notifikasi penjualan.
 - **`js/app.js`** — Titik masuk (*bootstrap*): routing hash URL dan event binding utama.
 - **`js/charts.js`** — Pembuatan grafik untuk dashboard/laporan.
 - **`index.html`** — Kerangka halaman; splash screen kini statis di sini (CSS di `<head>`, HTML setelah `<body>`, skrip penutup sebelum `</body>`) beserta gambar potongan logo di `assets/splash/`.

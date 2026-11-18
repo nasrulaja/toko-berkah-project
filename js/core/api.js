@@ -21,6 +21,7 @@
      produk.harga_beli             -> produk.harga_beli (bila kolomnya ada; bila tidak, dari stok_mutasi.harga_kulak)
      stok_mutasi.harga_kulak       -> mutasi.harga_beli
      transaksi.kode_transaksi      -> transaksi.kode
+     transaksi.status              -> transaksi.status ('berhasil' / 'gagal')
      transaksi.rekap_id            -> transaksi.terkunci (penanda periode)
      detail_transaksi.harga_jual   -> detail.harga_satuan
      tutup_buku.*                  -> tutup.*
@@ -100,21 +101,28 @@ const tgl = (w) => new Date(w).toLocaleDateString('en-CA');
 /** Penanda: tabel produk di Supabase punya kolom harga_beli (diisi saat muatDB). */
 let HARGA_BELI_ADA = false;
 
+/** Penanda: tabel transaksi di Supabase punya kolom status ('berhasil'/'gagal'). */
+let STATUS_ADA = false;
+
 /** Susun objek DB aplikasi dari tabel-tabel Supabase. | param: - | return: objek DB */
 export async function muatDB() {
   // semua tabel diambil sekaligus agar cepat
-  const [users, roles, kategori, produk, transaksi, detail, mutasi, tutup] = await Promise.all([
+  const [users, roles, kategori, produk, transaksiMentah, detail, mutasi, tutup] = await Promise.all([
     // users: password_hash sengaja tidak boleh dibaca anon key (RLS/column privilege),
     // jadi kolomnya ditulis satu per satu. Jangan pakai select=* — akan ditolak 401.
     get('users', 'select=id,nama,email,role_id'),
     get('roles', 'select=*'),
     get('kategori', 'select=*&order=id'),
     get('produk', 'select=*&order=id'),
-    get('transaksi', 'select=*&order=id'),
+    // transaksi: status dimuat eksplisit sehingga tetap terbaca walau project lain belum
+    // menjalankan ALTER TABLE (kolomnya belum ada). Bila ditolak, muat ulang tanpa status.
+    get('transaksi', 'select=*,status&order=id').catch(() => get('transaksi', 'select=*&order=id')),
     get('detail_transaksi', 'select=*&order=id'),
     get('stok_mutasi', 'select=*&order=id'),
     get('tutup_buku', 'select=*&order=id')
   ]);
+  const transaksi = (transaksiMentah || []).filter((t) => t && typeof t === 'object' && 'id' in t);
+  STATUS_ADA = transaksi.some((t) => 'status' in t);
 
   // harga beli: utamakan kolom produk.harga_beli bila ada di tabel. Bila kolom
   // belum ada (atau kosong), pakai nilai terakhir dari riwayat stok masuk
@@ -183,6 +191,9 @@ export async function muatDB() {
       total: t.total,
       uang_diterima: t.uang_diterima ?? t.total,
       kembalian: t.kembalian ?? 0,
+      // status transaksi: 'berhasil' (dianggap sah) atau 'gagal' (dibatalkan, tidak dihitung).
+      // Baris lama tanpa kolom status dianggap berhasil.
+      status: t.status === 'gagal' ? 'gagal' : 'berhasil',
       sumber: 'kasir',
       user_id: t.user_id,
       terkunci: t.rekap_id ? 'R' + t.rekap_id : null
@@ -362,6 +373,20 @@ export async function simpanTutup(x) {
       const t = await res.text().catch(() => '');
       return { ok: false, pesan: `${res.status} ${t.slice(0, 200)}` };
     }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, pesan: e.message || String(e) };
+  }
+}
+
+/** Mengubah status satu transaksi di Supabase (mis. membatalkan transaksi yang batal).
+ *  Hanya kolom status yang disentuh, jadi baris transaksi lain tidak ikut berubah.
+ *  param: id (id transaksi), status ('berhasil' | 'gagal') | return: Promise<{ok,pesan?}> */
+export async function ubahStatusTransaksi(id, status) {
+  const baru = status === 'gagal' ? 'gagal' : 'berhasil';
+  try {
+    if (!STATUS_ADA) return { ok: false, pesan: 'Kolom status belum ada di tabel transaksi Supabase.' };
+    await tulis('PATCH', `transaksi?id=eq.${+id}`, { status: baru });
     return { ok: true };
   } catch (e) {
     return { ok: false, pesan: e.message || String(e) };

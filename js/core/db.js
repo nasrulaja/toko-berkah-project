@@ -11,7 +11,7 @@
      BAGIAN 3  MUTASI STOK          mut(), terkunci()
    ========================================================================== */
 
-import { muatDB, simpanDB } from './api.js?v=20261118a';
+import { muatDB, simpanDB, ubahStatusTransaksi } from './api.js?v=20261119a';
 
 /* ==========================================================================
    BAGIAN 1 — KUNCI & STATE
@@ -140,3 +140,27 @@ export function mut(p, jenis, jml, o = {}) {
 
 /** Apakah transaksi terkunci (sudah masuk tutup buku). | param: t (transaksi) | return: boolean */
 export const terkunci = (t) => !!t.terkunci;
+
+/** Apakah transaksi sah dan boleh dihitung sebagai penjualan.
+ *  Transaksi berstatus 'gagal' (mis. batal bayar) tetap tampil di riwayat, tetapi
+ *  tidak masuk omzet, laba, jumlah penjualan, notifikasi, maupun tutup buku.
+ *  param: t (transaksi) | return: boolean */
+export const sah = (t) => (t?.status || 'berhasil') !== 'gagal';
+
+/** Menandai satu transaksi berhasil atau gagal, lalu memuat ulang data dari Supabase.
+ *  param: id (id transaksi), status ('berhasil' | 'gagal') | return: Promise<{ok,pesan?}> */
+export async function setStatusTransaksi(id, status) {
+  antrean = antrean.then(async () => {
+    const r = await ubahStatusTransaksi(id, status);
+    if (r.ok) {
+      try {
+        setDB(await muatDB());
+      } catch (e) {
+        return { ok: false, pesan: 'Status tersimpan, tetapi gagal memuat ulang: ' + (e.message || e) };
+      }
+    }
+    dbGalat = r.ok ? '' : r.pesan || '';
+    return r;
+  });
+  return antrean;
+}

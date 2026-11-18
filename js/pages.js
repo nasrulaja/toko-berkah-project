@@ -21,7 +21,7 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, terkunci, dbGalat } from './core/db.js?v=20261118a';
+import { db, me, save, mut, KS, setMe, terkunci, sah, setStatusTransaksi, dbGalat } from './core/db.js?v=20261119a';
 import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117m';
 import { barChart, donut, spark, short } from './charts.js?v=20261117m';
 
@@ -343,6 +343,15 @@ const jb = {
   penyesuaian: ['o', 'Penyesuaian']
 };
 
+/** Lencana status transaksi. Gagal = merah (tidak dihitung), berhasil = hijau.
+ *  Diekspor agar dialog detail di app.js memakai tampilan yang sama.
+ *  param: t (transaksi) | return: string HTML */
+export const stBadge = (t) =>
+  sah(t) ? `<span class="b g" title="Transaksi sah dan dihitung sebagai penjualan">Berhasil</span>` : `<span class="b r" title="Transaksi gagal/batal: masih tampil di riwayat, tetapi tidak dihitung sebagai penjualan">Gagal</span>`;
+
+/** Apakah transaksi dihitung sebagai penjualan (status bukan 'gagal'). Diekspor untuk app.js. */
+export { sah };
+
 let shellRef = () => {};
 export function setShellRef(fn) {
   shellRef = fn;
@@ -355,11 +364,13 @@ export function setShellRef(fn) {
    stok()      : form barang masuk/penyesuaian + riwayat mutasi stok
    ========================================================================== */
 
-/** Agregasi penjualan per hari. | param: - | return: objek { 'YYYY-MM-DD': {sales, profit, count} } */
+/** Agregasi penjualan per hari. Hanya transaksi sah (status bukan 'gagal') yang dihitung.
+ *  param: - | return: objek { 'YYYY-MM-DD': {sales, profit, count} } */
 const agg = () => {
   const m = {},
     tk = new Map();
   db.transaksi.forEach((t) => {
+    if (!sah(t)) return;
     const k = dk(t.waktu);
     tk.set(t.id, k);
     const o = (m[k] ||= { sales: 0, profit: 0, count: 0 });
@@ -409,9 +420,10 @@ export function dashboard() {
     w7 = lastDays(m, 7),
     w7p = lastDays(m, 7, 7);
   const sum = (a, k) => a.reduce((x, y) => x + y[k], 0);
-  // transaksi dengan total belanja terbesar HARI INI (per hari, bukan per pembeli)
+  // transaksi dengan total belanja terbesar HARI INI (per hari, bukan per pembeli);
+  // transaksi gagal tidak ikut dihitung
   const hariIni = lastDays(m, 1)[0].k,
-    trxHariIni = db.transaksi.filter((t) => dk(t.waktu) === hariIni),
+    trxHariIni = db.transaksi.filter((t) => sah(t) && dk(t.waktu) === hariIni),
     belanjaMax = trxHariIni.reduce((a, t) => (t.total > a ? t.total : a), 0);
 
   /* --- KPI --- */
@@ -482,7 +494,7 @@ export function dashboard() {
     bmax = Math.max(...best.map((x) => x.q), 1);
 
   /* --- Jam tersibuk --- */
-  const hrs = db.transaksi.map((t) => new Date(t.waktu).getHours());
+  const hrs = db.transaksi.filter(sah).map((t) => new Date(t.waktu).getHours());
   const h0 = Math.min(8, ...hrs),
     h1 = Math.max(18, ...hrs);
   const hours = [...Array(h1 - h0 + 1)].map((_, i) => h0 + i);
@@ -498,7 +510,7 @@ export function dashboard() {
     left: 24
   });
 
-  /* --- Transaksi terbaru --- */
+  /* --- Transaksi terbaru (semua status, termasuk gagal, agar terlihat di beranda) --- */
   const items = new Map();
   db.detail.forEach((d) => items.set(d.transaksi_id, (items.get(d.transaksi_id) || 0) + d.jumlah));
   const rec = [...db.transaksi].reverse().slice(0, 6);
@@ -538,8 +550,9 @@ export function dashboard() {
   // ringkasan jam/hari tersibuk (semua data) untuk mengisi kartu Jam Tersibuk
   const cJam = {},
     cHari = {},
-    tglSet = new Set();
-  db.transaksi.forEach((t) => {
+    tglSet = new Set(),
+    trxSah = db.transaksi.filter(sah);
+  trxSah.forEach((t) => {
     const d = new Date(t.waktu),
       h = d.getHours();
     cJam[h] = (cJam[h] || 0) + 1;
@@ -555,7 +568,7 @@ export function dashboard() {
     ringkasJam = [
       ['Jam tersibuk', tj ? String(tj[0]).padStart(2, '0') + '.00' : '-'],
       ['Hari tersibuk', th ? nmHari[th[0]] : '-'],
-      ['Rata-rata / hari', tglSet.size ? (db.transaksi.length / tglSet.size).toFixed(1).replace('.', ',') + ' transaksi' : '-']
+      ['Rata-rata / hari', tglSet.size ? (trxSah.length / tglSet.size).toFixed(1).replace('.', ',') + ' transaksi' : '-']
     ];
   // kartu stok: bila tidak ada yang menipis, tampilkan 5 produk dengan stok paling sedikit
   const sedikit = L.length ? L : [...db.produk].sort((a, b) => a.stok / Math.max(a.stok_minimum, 1) - b.stok / Math.max(b.stok_minimum, 1)).slice(0, 5);
@@ -599,8 +612,8 @@ export function dashboard() {
     <div class="card"><div class="ch"><h4>Jam Tersibuk</h4><a href="#laporan" class="btn sm">Selengkapnya</a></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p><div class="mini">${ringkasJam.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>${top3Jam.map(([h, c]) => `<div class="tp" style="margin-top:12px"><span class="rk">${String(h).padStart(2, '0')}</span><div class="tp-b"><div class="tp-h"><b>Pukul ${String(h).padStart(2, '0')}.00</b><span>${c} transaksi</span></div><div class="bar"><i style="width:${Math.round((c / maxJam) * 100)}%"></i></div></div></div>`).join('')}</div></div>
   </div>
 
-  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Selengkapnya</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
-    rec.slice(0, 5).map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
+  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Selengkapnya</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th><th>Status</th></tr>${
+    rec.slice(0, 5).map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td><td>${stBadge(t)}</td></tr>`).join('') ||
     `<tr><td colspan="6">${empty('Tidak ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
   }</table></div></div>
   <div class="tip" id="tip" hidden></div></div>`;
@@ -682,7 +695,11 @@ const nevents = () => {
   const out = [],
     nama = (id) => db.produk.find((p) => p.id === id)?.nama || 'Produk';
   db.transaksi.forEach((t) =>
-    out.push({ w: t.waktu, ic: 'cart', c: 'g', to: '#transaksi', a: 'Penjualan ' + t.kode, b: 'senilai ' + rp(t.total) + ' tercatat.' })
+    out.push(
+      sah(t)
+        ? { w: t.waktu, ic: 'cart', c: 'g', to: '#transaksi', a: 'Penjualan ' + t.kode, b: 'senilai ' + rp(t.total) + ' tercatat.' }
+        : { w: t.waktu, ic: 'alert', c: 'r', to: '#transaksi', a: 'Transaksi gagal ' + t.kode, b: 'senilai ' + rp(t.total) + ' dibatalkan, tidak dihitung sebagai penjualan.' }
+    )
   );
   db.mutasi
     .filter((m) => m.jenis !== 'jual')
@@ -1021,8 +1038,11 @@ export function laporan() {
         bulankmr: 'bulan kemarin',
         tahun: 'tahun ini'
       }[tf] || labelBulanKunci(tf);
-  // transaksi yang lolos filter; idOk dipakai untuk menyaring detail
-  const trx = dalamPeriode(db.transaksi, tf, dari, sampai),
+  // transaksi yang lolos filter; idOk dipakai untuk menyaring detail.
+  // Transaksi berstatus 'gagal' tidak dihitung: hanya yang sah yang masuk omzet, laba, dan tabel.
+  const trxPeriode = dalamPeriode(db.transaksi, tf, dari, sampai),
+    trx = trxPeriode.filter(sah),
+    nGagal = trxPeriode.length - trx.length,
     idOk = new Set(trx.map((t) => t.id));
 
   const totJual = trx.reduce((a, t) => a + t.total, 0);
@@ -1107,7 +1127,7 @@ export function laporan() {
       pakaiRentang
     )}</div>`;
   const infoHari = pakaiRentang && dari && sampai ? ` (${Math.round((rentangTanggal(dari, sampai).akhir - rentangTanggal(dari, sampai).awal) / 864e5)} hari)` : '';
-  return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b>${infoHari} — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
+  return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b>${infoHari} — ${trx.length} dari ${db.transaksi.length} transaksi.${nGagal ? ` <span class="b r">${nGagal} transaksi gagal tidak dihitung</span>` : ''}</p></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
   <div class="card"><div class="ch"><h4>Transaksi terbanyak</h4></div><div class="tw">${
     ramai.length
@@ -1140,9 +1160,13 @@ export function transaksi() {
     dari = S.tpDari || '',
     sampai = S.tpSampai || '',
     tu = S.tu === 'total' ? 'total' : 'baru',
+    // filter status: '' = semua, 'berhasil' / 'gagal'
+    ts = ['berhasil', 'gagal'].includes(S.ts) ? S.ts : '',
     batas = pakaiRentang ? rentangTanggal(dari, sampai).awal : awalPeriode(tp),
     semua = [...db.transaksi].reverse(),
-    rec = dalamPeriode(semua, tp, dari, sampai).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
+    recPeriode = dalamPeriode(semua, tp, dari, sampai),
+    rec = (ts ? recPeriode.filter((t) => (ts === 'gagal' ? !sah(t) : sah(t))) : recPeriode).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
+    nGagal = recPeriode.filter((t) => !sah(t)).length,
     nKunci = rec.filter(terkunci).length,
     // Label periode: huruf kecil hanya untuk periode tetap ("bulan ini"),
     // sedangkan nama bulan dibiarkan apa adanya ("Okt 2026").
@@ -1160,7 +1184,8 @@ export function transaksi() {
     opsiHtml = ([k, v]) => `<option value="${k}"${k === tp ? ' selected' : ''}>${v}</option>`;
   setTimeout(() => {
     const f = $('#ftp'),
-      u = $('#ftu');
+      u = $('#ftu'),
+      st = $('#fts');
     if (f)
       f.onchange = () => {
         S.tp = f.value;
@@ -1173,6 +1198,11 @@ export function transaksi() {
     if (u)
       u.onchange = () => {
         S.tu = u.value;
+        shellRef();
+      };
+    if (st)
+      st.onchange = () => {
+        S.ts = st.value;
         shellRef();
       };
   }, 0);
@@ -1195,8 +1225,8 @@ export function transaksi() {
     dari,
     sampai,
     pakaiRentang
-  )}<select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>.${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
-  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('') || `<tr><td colspan="6">${pakaiRentang && periodeMasaDepan(dari, sampai) ? 'Belum ada transaksi' : 'Tidak ada transaksi'} pada periode ini.</td></tr>`}</table></div></div>`;
+  )}<select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select><select id="fts" aria-label="Filter status transaksi"><option value=""${ts === '' ? ' selected' : ''}>Semua status</option><option value="berhasil"${ts === 'berhasil' ? ' selected' : ''}>Berhasil</option><option value="gagal"${ts === 'gagal' ? ' selected' : ''}>Gagal</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>${ts ? `, status <b>${ts}</b>` : ''}. Transaksi <b>gagal</b> tidak dihitung sebagai penjualan.${nGagal ? ` <span class="b r">${nGagal} gagal</span>` : ''}${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th>Periode</th><th class="r">Aksi</th></tr>
+  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${stBadge(t)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button>${sah(t) ? `<button class="btn sm" data-act="stgagal" data-id="${t.id}" title="Tandai transaksi ini gagal/batal sehingga tidak dihitung sebagai penjualan">Batalkan</button>` : `<button class="btn sm" data-act="stberhasil" data-id="${t.id}" title="Kembalikan transaksi ini sebagai berhasil">Pulihkan</button>`}</td></tr>`).join('') || `<tr><td colspan="7">${pakaiRentang && periodeMasaDepan(dari, sampai) ? 'Belum ada transaksi' : 'Tidak ada transaksi'} pada periode ini.</td></tr>`}</table></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */

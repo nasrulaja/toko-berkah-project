@@ -18,7 +18,7 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261118a';
+import { load, db, setDB, me, setMe, KS, save, setStatusTransaksi } from './core/db.js?v=20261119a';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
 import { bukaScan } from './core/scan.js?v=20261118f';
 import {
@@ -38,8 +38,10 @@ import {
   setShellRef,
   pform,
   saveP,
-  kform
-} from './pages.js?v=20261118i';
+  kform,
+  stBadge,
+  sah
+} from './pages.js?v=20261119a';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -298,7 +300,9 @@ function onClick(e) {
       const t = db.transaksi.find((x) => x.id === id);
       modal(
         t.kode,
-        `<p>${dt(t.waktu)}</p><div class="tw"><table style="min-width:0"><tr><th>Barang</th><th class="r">Harga</th><th class="r">Jml</th><th class="r">Subtotal</th></tr>${db.detail
+        `<p>${dt(t.waktu)}</p><div class="li"><span>Status transaksi</span>${stBadge(t)}</div>${
+          sah(t) ? '' : '<p class="note" style="margin:0 0 8px">Transaksi ini gagal/batal, jadi tidak dihitung dalam omzet, laba, maupun jumlah penjualan.</p>'
+        }<div class="tw"><table style="min-width:0"><tr><th>Barang</th><th class="r">Harga</th><th class="r">Jml</th><th class="r">Subtotal</th></tr>${db.detail
           .filter((d) => d.transaksi_id === id)
           .map(
             (d) =>
@@ -307,6 +311,21 @@ function onClick(e) {
           .join(
             ''
           )}</table></div><div class="li"><span>Total</span><b>${rp(t.total)}</b></div><div class="li"><span>Uang diterima</span><span>${rp(t.uang_diterima)}</span></div><div class="li"><span>Kembalian</span><span>${rp(t.kembalian)}</span></div>`
+      );
+    } else if (a === 'stgagal' || a === 'stberhasil') {
+      // Ubah status transaksi: 'gagal' = dibatalkan (tidak dihitung), 'berhasil' = dipulihkan.
+      const t = db.transaksi.find((x) => x.id === id);
+      if (!t) return;
+      const jadi = a === 'stgagal' ? 'gagal' : 'berhasil';
+      ask(
+        jadi === 'gagal'
+          ? `Tandai transaksi ${t.kode} sebagai gagal? Transaksi tetap ada di riwayat, tetapi tidak dihitung sebagai penjualan (omzet dan laba ikut berkurang).`
+          : `Pulihkan transaksi ${t.kode} menjadi berhasil? Nilainya kembali dihitung sebagai penjualan.`,
+        async () => {
+          const r = await setStatusTransaksi(id, jadi);
+          toast(r.ok ? (jadi === 'gagal' ? 'Transaksi ditandai gagal' : 'Transaksi dipulihkan') : 'Gagal mengubah status: ' + r.pesan);
+          shell();
+        }
       );
     }
   }
