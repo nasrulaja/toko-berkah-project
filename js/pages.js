@@ -152,6 +152,26 @@ const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { wee
 /** Batas atas datepicker: hari ini (tidak perlu memilih tanggal masa depan). | param: - | return: string YYYY-MM-DD */
 const hariIniKunci = () => tglKunci(Date.now());
 
+/** Periode yang dipilih sepenuhnya berada di masa depan? Dipakai untuk memilih kata pada keadaan kosong.
+ *  Dianggap masa depan bila tanggal mulainya sesudah hari ini (rentang terbalik sudah ditukar oleh rentangTanggal).
+ *  param: dari, sampai (YYYY-MM-DD, boleh kosong) | return: bool */
+const periodeMasaDepan = (dari, sampai) => {
+  const a = dari || sampai,
+    b = sampai || dari;
+  if (!a || !b) return false;
+  const { awal } = rentangTanggal(a, b);
+  const mulaiHariIni = new Date(new Date().setHours(0, 0, 0, 0)).getTime();
+  return awal >= mulaiHariIni + 864e5; // >= 00:00 besok
+};
+
+/** Teks keadaan kosong yang membedakan masa lalu & masa depan.
+ *  "Tidak ada transaksi" untuk periode yang sudah lewat, "Belum ada transaksi" untuk periode mendatang.
+ *  param: depan (bool dari periodeMasaDepan), sub (keterangan tambahan) | return: string HTML */
+const kosongTrx = (depan, sub) =>
+  depan
+    ? empty('Belum ada transaksi', sub || 'Periode ini belum berjalan, transaksi akan muncul setelah harinya tiba.')
+    : empty('Tidak ada transaksi', sub || 'Tidak ada penjualan pada periode ini. Coba pilih tanggal lain.');
+
 /** HTML datepicker "dari - sampai" + tombol Terapkan/Reset. Ikon & teks disesuaikan nama kontrol.
  *  param: idAwalan ('rd'/'td'), dari, sampai, aktif (bool) | return: string HTML */
 const kotakTanggal = (idAwalan, dari, sampai, aktif) => `<span class="rgx${aktif ? ' on' : ''}" data-rgx>
@@ -999,7 +1019,7 @@ export function laporan() {
   <div class="card"><div class="ch"><h4>Transaksi terbanyak</h4></div><div class="tw">${
     ramai.length
       ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
-      : empty('Belum ada transaksi', 'Daftar muncul setelah ada transaksi.')
+      : kosongTrx(pakaiRentang && periodeMasaDepan(dari, sampai), 'Daftar muncul setelah ada transaksi.')
   }</div></div>
   <div class="card"><div class="ch"><h4>Transaksi terbanyak mingguan</h4>${hariTop && hariTop.c ? `<span class="b g">Tersibuk: ${hariTop.n} (${hariTop.c} transaksi)</span>` : ''}</div><div class="cb hr">${urutHari
     .map((h) => `<div class="hr-r"><span class="hr-n">${h.n}</span><span class="hr-b"><i style="width:${Math.round((h.c / maxHari) * 100)}%"></i></span><span class="hr-v">${h.c} <small>transaksi</small></span></div>`)
@@ -1007,12 +1027,15 @@ export function laporan() {
   <div class="card"><div class="ch"><h4>Produk terlaris</h4></div><div class="tw">${
     best.length
       ? `<table data-size="5"><tr><th>No</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
-      : empty('Belum ada penjualan', 'Produk terlaris muncul setelah ada transaksi.')
+      : kosongTrx(pakaiRentang && periodeMasaDepan(dari, sampai), 'Produk terlaris muncul setelah ada transaksi.')
   }</div></div>
   <div class="card"><div class="ch"><h4>Belanja terbesar per pembeli</h4></div><div class="tw">${
     buyers.length
       ? `<table data-size="5"><tr><th>No</th><th>Pembeli</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([nm, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(nm)}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
-      : empty('Belum ada pembeli', 'Daftar muncul setelah ada transaksi.')
+      : (() => {
+          const depan = pakaiRentang && periodeMasaDepan(dari, sampai);
+          return empty(depan ? 'Belum ada pembeli' : 'Tidak ada pembeli', depan ? 'Daftar muncul setelah ada transaksi.' : 'Tidak ada pembeli pada periode ini.');
+        })()
   }</div></div>`;
 }
 
@@ -1080,7 +1103,7 @@ export function transaksi() {
     sampai,
     pakaiRentang
   )}<select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>.${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
-  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('') || `<tr><td colspan="6">Belum ada transaksi pada periode ini.</td></tr>`}</table></div></div>`;
+  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('') || `<tr><td colspan="6">${pakaiRentang && periodeMasaDepan(dari, sampai) ? 'Belum ada transaksi' : 'Tidak ada transaksi'} pada periode ini.</td></tr>`}</table></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
