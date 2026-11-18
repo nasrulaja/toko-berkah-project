@@ -26,8 +26,7 @@ public static class Supa
     public const string Url = "https://ejohssqnhhtaveelmter.supabase.co";
     public const string Key = "sb_publishable_PGbNjr7ySv7Mvwh0hGn8Uw_lz7uAGLs";
 
-    static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
-    static bool siap;
+    // HttpClient dibuat ulang tiap percobaan oleh Coba() di bawah.
 
     // Ambil id pengguna Supabase untuk sebuah email; 1 kalau tidak ketemu.
     // Desktop memakai email lokal, sedangkan Supabase punya kolom user_id pada
@@ -53,36 +52,40 @@ public static class Supa
         return r;
     }
 
-    static void PastikanSekali()
-    {
-        if (siap) return;
-        Http.DefaultRequestHeaders.Clear();
-        siap = true;
-    }
-
     // Jalankan aksi HTTP dengan percobaan ulang.
     // Koneksi pertama sering ditutup paksa oleh jaringan/proxy
-    // ("An existing connection was forcibly closed by the remote host"),
-    // sehingga tanpa retry sinkronisasi terlihat gagal padahal server normal.
-    static T Coba<T>(Func<T> aksi)
+    // ("An existing connection was forcibly closed by the remote host" /
+    // "The SSL connection could not be established"). Di mesin ini pola
+    // pengamatannya: 1-2 percobaan pertama gagal, setelah itu lancar.
+    // Karena itu dicoba beberapa kali dengan jeda bertahap, dan HttpClient
+    // dibuat ulang tiap percobaan supaya TLS handshake benar-benar diulang
+    // (bukan memakai koneksi lama yang sudah rusak).
+    static T Coba<T>(Func<HttpClient, T> aksi)
     {
-        const int maks = 3;
-        for (int i = 1; ; i++)
+        const int maks = 8;
+        Exception? terakhir = null;
+        for (int i = 1; i <= maks; i++)
         {
-            try { return aksi(); }
-            catch (Exception e) when (i < maks && (e is HttpRequestException || e is IOException))
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(45) };
+            try
             {
-                Thread.Sleep(300 * i); // jeda singkat sebelum mencoba lagi
+                return aksi(http);
+            }
+            catch (Exception e) when (e is HttpRequestException || e is IOException ||
+                                      e is TaskCanceledException || e is OperationCanceledException)
+            {
+                terakhir = e;
+                if (i < maks) Thread.Sleep(250 * i); // 250ms, 500ms, 750ms, ...
             }
         }
+        throw terakhir!;
     }
 
     // GET -> daftar baris JSON.
-    public static List<JsonObject> Get(string path) => Coba(() =>
+    public static List<JsonObject> Get(string path) => Coba(h =>
     {
-        PastikanSekali();
         using var r = Req(HttpMethod.Get, path);
-        using var res = Http.Send(r);
+        using var res = h.Send(r);
         var txt = new StreamReader(res.Content.ReadAsStream()).ReadToEnd();
         if (!res.IsSuccessStatusCode) throw new Exception($"{((int)res.StatusCode)} {txt}");
         var arr = JsonNode.Parse(txt) as JsonArray ?? new JsonArray();
@@ -90,13 +93,12 @@ public static class Supa
     });
 
     // Kirim satu atau banyak baris. return=representation supaya id barunya terbaca.
-    public static List<JsonObject> Post(string tabel, JsonArray rows, bool ambilId = true) => Coba(() =>
+    public static List<JsonObject> Post(string tabel, JsonArray rows, bool ambilId = true) => Coba(h =>
     {
-        PastikanSekali();
         using var r = Req(HttpMethod.Post, tabel);
         r.Headers.Add("Prefer", ambilId ? "return=representation" : "return=minimal");
         r.Content = new StringContent(rows.ToJsonString(), Encoding.UTF8, "application/json");
-        using var res = Http.Send(r);
+        using var res = h.Send(r);
         var txt = new StreamReader(res.Content.ReadAsStream()).ReadToEnd();
         if (!res.IsSuccessStatusCode) throw new Exception($"{((int)res.StatusCode)} {txt}");
         if (!ambilId || string.IsNullOrWhiteSpace(txt)) return new();
@@ -105,13 +107,12 @@ public static class Supa
     });
 
     // PATCH untuk memperbarui baris yang sudah ada (mis. stok & harga produk).
-    public static void Patch(string path, JsonObject body) => Coba<object?>(() =>
+    public static void Patch(string path, JsonObject body) => Coba<object?>(h =>
     {
-        PastikanSekali();
         using var r = Req(HttpMethod.Patch, path);
         r.Headers.Add("Prefer", "return=minimal");
         r.Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
-        using var res = Http.Send(r);
+        using var res = h.Send(r);
         var txt = new StreamReader(res.Content.ReadAsStream()).ReadToEnd();
         if (!res.IsSuccessStatusCode) throw new Exception($"{((int)res.StatusCode)} {txt}");
         return null;
