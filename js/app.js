@@ -20,6 +20,7 @@
 
 import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117m';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
+import { pindaiBarcode } from './scan.js?v=20261118c';
 import {
   terapkanFilter,
   dashboard,
@@ -252,6 +253,16 @@ function onClick(e) {
       } catch (e) {}
       route();
     } else if (a === 'addp') modal('Tambah produk', pform(), 'Simpan', (d) => saveP(d));
+    else if (a === 'scanbc') {
+      // Isi kolom barcode pada form produk yang sedang terbuka.
+      pindaiBarcode((kode) => {
+        const kolom = $('#ov input[name="barcode"]');
+        if (kolom) {
+          kolom.value = kode;
+          kolom.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      });
+    }
     else if (a === 'editp') {
       const p = prod(id);
       modal('Ubah produk', pform(p), 'Simpan', (d) => saveP(d, p));
