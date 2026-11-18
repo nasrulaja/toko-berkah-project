@@ -610,7 +610,7 @@ export function panduan() {
     ['layers', 'Catat Stok', 'Di Manajemen Stok catat barang masuk, barang keluar, atau penyesuaian bila jumlah di rak berbeda dari catatan.', '#stok'],
     ['alert', 'Pantau Stok Menipis', 'Barang yang hampir habis dikumpulkan di satu halaman supaya tahu apa yang harus dibeli lagi.', '#stok-menipis'],
     ['recv', 'Lihat Riwayat Transaksi', 'Daftar semua penjualan beserta kode, waktu, dan total. Tekan tombol Detail untuk melihat barang yang dibeli. Status Terkunci berarti periodenya sudah ditutup buku.', '#transaksi'],
-    ['chart', 'Baca Laporan', 'Pilih periode di bagian atas (hari ini, 7 hari, 30 hari, bulan ini, bulan kemarin, tahun ini, atau semua data). Untuk bulan tertentu, buka daftar "Pilih bulan" lalu pilih bulannya, misalnya Okt 2026. Angka dan tabel di bawahnya ikut berubah: laba per tanggal, hari dan tanggal tersibuk, produk terlaris, dan belanja terbesar.', '#laporan'],
+    ['chart', 'Baca Laporan', 'Pilih periode di bagian atas (hari ini, 7 hari, 30 hari, bulan ini, bulan kemarin, tahun ini, atau semua data). Untuk bulan tertentu, buka daftar "Pilih bulan" lalu pilih bulannya, misalnya Okt 2026. Angka dan tabel di bawahnya ikut berubah: omzet dan laba kotor, hari dan tanggal tersibuk, produk terlaris, dan belanja terbesar.', '#laporan'],
     ['book', 'Tutup Buku', 'Halaman ini hanya menampilkan hasil tutup buku: jumlah periode yang sudah ditutup, periode yang ada selisih, total uang kurang, dan riwayat per periode (penjualan sistem, uang di laci, selisih). Proses tutup buku dilakukan di aplikasi Desktop. Kotak Selisih menunjukkan pemasukan dikurangi pengeluaran.', '#tutup-buku'],
     ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas. Gunakan filter (Semua, Belum dibaca, Penjualan, Stok, Tutup buku) atau kotak Cari untuk memilih notifikasi. Klik satu notifikasi untuk membukanya; statusnya langsung jadi dibaca dan angka di lonceng berkurang. Sakelar aktif/nonaktif ada di Pengaturan.', '#notifikasi']
   ];
@@ -832,30 +832,21 @@ export function laporan() {
     top.set(d.nama_produk, x);
   });
   const laba = totJual - modalAwal;
-  // laba per transaksi (harga jual - snapshot harga beli) lalu dikelompokkan per tanggal & per hari
-  const labaT = new Map();
-  db.detail.forEach((d) => {
-    if (!idOk.has(d.transaksi_id)) return;
-    const hb = d.harga_beli ?? prod(d.produk_id)?.harga_beli ?? d.harga_satuan;
-    labaT.set(d.transaksi_id, (labaT.get(d.transaksi_id) || 0) + (d.harga_satuan - hb) * d.jumlah);
-  });
   const perTgl = new Map(),
     namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'],
     perHari = namaHari.map(() => ({ c: 0, v: 0 }));
   trx.forEach((t) => {
     const k = dk(t.waktu),
-      x = perTgl.get(k) || { c: 0, v: 0, l: 0 };
+      x = perTgl.get(k) || { c: 0, v: 0 };
     x.c++;
     x.v += t.total;
-    x.l += labaT.get(t.id) || 0;
     perTgl.set(k, x);
     const h = perHari[new Date(t.waktu).getDay()];
     h.c++;
     h.v += t.total;
   });
   const tglId = (k) => new Date(k + 'T00:00:00').toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const harian = [...perTgl.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1)).slice(0, 14),
-    ramai = [...perTgl.entries()].sort((a, b) => b[1].c - a[1].c || b[1].v - a[1].v).slice(0, 5),
+  const ramai = [...perTgl.entries()].sort((a, b) => b[1].c - a[1].c || b[1].v - a[1].v).slice(0, 5),
     urutHari = [1, 2, 3, 4, 5, 6, 0].map((i) => ({ n: namaHari[i], ...perHari[i] })),
     maxHari = Math.max(1, ...urutHari.map((h) => h.c)),
     hariTop = [...urutHari].sort((a, b) => b.c - a.c)[0];
@@ -887,11 +878,6 @@ export function laporan() {
       .join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}</select></div>`;
   return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b> — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
-  <div class="card"><div class="ch"><h4>Penjualan &amp; laba harian</h4></div><div class="tw">${
-    harian.length
-      ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th><th class="r">Laba kotor</th></tr>${harian.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td><td class="r"><span class="b ${x.l >= 0 ? 'g' : 'r'}">${rp(x.l)}</span></td></tr>`).join('')}</table>`
-      : empty('Belum ada penjualan', 'Laba harian muncul setelah ada transaksi.')
-  }</div></div>
   <div class="card"><div class="ch"><h4>Transaksi terbanyak harian</h4></div><div class="tw">${
     ramai.length
       ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
