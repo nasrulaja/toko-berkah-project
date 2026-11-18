@@ -1,22 +1,22 @@
-﻿<!doctype html>
+<!doctype html>
 <!-- ==========================================================================
-     TOKO BERKAH â€” SISTEM STOK & TRANSAKSI
+     TOKO BERKAH — SISTEM STOK & TRANSAKSI
      File   : index.html
      Fungsi : kerangka halaman. Semua isi (login / shell aplikasi) dibuat oleh
               js/app.js, jadi di sini hanya ada wadah kosong + pemuatan skrip.
      --------------------------------------------------------------------------
-     PETA FILE â€” cari teks "BAGIAN n":
+     PETA FILE — cari teks "BAGIAN n":
        BAGIAN 1  KEPALA DOKUMEN   meta, judul, font, urutan pemuatan CSS
        BAGIAN 2  BADAN DOKUMEN    wadah #app/#ov, skrip
      ========================================================================== -->
 <html lang="id" data-theme="light">
   <head>
     <!-- ====================================================================
-         BAGIAN 1 â€” KEPALA DOKUMEN
+         BAGIAN 1 — KEPALA DOKUMEN
          ==================================================================== -->
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Toko Berkah â€“ Sistem Manajemen Toko</title>
+    <title>Toko Berkah – Sistem Manajemen Toko</title>
     <link rel="icon" type="image/png" href="assets/favicon.png" />
     <link rel="apple-touch-icon" href="assets/ikon-192.png" />
 
@@ -39,120 +39,93 @@
     <link rel="stylesheet" href="css/light.css?v=20261117q" />
     <link rel="stylesheet" href="css/loader.css?v=20261117q" />
 
-    <style>/* SPLASH: folder terbuka -> isinya keluar */
+    <!-- Gaya splash (dulu di css/splash.css, kini menyatu di sini).
+         Dipisah agar cepat terbaca browser sebelum halaman digambar. -->
+    <style>/* SPLASH */
+@property --tb-a{syntax:"<angle>";inherits:false;initial-value:0deg}
 .tb-lock,.tb-lock body{overflow:hidden}
 .tb-splash{
   --c0:#F9FDFF;--c1:#C3E9FE;--c2:#97D8FE;--c3:#67C8FF;--c4:#3FB8FF;
-  position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;overflow:hidden;cursor:pointer;
-  background:radial-gradient(90% 70% at 50% 40%,var(--c0),var(--c1) 70%,var(--c2));
-  clip-path:circle(150% at 50% 50%);animation:tb-out .9s cubic-bezier(.7,0,.3,1) 3.9s forwards;
+  position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;overflow:hidden;
+  background:linear-gradient(160deg,var(--c0) 10%,var(--c1) 65%,var(--c2));
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;cursor:pointer;
+  animation:tb-out .8s cubic-bezier(.6,0,.3,1) 3.8s forwards;
 }
 .tb-splash.tb-skip{animation:tb-out .3s ease forwards}
 .tb-splash.tb-done{display:none}
 .tb-splash *,.tb-splash *::before,.tb-splash *::after{box-sizing:border-box}
-@keyframes tb-out{to{clip-path:circle(0% at 50% 50%);visibility:hidden}}
-.tb-blob{position:absolute;border-radius:50%}
-.tb-blob.a{width:60vmax;height:60vmax;left:-20vmax;top:-18vmax;background:radial-gradient(closest-side,var(--c3),transparent);opacity:.5;animation:tb-d1 14s ease-in-out infinite}
-.tb-blob.b{width:46vmax;height:46vmax;right:-16vmax;top:12vh;background:radial-gradient(closest-side,var(--c2),transparent);opacity:.8;animation:tb-d2 16s ease-in-out infinite}
-.tb-blob.c{width:44vmax;height:44vmax;left:20vw;bottom:-22vmax;background:radial-gradient(closest-side,var(--c4),transparent);opacity:.4;animation:tb-d1 15s ease-in-out infinite reverse}
+@keyframes tb-out{to{opacity:0;transform:scale(1.08);visibility:hidden}}
+.tb-blob{position:absolute;border-radius:50%;filter:blur(60px);will-change:transform}
+.tb-blob.a{width:60vmax;height:60vmax;left:-20vmax;top:-18vmax;background:var(--c3);opacity:.55;animation:tb-d1 14s ease-in-out infinite}
+.tb-blob.b{width:48vmax;height:48vmax;right:-16vmax;top:10vh;background:var(--c2);opacity:.8;animation:tb-d2 16s ease-in-out infinite}
+.tb-blob.c{width:46vmax;height:46vmax;left:18vw;bottom:-22vmax;background:var(--c4);opacity:.45;animation:tb-d3 15s ease-in-out infinite}
 @keyframes tb-d1{50%{transform:translate(14vmax,10vmax) scale(1.1)}}
 @keyframes tb-d2{50%{transform:translate(-12vmax,12vmax) scale(.9)}}
-.tb-rays{position:absolute;inset:-25%;background:repeating-conic-gradient(from 0deg at 50% 55%,rgba(255,255,255,.85) 0deg 3deg,transparent 3deg 10deg);
-  -webkit-mask:radial-gradient(closest-side,#000 22%,transparent 68%);mask:radial-gradient(closest-side,#000 22%,transparent 68%);
-  opacity:0;animation:tb-raysin 1.6s .5s both,tb-rot 50s linear infinite}
-@keyframes tb-raysin{to{opacity:.75}}
-@keyframes tb-rot{to{transform:rotate(360deg)}}
-/* panggung 3D tipis: folder terasa benar-benar terbuka */
-.tb-scene{position:relative;width:min(84vw,560px);padding-bottom:34%;perspective:1200px;perspective-origin:50% 45%;--px:0;--py:0;
-  animation:tb-zoom .9s cubic-bezier(.6,0,.9,.5) 3.9s forwards}
-@keyframes tb-zoom{to{transform:scale(2.1)}}
-.tb-tilt{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(calc(var(--px)*10deg)) rotateX(calc(var(--py)*-7deg));transition:transform .3s ease-out}
-.tb-stage{position:absolute;inset:0;transform-style:preserve-3d;animation:tb-in 1.4s cubic-bezier(.2,.9,.3,1) both}
-@keyframes tb-in{from{opacity:0;transform:translateY(34%) rotateX(52deg) scale(.72)}to{opacity:1;transform:none}}
-.tb-floor{position:absolute;left:8%;right:8%;bottom:-6%;height:22%;border-radius:50%;transform:translateZ(-60px);
-  background:radial-gradient(closest-side,rgba(63,184,255,.4),transparent 72%);animation:tb-in 1.4s both}
-/* ---------- folder ---------- */
-.tb-folder{position:absolute;left:18%;right:18%;top:20%;bottom:6%;transform-style:preserve-3d}
-.tb-tab{position:absolute;left:3%;top:-9%;width:42%;height:20%;overflow:hidden;
-  transform-origin:0 100%;animation:tb-tab 1s cubic-bezier(.2,1.3,.4,1) .35s both}
-.tb-tab u{display:block;width:186%;height:290%;border-radius:14px 14px 0 0;
-  background:linear-gradient(180deg,#7FD0FF,#4FBEFF);box-shadow:inset 0 1px 0 rgba(255,255,255,.6)}
-.tb-back{position:absolute;inset:0;border-radius:12px;
-  background:linear-gradient(180deg,#8BD5FF,#5CC2FF);box-shadow:inset 0 2px 0 rgba(255,255,255,.7),inset 0 -6px 14px rgba(10,59,92,.12);
-  animation:tb-grow .8s cubic-bezier(.2,1.1,.4,1) .1s both}
-/* tutup depan: berputar ke belakang = folder TERBUKA */
-.tb-front{position:absolute;left:-1.5%;right:-1.5%;top:4%;bottom:-9%;transform-origin:50% 100%;transform-style:preserve-3d;
-  animation:tb-open 1.25s cubic-bezier(.22,1.05,.36,1) 1s both,tb-sway 5.5s 2.4s ease-in-out infinite}
-.tb-front>span{position:absolute;inset:0;display:block;overflow:hidden;border-radius:6px 6px 12px 12px;
-  background:linear-gradient(180deg,#EAF8FF 0%,#BFE7FF 46%,#8ED5FF 100%);
-  box-shadow:inset 0 2px 0 #fff,inset 0 -8px 16px rgba(10,59,92,.14),0 14px 30px rgba(63,184,255,.35)}
-.tb-front>span:before{content:"";position:absolute;left:7%;top:13%;width:86%;height:10%;border-radius:99px;
-  background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(255,255,255,.25))}
-.tb-front>span:after{content:"";position:absolute;left:7%;top:31%;width:48%;height:7%;border-radius:99px;background:rgba(255,255,255,.62)}
-/* kartu-kartu (isi folder) */
-.tb-item{position:absolute;width:26%;aspect-ratio:4/5;border-radius:10px;overflow:hidden;
-  box-shadow:0 10px 22px rgba(10,59,92,.18),inset 0 0 0 1px rgba(255,255,255,.9);
-  background:linear-gradient(165deg,#fff,#D9F1FF 70%,#BEE7FF)}
-.tb-item:before{content:"";position:absolute;left:16%;right:16%;top:20%;height:7%;border-radius:99px;background:#9FD9FE}
-.tb-item:after{content:"";position:absolute;left:16%;right:38%;top:36%;height:6%;border-radius:99px;background:#CBE9FE;
-  box-shadow:0 1.1em 0 -.05em #CBE9FE,0 2.2em 0 -.05em #CBE9FE}
-.tb-item em{position:absolute;right:20%;bottom:15%;width:30%;aspect-ratio:1;border-radius:9px;
-  background:linear-gradient(150deg,#67C8FF,#3FB8FF);box-shadow:0 4px 10px rgba(63,184,255,.5)}
-.tb-item.i1{left:10%;bottom:26%;--r:-11deg;animation:tb-pop 1.1s cubic-bezier(.2,1.4,.4,1) 1.05s both,tb-float 4.2s 2.2s ease-in-out infinite}
-.tb-item.i2{left:34%;bottom:30%;--r:3deg;animation:tb-pop 1.1s cubic-bezier(.2,1.4,.4,1) 1.18s both,tb-float 4.6s 2.4s ease-in-out infinite}
-.tb-item.i3{left:58%;bottom:25%;--r:14deg;animation:tb-pop 1.1s cubic-bezier(.2,1.4,.4,1) 1.31s both,tb-float 4.4s 2.6s ease-in-out infinite}
-.tb-item.i4{left:22%;bottom:31%;--r:-6deg;animation:tb-pop 1.1s cubic-bezier(.2,1.4,.4,1) 1.6s both,tb-float 4.8s 2.8s ease-in-out infinite}
-.tb-item.i5{left:46%;bottom:28%;--r:9deg;animation:tb-pop 1.1s cubic-bezier(.2,1.4,.4,1) 1.73s both,tb-float 4.3s 3s ease-in-out infinite}
-@keyframes tb-grow{from{opacity:0;transform:scale(.4,.2)}to{opacity:1;transform:none}}
-@keyframes tb-tab{from{opacity:0;transform:rotateX(-90deg) scaleY(.2)}to{opacity:1;transform:none}}
-@keyframes tb-open{from{transform:rotateX(0deg)}to{transform:rotateX(74deg)}}
-@keyframes tb-sway{0%,100%{transform:rotateX(74deg)}50%{transform:rotateX(70deg) rotateZ(-1.2deg)}}
-@keyframes tb-pop{from{opacity:0;transform:translate3d(0,40%,-40px) rotate(var(--r)) scale(.5)}
-  to{opacity:1;transform:translate3d(0,-28%,0) rotate(var(--r)) scale(1)}}
-@keyframes tb-float{0%,100%{transform:translate3d(0,-28%,0) rotate(var(--r))}
-  50%{transform:translate3d(0,-42%,14px) rotate(calc(var(--r) * -1))}}
-.tb-bar{position:absolute;left:50%;bottom:calc(8vh + env(safe-area-inset-bottom,0px));width:min(46vw,260px);height:6px;transform:translateX(-50%);
-  border-radius:99px;overflow:hidden;background:rgba(255,255,255,.7);box-shadow:inset 0 1px 2px rgba(63,184,255,.35),0 4px 14px rgba(63,184,255,.25)}
-.tb-bar i{display:block;height:100%;transform-origin:0 50%;background:linear-gradient(90deg,var(--c3),var(--c4));animation:tb-fill 3.9s cubic-bezier(.4,0,.2,1) .15s both}
-@keyframes tb-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-/* ---- mode adaptif: lite (HP / perangkat lemah) & ultra (otomatis kalau masih patah-patah) ---- */
-.tb-splash.tb-lite .tb-rays,.tb-splash.tb-lite .tb-front>span:after,.tb-splash.tb-lite .tb-item:after,.tb-splash.tb-lite .tb-floor{display:none}
-.tb-splash.tb-lite .tb-tilt{transform:none!important}
-.tb-splash.tb-ultra .tb-rays,.tb-splash.tb-ultra .tb-floor,.tb-splash.tb-ultra .tb-item{display:none}
-.tb-splash.tb-ultra .tb-front{animation:tb-open 1.25s cubic-bezier(.22,1.05,.36,1) 1s both}
+@keyframes tb-d3{50%{transform:translate(10vmax,-10vmax) scale(1.12)}}
+.tb-card{
+  position:relative;isolation:isolate;width:min(92vw,720px);
+  padding:clamp(26px,6vw,60px) clamp(20px,5vw,54px);border-radius:clamp(28px,5vw,52px);
+  background:radial-gradient(120% 90% at 30% 0%,rgba(255,255,255,.85),transparent 55%),linear-gradient(135deg,rgba(255,255,255,.72),rgba(255,255,255,.3));
+  -webkit-backdrop-filter:blur(24px) saturate(180%);backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:inset 0 1.5px 0 #fff,inset 0 -1.5px 0 rgba(255,255,255,.4),0 24px 60px rgba(63,184,255,.38);
+  animation:tb-card .9s cubic-bezier(.2,1.2,.4,1) both;
+}
+.tb-card::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;
+  background:conic-gradient(from var(--tb-a),#fff,rgba(255,255,255,.2) 22%,var(--c3) 48%,rgba(255,255,255,.2) 72%,#fff);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;animation:tb-spin 8s linear infinite;
+}
+@keyframes tb-spin{to{--tb-a:360deg}}
+@keyframes tb-card{from{opacity:0;transform:scale(.9) translateY(20px)}to{opacity:1;transform:none}}
+.tb-logo{position:relative;width:100%;aspect-ratio:2064/762;filter:drop-shadow(0 8px 14px rgba(63,184,255,.45))}
+.tb-p{position:absolute;display:block;user-select:none;-webkit-user-drag:none}
+.tb-pestle{transform-origin:9% 92%}
+.tb-leaf{transform-origin:92% 100%}
+.tb-basket{transform-origin:50% 100%}
+.tb-basket{animation:tb-rise .9s cubic-bezier(.2,1.2,.4,1) var(--d) both,tb-breathe 4.5s 2.6s ease-in-out infinite}
+.tb-leaf{animation:tb-grow .9s cubic-bezier(.25,1.4,.45,1) var(--d) both,tb-sway 4s 2.6s ease-in-out infinite}
+.tb-pestle{animation:tb-drop 1s cubic-bezier(.3,1.35,.5,1) var(--d) both,tb-grind 3.2s 2.6s ease-in-out infinite}
+.tb-l{animation:tb-pop .7s cubic-bezier(.3,1.7,.5,1) var(--d) both,tb-bob 3.4s calc(2.4s + var(--d)) ease-in-out infinite}
+@keyframes tb-rise{from{opacity:0;transform:translateY(35%) scale(.88)}to{opacity:1;transform:none}}
+@keyframes tb-grow{from{opacity:0;transform:scale(0) rotate(-25deg)}to{opacity:1;transform:none}}
+@keyframes tb-drop{from{opacity:0;transform:translate(12%,-70%) rotate(28deg)}to{opacity:1;transform:none}}
+@keyframes tb-pop{from{opacity:0;transform:translateY(-80%) scale(.4)}to{opacity:1;transform:none}}
+@keyframes tb-breathe{50%{transform:scale(1.012)}}
+@keyframes tb-sway{0%,100%{transform:rotate(0)}35%{transform:rotate(3.5deg)}70%{transform:rotate(-2deg)}}
+@keyframes tb-grind{0%,100%{transform:rotate(0)}25%{transform:rotate(-7deg) translate(1%,1%)}50%{transform:rotate(0)}75%{transform:rotate(6deg) translate(-1%,1%)}}
+@keyframes tb-bob{0%,100%{transform:none}50%{transform:translateY(-4%)}}
 @media (prefers-reduced-motion:reduce){
-  .tb-splash *,.tb-scene{animation:none!important}
+  .tb-splash *{animation:none!important}
   .tb-splash{animation:tb-out .5s ease 1.2s forwards}
 }
-    </style>
+</style>
   </head>
 
   <body>
     <!-- ====================================================================
-         BAGIAN 2 â€” BADAN DOKUMEN
+         BAGIAN 2 — BADAN DOKUMEN
          ==================================================================== -->
 
-    <!-- SPLASH: folder terbuka, lalu isinya keluar. Muncul setiap halaman dimuat.
-         Murni CSS (tanpa gambar), jadi tidak ada aset yang bisa gagal dimuat. -->
-    <div class="tb-splash" id="tb-splash" role="img" aria-label="Toko Berkah, folder dibuka, memuat">
-      <div class="tb-rays"></div><div class="tb-blob a"></div><div class="tb-blob b"></div><div class="tb-blob c"></div>
-      <div class="tb-scene" id="tb-scene">
-        <div class="tb-tilt"><div class="tb-stage">
-          <div class="tb-folder">
-            <div class="tb-tab"><u></u></div>
-            <div class="tb-back"></div>
-            <div class="tb-item i1"><em></em></div>
-            <div class="tb-item i2"><em></em></div>
-            <div class="tb-item i3"><em></em></div>
-            <div class="tb-item i4"><em></em></div>
-            <div class="tb-item i5"><em></em></div>
-            <div class="tb-front"><span></span></div>
-          </div>
-          <div class="tb-floor"></div>
-        </div></div>
-      </div>
-      <div class="tb-bar"><i></i></div>
-    </div>
+    <!-- SPLASH: tampil setiap halaman dimuat / di-reload. Isi kartu = potongan
+         logo (PNG terpisah di assets/splash/) yang dianimasikan satu per satu. -->
+    <div class="tb-splash" id="tb-splash" role="img" aria-label="Toko Berkah, memuat">
+      <div class="tb-blob a"></div><div class="tb-blob b"></div><div class="tb-blob c"></div>
+      <div class="tb-card"><div class="tb-logo">
+        <img class="tb-p tb-basket" style="left:0.775%;top:28.215%;width:43.508%;height:60.761%;--d:0.05s" src="assets/splash/basket.png" alt="" draggable="false">
+        <img class="tb-p tb-leaf" style="left:0.242%;top:50.787%;width:23.014%;height:48.294%;--d:0.45s" src="assets/splash/leaf.png" alt="" draggable="false">
+        <img class="tb-p tb-pestle" style="left:19.864%;top:0.525%;width:14.341%;height:37.139%;--d:0.8s" src="assets/splash/pestle.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:45.688%;top:16.929%;width:11.337%;height:31.759%;--d:1.1s" src="assets/splash/T.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:54.748%;top:23.491%;width:11.047%;height:25.459%;--d:1.17s" src="assets/splash/o1.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:66.473%;top:16.404%;width:9.981%;height:32.283%;--d:1.24s" src="assets/splash/k1.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:75.872%;top:23.622%;width:10.998%;height:25.328%;--d:1.31s" src="assets/splash/o2.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:45.397%;top:51.837%;width:10.562%;height:31.102%;--d:1.38s" src="assets/splash/B.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:56.202%;top:58.661%;width:9.545%;height:24.672%;--d:1.45s" src="assets/splash/e.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:66.231%;top:59.186%;width:5.717%;height:23.885%;--d:1.52s" src="assets/splash/r.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:72.141%;top:51.444%;width:9.351%;height:31.496%;--d:1.59s" src="assets/splash/k2.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:81.105%;top:58.793%;width:8.818%;height:24.541%;--d:1.66s" src="assets/splash/a.png" alt="" draggable="false">
+        <img class="tb-p tb-l" style="left:90.649%;top:51.444%;width:9.205%;height:31.365%;--d:1.73s" src="assets/splash/h.png" alt="" draggable="false">
+      </div></div>
     </div>
 
     <!-- Wadah utama: login & shell aplikasi dirender ke sini oleh app.js -->
@@ -172,44 +145,20 @@
         var s = document.getElementById('tb-splash');
         if (!s) return;
         var h = document.documentElement,
-          sc = document.getElementById('tb-scene'),
           t;
         h.classList.add('tb-lock');
-        // deteksi perangkat: HP / RAM kecil / CPU sedikit langsung pakai mode lite
-        var lv = ((navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4 || innerWidth < 700) ? 1 : 0;
-        if (lv) s.classList.add('tb-lite');
-        // pantau FPS: kalau masih < 40fps, turunkan efek otomatis (lite -> ultra)
-        var n = 0, t0 = 0, tb = 0;
-        function chk(now) {
-          if (!tb) tb = t0 = now;
-          n++;
-          if (now - t0 >= 600) {
-            if (n * 1000 / (now - t0) < 40 && lv < 2) {
-              lv++;
-              s.classList.add(lv === 1 ? 'tb-lite' : 'tb-ultra');
-            }
-            n = 0;
-            t0 = now;
-          }
-          if (now - tb < 3100 && !s.classList.contains('tb-done')) requestAnimationFrame(chk);
-        }
-        setTimeout(function () { requestAnimationFrame(chk); }, 500);
         function end() {
           clearTimeout(t);
           h.classList.remove('tb-lock');
           s.classList.add('tb-done');
         }
-        t = setTimeout(end, 4600);
+        t = setTimeout(end, 4800);
         s.addEventListener('animationend', function (e) {
           if (e.animationName === 'tb-out') end();
         });
         s.addEventListener('click', function () {
           s.classList.add('tb-skip');
         }); // klik = lewati
-        s.addEventListener('pointermove', function (e) {
-          sc.style.setProperty('--px', (e.clientX / innerWidth - .5) * 2);
-          sc.style.setProperty('--py', (e.clientY / innerHeight - .5) * 2);
-        });
       })();
     </script>
   </body>
