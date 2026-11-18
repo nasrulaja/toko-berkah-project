@@ -1,0 +1,44 @@
+/* ==========================================================================
+   TOKO BERKAH — transisi.css
+   Animasi pindah halaman. Dipicu lewat atribut html[data-trans] yang dipasang
+   sebentar oleh js/app.js:
+     data-trans="pindah" : pindah antar halaman (isi halaman naik berurutan)
+     data-trans="masuk"  : dari login ke beranda (menu masuk dari kiri, bar atas
+                           turun, kartu naik berurutan)
+   Render ulang biasa (mis. setelah simpan data) tidak beranimasi.
+   Dimatikan bila pengguna memilih "kurangi animasi".
+   ========================================================================== */
+@keyframes tr-naik { from { opacity: 0; transform: translateY(18px) scale(0.985); } }
+@keyframes tr-turun { from { opacity: 0; transform: translateY(-16px); } }
+@keyframes tr-kiri { from { opacity: 0; transform: translateX(-36px); } }
+@keyframes tr-bawah { from { opacity: 0; transform: translateY(30px); } }
+@keyframes tr-keluar { to { opacity: 0; transform: translateY(-14px) scale(0.96); filter: blur(8px); } }
+
+/* login: kartu dan logo menghilang sebelum beranda tampil */
+.lg.lg-out .lg-card, .lg.lg-out .lg-brand, .lg.lg-out .lg-chips { animation: tr-keluar 0.42s cubic-bezier(0.4, 0, 0.7, 1) both; pointer-events: none; }
+.lg.lg-out .lg-brand { animation-delay: 0.05s; }
+.lg.lg-out .lg-chips { animation-delay: 0.1s; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* pindah halaman */
+  html[data-trans] .pg > .ph { animation: tr-naik 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  html[data-trans] .pg > :not(.ph):not(.kpis):not(.stats),
+  html[data-trans] .kpis > *, html[data-trans] .stats > * { animation: tr-naik 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: 0.08s; }
+  html[data-trans] .pg > :nth-child(3), html[data-trans] .kpis > :nth-child(2), html[data-trans] .stats > :nth-child(2) { animation-delay: 0.14s; }
+  html[data-trans] .pg > :nth-child(4), html[data-trans] .kpis > :nth-child(3), html[data-trans] .stats > :nth-child(3) { animation-delay: 0.2s; }
+  html[data-trans] .pg > :nth-child(5), html[data-trans] .kpis > :nth-child(4), html[data-trans] .stats > :nth-child(4) { animation-delay: 0.26s; }
+  html[data-trans] .kpis > :nth-child(n+5) { animation-delay: 0.3s; }
+  html[data-trans] .pg > :nth-child(n+6) { animation-delay: 0.32s; }
+
+  /* login -> beranda: gerakan lebih panjang */
+  html[data-trans='masuk'] .top { animation: tr-turun 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  html[data-trans='masuk'] .gx-rail, html[data-trans='masuk'] .side { animation: tr-kiri 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both; }
+  html[data-trans='masuk'] .bnav { animation: tr-bawah 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both; }
+  html[data-trans='masuk'] .pg > .ph { animation-duration: 0.6s; animation-delay: 0.18s; }
+  html[data-trans='masuk'] .pg > :not(.ph):not(.kpis):not(.stats),
+  html[data-trans='masuk'] .kpis > *, html[data-trans='masuk'] .stats > * { animation-duration: 0.65s; animation-delay: 0.3s; }
+  html[data-trans='masuk'] .kpis > :nth-child(2), html[data-trans='masuk'] .stats > :nth-child(2) { animation-delay: 0.38s; }
+  html[data-trans='masuk'] .kpis > :nth-child(3), html[data-trans='masuk'] .stats > :nth-child(3) { animation-delay: 0.46s; }
+  html[data-trans='masuk'] .kpis > :nth-child(4), html[data-trans='masuk'] .stats > :nth-child(4) { animation-delay: 0.54s; }
+  html[data-trans='masuk'] .kpis > :nth-child(n+5), html[data-trans='masuk'] .pg > :nth-child(n+4) { animation-delay: 0.62s; }
+}

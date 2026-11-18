@@ -302,7 +302,7 @@ function route() {
     history.replaceState(null, '', '#' + hh);
   }
   if (!me) {
-    login(route);
+    login(masuk);
     return;
   }
   shell();
@@ -447,7 +447,6 @@ try {
 /* Efek loading antar halaman: lapisan #pl tampil sebentar, halaman diganti
    di baliknya, lalu lapisan memudar. Dilewati bila pengguna memilih "kurangi animasi". */
 const LOAD_FEEDBACK_MS = 120;
-let loadTimer;
 function loader(on) {
   let l = $('#pl');
   if (!l) {
@@ -464,20 +463,41 @@ function loader(on) {
   void l.offsetWidth;
   l.classList.toggle('on', on);
 }
+/** Memasang animasi sementara lewat atribut html[data-trans] (gaya di css/transisi.css). | param: jenis ('pindah' | 'masuk') | return: void */
+let animTimer;
+function anim(jenis) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const h = document.documentElement;
+  h.dataset.trans = jenis;
+  clearTimeout(animTimer);
+  animTimer = setTimeout(() => delete h.dataset.trans, jenis === 'masuk' ? 1500 : 800);
+}
+
+/** Dari login ke beranda: kartu login memudar dulu, lalu beranda tampil dengan animasi masuk. | param: - | return: void */
+let sedangMasuk = false;
+function masuk() {
+  const lg = $('.lg');
+  if (!lg || matchMedia('(prefers-reduced-motion: reduce)').matches) return route();
+  sedangMasuk = true;
+  lg.classList.add('lg-out');
+  setTimeout(() => {
+    anim('masuk');
+    route();
+    sedangMasuk = false;
+  }, 450);
+}
+
 function go() {
-  clearTimeout(loadTimer);
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return route();
-  loader(true);
+  if (sedangMasuk) return; // animasi masuk sedang berjalan; route() dipanggil olehnya
+  anim('pindah');
   route();
-  loadTimer = setTimeout(() => {
-    loader(false);
-  }, LOAD_FEEDBACK_MS);
 }
 
 addEventListener('hashchange', () => {
   if (innerWidth < 992) sb(true);
   go();
 });
+if (me) anim('pindah');
 route();
 if (me && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   // muat awal: tampilkan loading singkat seperti pindah halaman
