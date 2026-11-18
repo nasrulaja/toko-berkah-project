@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kotak lunak (Figma: #E4EFFF, r12) untuk tombol Restok / tambah (+) -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33001D34">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" />
+            <solid android:color="@color/primary_container" />
+        </shape>
+    </item>
+</ripple>

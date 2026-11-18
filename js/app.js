@@ -18,10 +18,10 @@
    NAV : susunan menu sidebar, dikelompokkan per grup
    ========================================================================== */
 
-import { splash } from './splash.js?v=20261117c';
-import { load, db, setDB, me, setMe, KS, K, save, seed } from './core/db.js?v=20261117c';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117c';
+import { load, db, setDB, me, setMe, KS, save } from './core/db.js?v=20261117m';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
 import {
+  terapkanFilter,
   dashboard,
   produk,
   stok,
@@ -38,7 +38,7 @@ import {
   pform,
   saveP,
   kform
-} from './pages.js?v=20261117c';
+} from './pages.js?v=20261117r';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
@@ -88,15 +88,18 @@ const NAV = [
    route() : kalau belum login tampilkan form login, kalau sudah render shell
    ========================================================================== */
 
-const cur = () => (Object.prototype.hasOwnProperty.call(PG, location.hash.slice(1)) ? location.hash.slice(1) : 'dashboard');
+const cur = () => {
+  const h = location.hash.slice(1).split('?')[0];
+  return Object.prototype.hasOwnProperty.call(PG, h) ? h : 'dashboard';
+};
 
 function shell() {
   const k = cur(),
     p = PG[k],
     navK = k === 'barang-masuk' ? 'stok' : k; // #barang-masuk menyorot menu Manajemen Stok
   $('#app').innerHTML =
-    `<aside class="side" id="sd"><div class="logo"><i>B</i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === navK ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'notifikasi' && notifUnread() ? `<span class="b r" style="margin-left:auto">${notifUnread() > 99 ? '99+' : notifUnread()}</span>` : ''}${id === 'stok-menipis' && db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
-<div class="main"><header class="top"><span class="brand"><i>B</i><b>${p.t}</b></span><span class="tdate">${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span><span class="sp"></span><a class="ic bell" href="#notifikasi" title="Notifikasi" aria-label="Notifikasi">${ico('bell')}${notifUnread() ? `<em>${notifUnread() > 99 ? '99+' : notifUnread()}</em>` : ''}</a><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
+    `<aside class="side" id="sd"><div class="logo"><i class="lgi"><img src="assets/logo-ikon.png" alt=""></i><span class="nm">Toko Berkah</span><button class="sbt" data-act="collapse" aria-label="Ciutkan atau lebarkan menu">${ico('menu')}</button></div>${NAV.map(([g, it]) => `<div class="grp">${g}</div>` + it.map(([id, ic, l]) => `<a class="nav ${id === navK ? 'on' : ''}" href="#${id}" title="${l}">${ico(ic)}<span class="ln">${l}</span>${id === 'notifikasi' && notifUnread() ? `<span class="b r" style="margin-left:auto">${notifUnread() > 99 ? '99+' : notifUnread()}</span>` : ''}${id === 'stok-menipis' && db.produk.filter((p) => p.stok <= p.stok_minimum).length ? `<span class="b r" style="margin-left:auto">${db.produk.filter((p) => p.stok <= p.stok_minimum).length}</span>` : ''}</a>`).join('')).join('')}</aside>
+<div class="main"><header class="top"><span class="brand"><i class="lgi"><img src="assets/logo-ikon.png" alt=""></i><b>${p.t}</b></span><span class="tdate">${new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span><span class="sp"></span><a class="ic bell" href="#notifikasi" title="Notifikasi" aria-label="Notifikasi">${ico('bell')}${notifUnread() ? `<em>${notifUnread() > 99 ? '99+' : notifUnread()}</em>` : ''}</a><button class="ic" data-act="logout" aria-label="Keluar" title="Keluar">${ico('out')}</button></header>
 <main class="pg"><div class="ph"><div><h2>${p.t}</h2><p>${p.s}</p></div><div>${p.act || ''}</div></div>${p.html()}</main></div>${bottomNav(navK)}`;
   labelTables();
   paginate();
@@ -261,9 +264,10 @@ function onClick(e) {
           if (p.kategori_id === id) p.kategori_id = null;
         });
         db.kategori = db.kategori.filter((x) => x.id !== id);
-        save();
-        toast('Kategori dihapus');
-        shell();
+        save().then((r) => {
+          toast(r.ok ? 'Kategori dihapus' : 'Gagal menyimpan ke database: ' + r.pesan);
+          shell();
+        });
       });
     } else if (a === 'det') {
       const t = db.transaksi.find((x) => x.id === id);
@@ -291,6 +295,12 @@ function onClick(e) {
    ========================================================================== */
 
 function route() {
+  // tautan berfilter (mis. #laporan?lp=hari): terapkan filter, lalu bersihkan tanda tanya dari alamat
+  const [hh, qs] = location.hash.slice(1).split('?');
+  if (qs) {
+    terapkanFilter(Object.fromEntries(new URLSearchParams(qs)));
+    history.replaceState(null, '', '#' + hh);
+  }
   if (!me) {
     login(route);
     return;
@@ -412,26 +422,23 @@ try {
 }
 theme('light'); // aplikasi hanya memakai tema terang
 
-/** Memuat data dengan batas waktu; bila Supabase lambat, pakai data lokal.
- *  param: ms (batas waktu milidetik) | return: Promise<objek DB> */
-async function loadAman(ms = 8000) {
-  return Promise.race([
-    load(),
-    new Promise((resolve) =>
-      setTimeout(async () => {
-        // waktu habis: tetap beri data agar aplikasi bisa dibuka
-        try {
-          const s = localStorage.getItem(K);
-          if (s) return resolve(JSON.parse(s));
-        } catch (e) {}
-        resolve(await load().catch(() => seed()));
-      }, ms)
-    )
-  ]);
+/** Layar galat bila database tidak terjangkau: aplikasi tidak memakai data cadangan. | param: pesan (string) | return: void */
+function layarGalat(pesan) {
+  $('#app').innerHTML = `<div class="lg"><div class="lg-c"><div class="lg-brand"><img class="lg-img" src="assets/logo.png" alt="Toko Berkah"><span>Sistem manajemen toko</span></div><div class="lg-card"><h2 class="lg-t">Tidak dapat terhubung</h2><p class="lg-s">Data toko diambil dari database dan saat ini belum bisa dijangkau. Periksa koneksi internet, lalu coba lagi.</p><p class="note" style="word-break:break-word">${esc(pesan)}</p><button class="lg-b" id="ulang">Coba lagi</button></div></div></div>`;
+  $('#ulang').onclick = () => location.reload();
 }
 
-// Muat data: Supabase lebih dulu (async), lalu tampilkan aplikasi
-setDB(await loadAman());
+// salinan data lama di browser (versi sebelumnya) dihapus; data hanya dari Supabase
+try {
+  localStorage.removeItem('berkah_db_v1');
+} catch (e) {}
+// Muat data dari Supabase, lalu tampilkan aplikasi
+try {
+  setDB(await load());
+} catch (e) {
+  layarGalat(e.message || String(e));
+  throw e;
+}
 try {
   const s = localStorage.getItem(KS);
   setMe(db.users.find((u) => u.id == s) || null);
@@ -478,4 +485,5 @@ if (me && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   setTimeout(() => loader(false), LOAD_FEEDBACK_MS);
 }
 
-splash(); // layar sambutan: "TOKO BERKAH" diketik, lalu masuk ke halaman
+// Splash kini statis di index.html (bukan lagi dibuat dari app.js): tampil
+// sebelum skrip ini jalan, jadi tidak menunggu modul selesai dimuat.

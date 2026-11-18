@@ -106,7 +106,6 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - **`css/mobile.css`** — Penataan khusus HP (< 992px): bar menu bawah, tabel jadi kartu, modal & form ramah sentuh.
 - **`css/light.css`** — Penyempurnaan tema terang (latar aurora + kaca), dimuat paling akhir; tema gelap tidak disentuh.
 - **`css/loader.css`** — Overlay kaca saat pindah halaman (ring + progress halus), diatur `loader()` di `js/app.js`.
-- **`css/splash.css`** — Layar sambutan (typewriter "TOKO BERKAH") + hiasan halaman login.
 - **`css/pages/dashboard.css`** — Gaya khusus halaman Dashboard.
 - **`css/pages/penjualan.css`** — Gaya khusus halaman Penjualan/Transaksi.
 - **`js/core/db.js`** — Interaksi `localStorage`, simpan/muat basis data, seeding data awal, pencatatan mutasi/transaksi.
@@ -115,7 +114,7 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 - **`js/pages.js`** — Render seluruh halaman (Dashboard, Produk, Stok, Laporan, Hasil Tutup Buku, Transaksi, Pengaturan, Login).
 - **`js/app.js`** — Titik masuk (*bootstrap*): routing hash URL dan event binding utama.
 - **`js/charts.js`** — Pembuatan grafik untuk dashboard/laporan.
-- **`js/splash.js`** — Logika layar splash saat aplikasi dimuat.
+- **`index.html`** — Kerangka halaman; splash screen kini statis di sini (CSS di `<head>`, HTML setelah `<body>`, skrip penutup sebelum `</body>`) beserta gambar potongan logo di `assets/splash/`.
 - **`js/glass-rail.js`** — GX Rail vertikal di desktop dengan fisika *spring* (*rubber banding*, tetesan air).
 
 ### Catatan teknis web

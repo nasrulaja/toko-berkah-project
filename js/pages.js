@@ -21,11 +21,29 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, sell, KS, setMe, setDB, seed, rentangPeriode, terkunci, dbSumber, dbGalat } from './core/db.js?v=20261117c';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117c';
-import { barChart, donut, spark, short } from './charts.js?v=20261117c';
+import { db, me, save, mut, KS, setMe, terkunci, dbGalat } from './core/db.js?v=20261117m';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117m';
+import { barChart, donut, spark, short } from './charts.js?v=20261117m';
 
 let S = {};
+
+/** Mengisi filter halaman dari tautan (mis. #laporan?lp=hari) sebelum halaman digambar. | param: o (objek kunci-nilai) | return: void */
+export const terapkanFilter = (o) => Object.assign(S, o);
+
+/** Daftar periode filter dan batas awalnya (ms). | param: tf (kunci periode) | return: ms awal periode */
+const PERIODE = [
+  ['semua', 'Semua data'],
+  ['hari', 'Hari ini'],
+  ['7hari', '7 hari terakhir'],
+  ['30hari', '30 hari terakhir'],
+  ['bulan', 'Bulan ini'],
+  ['tahun', 'Tahun ini']
+];
+const awalPeriode = (tf) => {
+  const k = new Date(),
+    h = new Date(k.getFullYear(), k.getMonth(), k.getDate()).getTime();
+  return { semua: 0, hari: h, '7hari': h - 6 * 864e5, '30hari': h - 29 * 864e5, bulan: new Date(k.getFullYear(), k.getMonth(), 1).getTime(), tahun: new Date(k.getFullYear(), 0, 1).getTime() }[tf];
+};
 
 const prod = (id) => db.produk.find((x) => x.id == id);
 const kat = (id) => db.kategori.find((x) => x.id == id);
@@ -83,7 +101,7 @@ const lastDays = (m, n, offset = 0) =>
 
 /** Badge tren persen vs periode sebelumnya. | param: cur, prev, label | return: string HTML */
 const trend = (cur, prev, label) => {
-  if (!prev && !cur) return `<small>${label}</small>`;
+  if (!prev && !cur) return `${tip('Belum ada data untuk dibandingkan. Persentase perubahan akan muncul setelah ada penjualan.')}<small>${label}</small>`;
   const info = tip(`Persentase perubahan ${label}. Hijau berarti naik, merah berarti turun. Tulisan Baru berarti belum ada data pembanding.`);
   if (!prev) return `<span class="tr up">${ico('up')}Baru</span>${info}<small>${label}</small>`;
   const pc = Math.round(((cur - prev) / prev) * 100),
@@ -124,13 +142,13 @@ export function dashboard() {
   });
   const stokBeli7 = db.produk.reduce((a, p) => a + (p.stok - (ubah.get(p.id) || 0)) * p.harga_beli, 0);
   const kpis1 = [
-    kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'dibanding kemarin'), sp: spark(w7.map((x) => x.sales)), lnk: '#laporan' }),
-    kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'dibanding kemarin'), sp: spark(w7.map((x) => x.count)), lnk: '#transaksi' }),
-    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'dibanding kemarin'), sp: spark(w7.map((x) => x.profit)), lnk: '#laporan' }),
-    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Nilai satu transaksi paling besar pada hari ini. Dihitung per hari, bukan per pembeli.', v: rp(belanjaMax), f: `<small>${trxHariIni.length ? `Dari ${trxHariIni.length} transaksi hari ini` : 'Belum ada transaksi hari ini'}</small>`, lnk: '#transaksi' })
+    kpi({ c: 'k1', ic: 'cash', l: 'Pendapatan hari ini', h: 'Total uang dari semua penjualan hari ini.', v: rp(td.sales), f: trend(td.sales, yd.sales, 'dibanding kemarin'), sp: spark(w7.map((x) => x.sales)), lnk: '#laporan?lp=hari' }),
+    kpi({ c: 'k2', ic: 'cart', l: 'Penjualan hari ini', h: 'Jumlah penjualan (struk) yang tercatat hari ini.', v: td.count, f: trend(td.count, yd.count, 'dibanding kemarin'), sp: spark(w7.map((x) => x.count)), lnk: '#transaksi?tp=hari' }),
+    kpi({ c: 'k3', ic: 'trend', l: 'Laba kotor hari ini', h: 'Penjualan dikurangi harga beli barang yang terjual. Belum dikurangi biaya lain seperti listrik atau gaji.', v: rp(td.profit), f: trend(td.profit, yd.profit, 'dibanding kemarin'), sp: spark(w7.map((x) => x.profit)), lnk: '#laporan?lp=hari' }),
+    kpi({ c: 'k4', ic: 'wallet', l: 'Total belanja terbesar harian', h: 'Nilai satu transaksi paling besar pada hari ini. Dihitung per hari, bukan per pembeli.', v: rp(belanjaMax), f: `<small>${trxHariIni.length ? `Dari ${trxHariIni.length} transaksi hari ini` : 'Belum ada transaksi hari ini'}</small>`, lnk: '#transaksi?tp=hari&tu=total' })
   ].join('');
   const kpis2 = [
-    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'dibanding 7 hari lalu'), lnk: '#laporan' }),
+    kpi({ c: 'k1', ic: 'list', l: 'Omzet 7 hari', h: 'Total penjualan 7 hari terakhir. Persen menunjukkan perbandingan dengan 7 hari sebelumnya.', v: rp(sum(w7, 'sales')), f: trend(sum(w7, 'sales'), sum(w7p, 'sales'), 'dibanding 7 hari lalu'), lnk: '#laporan?lp=7hari' }),
     kpi({ c: 'k2', ic: 'layers', l: 'Nilai stok (modal)', h: 'Harga beli dikali stok semua barang yang masih ada. Artinya uang modal yang tertanam di barang.', v: rp(stokBeli), f: trend(stokBeli, stokBeli7, 'dibanding 7 hari lalu') + `<small class="blk"><span>Potensi jual${tip('Perkiraan uang yang didapat bila semua stok yang ada terjual habis dengan harga jual sekarang.')}</span><b>${rp(stokJual)}</b></small>`, lnk: '#stok' }),
     kpi({ c: 'k3', ic: 'box', l: 'Jumlah produk', h: 'Banyaknya jenis barang yang terdaftar.', v: db.produk.length, f: `<small>${db.kategori.length} kategori</small>`, lnk: '#produk' }),
     kpi({ c: 'k5', ic: 'alert', l: 'Stok menipis', h: 'Barang yang stoknya sudah sama dengan atau di bawah batas minimum. Segera isi ulang.', v: L.length, f: `<small>${L.length ? 'Perlu segera diisi ulang' : 'Semua stok aman'}</small>`, lnk: '#stok-menipis' })
@@ -277,7 +295,7 @@ export function dashboard() {
   </div>
 
   <div class="dgrid3">
-    <div class="card"><div class="ch"><h4>Produk Terlaris</h4><a href="#laporan" class="btn sm">Laporan</a></div><div class="cb">${
+    <div class="card"><div class="ch"><h4>Produk Terlaris</h4><a href="#laporan" class="btn sm">Selengkapnya</a></div><div class="cb">${
       best
         .map(
           (x, i) =>
@@ -285,7 +303,7 @@ export function dashboard() {
         )
         .join('') || empty('Belum ada penjualan', 'Produk terlaris tampil setelah ada transaksi.')
     }</div></div>
-    <div class="card"><div class="ch"><h4>Stok Menipis</h4><a href="#stok-menipis" class="btn sm">Lihat semua</a></div><div class="cb">${
+    <div class="card"><div class="ch"><h4>Stok Menipis</h4><a href="#stok-menipis" class="btn sm">Selengkapnya</a></div><div class="cb">${
       (L.length ? '' : '<p class="note ok">Semua stok aman. Produk dengan stok paling sedikit:</p>') +
       sedikit
         .slice(0, 5)
@@ -298,7 +316,7 @@ export function dashboard() {
     <div class="card"><div class="ch"><h4>Jam Tersibuk</h4><a href="#laporan" class="btn sm">Selengkapnya</a></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p><div class="mini">${ringkasJam.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>${top3Jam.map(([h, c]) => `<div class="tp" style="margin-top:12px"><span class="rk">${String(h).padStart(2, '0')}</span><div class="tp-b"><div class="tp-h"><b>Pukul ${String(h).padStart(2, '0')}.00</b><span>${c} transaksi</span></div><div class="bar"><i style="width:${Math.round((c / maxJam) * 100)}%"></i></div></div></div>`).join('')}</div></div>
   </div>
 
-  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Lihat semua</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
+  <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Selengkapnya</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th></tr>${
     rec.slice(0, 5).map((t, i) => `<tr><td>${i + 1}</td><td><b>${esc(t.kode)}</b></td><td>${dt(t.waktu)}</td><td class="r">${items.get(t.id) || 0}</td><td class="r">${rp(t.total)}</td></tr>`).join('') ||
     `<tr><td colspan="6">${empty('Belum ada transaksi', 'Riwayat transaksi akan muncul di sini.')}</td></tr>`
   }</table></div></div>
@@ -567,8 +585,8 @@ export function panduan() {
     ['Bagaimana melihat hanya barang masuk atau barang keluar di riwayat stok?', 'Di Manajemen Stok pakai filter jenis mutasi di atas tabel riwayat, lalu pilih jenis yang dicari, misalnya Barang masuk.'],
     ['Kenapa kotak Selisih dan Laba angkanya sama?', 'Laba dihitung dari pendapatan dikurangi pengeluaran (modal), sama dengan rumus Selisih. Kotak Selisih menambahkan keterangan Untung, Rugi, atau Impas.'],
     ['Notifikasi saya terlalu banyak.', 'Di halaman Notifikasi pilih filter (Belum dibaca, Penjualan, Stok, atau Tutup buku) atau ketik kata kunci di kotak Cari. Bila masih terlalu banyak, tekan Tandai semua dibaca atau Hapus semua. Data transaksi dan stok tidak ikut terhapus.'],
-    ['Apakah data saya aman bila browser ditutup?', 'Data tersimpan di database Supabase, jadi tetap ada walau browser ditutup dan bisa dibuka dari perangkat lain. Saat internet terputus, aplikasi memakai salinan terakhir di browser. Jangan memakai tombol Reset di Pengaturan kecuali ingin kembali ke data contoh.'],
-    ['Dari mana aplikasi mengambil data?', 'Data diambil langsung dari database Supabase. Status koneksi bisa dilihat di halaman Pengaturan pada kartu Basis Data: Terhubung berarti data terkirim ke server, sedangkan Lokal (offline) berarti sedang memakai salinan di browser karena server tidak terjangkau.'],
+    ['Apakah data saya aman bila browser ditutup?', 'Data tersimpan di database Supabase, jadi tetap ada walau browser ditutup dan bisa dibuka dari perangkat lain. Aplikasi tidak menyimpan data toko di browser, jadi butuh koneksi internet untuk dibuka.'],
+    ['Dari mana aplikasi mengambil data?', 'Data diambil langsung dari database Supabase. Status koneksi bisa dilihat di halaman Pengaturan pada kartu Basis Data: Terhubung berarti data terkirim ke server, sedangkan Ada masalah berarti penyimpanan terakhir gagal dan pesannya tampil di kartu itu.'],
   ];
   return `<div class="card"><div class="ch"><h4>Mulai dari mana?</h4></div><div class="cb gd">${langkah
     .map(([ic, t, d, h], i) => `<a class="gd-i" href="${h}"><span class="gd-n">${i + 1}</span><span class="nic">${ico(ic)}</span><span><b>${t}</b><small>${d}</small></span></a>`)
@@ -585,7 +603,7 @@ export function stokMenipis() {
   const L = low().sort((a, b) => a.stok - b.stok);
   return `<div class="card"><div class="ch"><h4>Produk perlu diisi ulang (${L.length})</h4></div><div class="tw">${
     L.length
-      ? `<table data-size="5"><tr><th>No</th><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p, i) => `<tr><td>${i + 1}</td><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk">Isi ulang</a></td></tr>`).join('')}</table>`
+      ? `<table data-size="5"><tr><th>No</th><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p, i) => `<tr><td>${i + 1}</td><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk?mpid=${p.id}">Isi ulang</a></td></tr>`).join('')}</table>`
       : empty('Semua stok aman', 'Tidak ada barang di bawah stok minimum.')
   }</div></div>`;
 }
@@ -597,7 +615,9 @@ export function stok() {
       pidEl = $('#mpid'),
       jmlEl = $('#mjml'),
       catEl = $('#mcat'),
-      hbEl = $('#mhb');
+      hbEl = $('#mhb'),
+      cariEl = $('#mcari'),
+      hintEl = $('#mhint');
     // sesuaikan isian dengan jenis mutasi: penyesuaian boleh 0 dan wajib alasan; harga beli hanya untuk barang masuk
     const syncForm = () => {
       const j = jenisEl.value;
@@ -608,10 +628,35 @@ export function stok() {
       hbEl.required = j === 'masuk';
       const p = prod(pidEl.value);
       if (p && j === 'masuk') hbEl.value = p.harga_beli;
+      if (hintEl) hintEl.textContent = p ? `Stok sekarang ${packTxt(p)} · minimum ${p.stok_minimum}` : '';
     };
     jenisEl.onchange = syncForm;
     pidEl.onchange = syncForm;
     syncForm();
+
+    /* Pencarian produk: menyaring daftar pilihan agar tidak perlu menggulir panjang.
+       Bila kata kunci hanya cocok dengan satu produk, produk itu langsung terpilih. */
+    if (cariEl) {
+      const cari = () => {
+        const q = cariEl.value.trim().toLowerCase();
+        const hasil = q
+          ? db.produk.filter((p) => `${p.nama} ${p.barcode || ''}`.toLowerCase().includes(q))
+          : db.produk;
+        const kini = pidEl.value;
+        pidEl.innerHTML = hasil.length ? popt({ produk: hasil }, hasil.some((p) => p.id == kini) ? kini : hasil[0].id) : '<option value="">(produk tidak ditemukan)</option>';
+        if (hasil.length === 1) pidEl.value = hasil[0].id;
+        syncForm();
+      };
+      cariEl.oninput = cari;
+      // Enter di kotak cari jangan sampai mengirim form sebelum produk dipilih
+      cariEl.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          cari();
+          pidEl.focus();
+        }
+      };
+    }
     $('#mform').onsubmit = (e) => {
       e.preventDefault();
       const p = prod(pidEl.value),
@@ -635,9 +680,7 @@ export function stok() {
         if (q === p.stok) return toast('Stok sudah sama, tidak ada perubahan');
         mut(p, 'penyesuaian', q - p.stok, { cat });
       }
-      save();
-      toast('Stok diperbarui');
-      shellRef();
+      simpan('Stok diperbarui');
     };
   }, 0);
   const fj = jb[S.mj] ? S.mj : '',
@@ -651,7 +694,7 @@ export function stok() {
         shellRef();
       };
   });
-  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label>Produk</label><select id="mpid" required>${popt(db)}</select></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (ubah stok langsung)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan</button></form></div></div>
+  return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label for="mcari">Produk</label><input id="mcari" type="search" placeholder="Cari nama produk…" autocomplete="off"><select id="mpid" required size="1">${popt(db, S.mpid)}</select><small class="hint" id="mhint"></small></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (ubah stok langsung)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan</button></form></div></div>
   <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length}${semua.length > rec.length ? ' terbaru' : ''})</h4><div class="flt"><select id="fjenis" aria-label="Filter jenis mutasi"><option value="">Semua jenis</option>${Object.entries(jb).map(([k, v]) => `<option value="${k}"${k === fj ? ' selected' : ''}>${v[1]}</option>`).join('')}</select></div></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
   ${rec
     .map((m, i) => {
@@ -668,7 +711,7 @@ export function stok() {
    laporan()    : ringkasan omzet/laba, grafik, dan produk terlaris
    hasilTutupBuku(): riwayat laporan tutup buku (proses dilakukan di desktop)
    transaksi()  : daftar seluruh transaksi + tombol detail
-   pengaturan() : profil toko, ganti user, reset ke data contoh, logout
+   pengaturan() : profil toko, status database, notifikasi, logout
    ========================================================================== */
 
 /** Hasil tutup buku (hanya tampilan): ringkasan dan riwayat per periode. Proses tutup buku dilakukan di aplikasi Desktop. | param: - | return: string HTML */
@@ -694,16 +737,7 @@ export function hasilTutupBuku() {
 export function laporan() {
   /* --- Filter periode: menyaring SEMUA angka & tabel di halaman ini --- */
   const tf = ['semua', 'hari', '7hari', '30hari', 'bulan', 'tahun'].includes(S.lp) ? S.lp : 'semua';
-  const kini = new Date(),
-    awalHari = new Date(kini.getFullYear(), kini.getMonth(), kini.getDate()).getTime();
-  const batas = {
-    semua: 0,
-    hari: awalHari,
-    '7hari': awalHari - 6 * 864e5,
-    '30hari': awalHari - 29 * 864e5,
-    bulan: new Date(kini.getFullYear(), kini.getMonth(), 1).getTime(),
-    tahun: new Date(kini.getFullYear(), 0, 1).getTime()
-  }[tf];
+  const batas = awalPeriode(tf);
   const labelPeriode = {
     semua: 'seluruh data',
     hari: 'hari ini',
@@ -775,14 +809,7 @@ export function laporan() {
         shellRef();
       };
   });
-  const opsi = [
-      ['semua', 'Semua data'],
-      ['hari', 'Hari ini'],
-      ['7hari', '7 hari terakhir'],
-      ['30hari', '30 hari terakhir'],
-      ['bulan', 'Bulan ini'],
-      ['tahun', 'Tahun ini']
-    ],
+  const opsi = PERIODE,
     fltBar = `<div class="flt"><select id="flp" aria-label="Filter periode laporan">${opsi.map(([k, v]) => `<option value="${k}"${k === tf ? ' selected' : ''}>${v}</option>`).join('')}</select></div>`;
   return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b> — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
@@ -813,33 +840,47 @@ export function laporan() {
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function transaksi() {
-  const rec = [...db.transaksi].reverse(),
-    nKunci = rec.filter(terkunci).length;
-  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${rec.length})</h4>${nKunci ? `<span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
-  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('')}</table></div></div>`;
+  const tp = PERIODE.some(([k]) => k === S.tp) ? S.tp : 'semua',
+    tu = S.tu === 'total' ? 'total' : 'baru',
+    batas = awalPeriode(tp),
+    semua = [...db.transaksi].reverse(),
+    rec = semua.filter((t) => new Date(t.waktu).getTime() >= batas).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
+    nKunci = rec.filter(terkunci).length,
+    label = PERIODE.find(([k]) => k === tp)[1].toLowerCase();
+  setTimeout(() => {
+    const f = $('#ftp'),
+      u = $('#ftu');
+    if (f)
+      f.onchange = () => {
+        S.tp = f.value;
+        shellRef();
+      };
+    if (u)
+      u.onchange = () => {
+        S.tu = u.value;
+        shellRef();
+      };
+  }, 0);
+  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${tp === 'semua' ? rec.length : rec.length + ' dari ' + semua.length})</h4><div class="flt"><select id="ftp" aria-label="Filter periode transaksi">${PERIODE.map(([k, v]) => `<option value="${k}"${k === tp ? ' selected' : ''}>${v}</option>`).join('')}</select><select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>.${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
+  ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('') || `<tr><td colspan="6">Belum ada transaksi pada periode ini.</td></tr>`}</table></div></div>`;
 }
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function pengaturan() {
   setTimeout(() => {
     bindSwitch('nsw2');
-    $('#resetDB').onclick = () => {
-      ask('Reset seluruh data ke awal (data contoh)? Data Anda akan terhapus.', () => {
-        setDB(seed());
-        save();
-        toast('Data direset ke contoh');
-        shellRef();
-      });
-    };
   }, 0);
   return `<div class="card"><div class="ch"><h4>Profil Toko</h4></div><div class="cb"><p>Pengguna Aktif: <b>${esc(me.nama)}</b> (${esc(me.email)})</p></div></div>
-  <div class="card"><div class="ch"><h4>Basis Data</h4></div><div class="cb"><p style="margin:0 0 10px">${
-    dbSumber === 'supabase'
-      ? 'Terhubung ke database Supabase. Semua perubahan langsung tersimpan ke server, jadi data sama di setiap perangkat.'
-      : 'Sedang memakai data lokal di browser ini karena database Supabase tidak terjangkau. Perubahan belum terkirim ke server.'
-  }</p><p class="note" style="margin:0">Status: <b>${dbSumber === 'supabase' ? 'Terhubung' : 'Lokal (offline)'}</b>${dbGalat ? ` — ${esc(dbGalat)}` : ''}</p></div></div>
-  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Sakelar notifikasi hanya ada di halaman ini. Bila aktif, aktivitas toko (penjualan, stok, tutup buku) tampil di halaman Notifikasi dan angka muncul pada lencana lonceng.</p>${notifSwitch('nsw2')}</div></div>
-  <div class="card"><div class="ch"><h4>Pembersihan Data</h4></div><div class="cb"><button class="btn bd" id="resetDB">Reset Basis Data ke Contoh</button></div></div>`;
+  <div class="card"><div class="ch"><h4>Basis Data</h4></div><div class="cb"><p style="margin:0 0 10px">Terhubung ke database Supabase. Semua perubahan langsung tersimpan ke server, jadi data sama di setiap perangkat. Aplikasi tidak menyimpan data toko di browser.</p><p class="note" style="margin:0">Status: <b>${dbGalat ? 'Ada masalah' : 'Terhubung'}</b>${dbGalat ? ` — ${esc(dbGalat)}` : ''}</p></div></div>
+  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Sakelar notifikasi hanya ada di halaman ini. Bila aktif, aktivitas toko (penjualan, stok, tutup buku) tampil di halaman Notifikasi dan angka muncul pada lencana lonceng.</p>${notifSwitch('nsw2')}</div></div>`;
+}
+
+/** Menyimpan perubahan ke Supabase, memberi tahu hasilnya, lalu menampilkan ulang halaman dari isi database. | param: ok (pesan bila berhasil) | return: Promise<boolean> */
+async function simpan(ok) {
+  const r = await save();
+  toast(r.ok ? ok : 'Gagal menyimpan ke database: ' + r.pesan);
+  shellRef();
+  return r.ok;
 }
 
 /* ==========================================================================
@@ -897,9 +938,7 @@ export function saveP(d, p) {
     db.produk.push(n);
     if (stokBaru > 0) mut(n, 'masuk', stokBaru, { hb: n.harga_beli, cat: 'Stok awal' });
   }
-  save();
-  toast('Produk disimpan');
-  shellRef();
+  simpan('Produk disimpan');
 }
 
 export function kform(k) {
@@ -915,9 +954,7 @@ export function kform(k) {
       }
       if (k) k.nama = n;
       else db.kategori.push({ id: ++db.n, nama: n, created_at: new Date().toISOString() });
-      save();
-      toast('Kategori disimpan');
-      shellRef();
+      simpan('Kategori disimpan');
     }
   );
 }
@@ -931,7 +968,7 @@ export function kform(k) {
 
 export function login(routeFn) {
   $('#app').innerHTML =
-    `<div class="lg"><div class="lg-c"><div class="lg-brand"><b>TOKO BERKAH</b><span>Sistem manajemen toko</span></div><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Silakan masuk untuk melanjutkan</p><div class="lg-al" id="al" role="alert" hidden></div>
+    `<div class="lg"><div class="lg-c"><div class="lg-brand"><img class="lg-img" src="assets/logo.png" alt="Toko Berkah"><span>Sistem manajemen toko</span></div><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Silakan masuk untuk melanjutkan</p><div class="lg-al" id="al" role="alert" hidden></div>
   <div class="lg-f"><label class="lg-l" for="em">${ico('mail')}Surel</label><div class="lg-w" id="w1"><span class="lg-i">${ico('mail')}</span><input id="em" name="email" type="email" autocomplete="username" placeholder="surel@contoh.com" value="berkah@gmail.com"></div></div>
   <div class="lg-f"><label class="lg-l" for="pw">${ico('lock')}Kata sandi</label><div class="lg-w" id="w2"><span class="lg-i">${ico('lock')}</span><input id="pw" name="pw" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" value="berkah123"><button type="button" class="lg-eye" id="eye" aria-label="Tampilkan kata sandi">${ico('eye')}</button></div></div>
   <button class="lg-b">Masuk</button></form><ul class="lg-chips"><li>${ico('box')}Stok</li><li>${ico('cart')}Penjualan</li><li>${ico('chart')}Laporan</li><li>${ico('book')}Tutup Buku</li></ul></div></div>`;

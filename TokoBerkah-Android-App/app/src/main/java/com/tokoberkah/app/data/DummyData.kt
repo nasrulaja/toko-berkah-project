@@ -1,14 +1,17 @@
 package com.tokoberkah.app.data
 
 import com.tokoberkah.app.R
+import com.tokoberkah.pos.data.Categories
 
 /**
  * Data dummy produk toko. Sesuai desain Figma:
- * - Kopi: 4 renceng (rak 4, gudang 0)
+ * - Kopi: 4 renceng (stok menipis)
  * - Beras: 0 (habis)
- * - Indomie: 15 (rak 5, gudang 10)
- * - Bimoli: 48 (rak 5, gudang 43)
+ * - Indomie: 15 (tersedia)
+ * - Bimoli: 48 (tersedia)
  * ditambah 2 produk tambahan agar daftar lebih realistis.
+ *
+ * Tag kategori memakai master [Categories.ALL] dari Figma.
  */
 object DummyData {
 
@@ -21,7 +24,9 @@ object DummyData {
             shelfStock = 4,
             warehouseStock = 0,
             lastIncoming = "3 hari lalu",
-            imageRes = R.drawable.product_kopi
+            imageRes = R.drawable.product_kopi,
+            categories = Categories.of("Susu & Kopi", "Minuman", "Sembako"),
+            unitsPerBox = 40
         ),
         Product(
             ean = "8992003300891",
@@ -31,7 +36,9 @@ object DummyData {
             shelfStock = 0,
             warehouseStock = 0,
             lastIncoming = "5 hari lalu",
-            imageRes = R.drawable.product_beras
+            imageRes = R.drawable.product_beras,
+            categories = Categories.of("Sembako"),
+            unitsPerBox = 1
         ),
         Product(
             ean = "0089686170733",
@@ -41,7 +48,9 @@ object DummyData {
             shelfStock = 5,
             warehouseStock = 10,
             lastIncoming = "1 hari lalu",
-            imageRes = R.drawable.product_indomie
+            imageRes = R.drawable.product_indomie,
+            categories = Categories.of("Mie Instan", "Sembako"),
+            unitsPerBox = 40
         ),
         Product(
             ean = "8992388012493",
@@ -51,7 +60,9 @@ object DummyData {
             shelfStock = 5,
             warehouseStock = 43,
             lastIncoming = "2 hari lalu",
-            imageRes = R.drawable.product_bimoli
+            imageRes = R.drawable.product_bimoli,
+            categories = Categories.of("Sembako", "Bumbu Dapur"),
+            unitsPerBox = 12
         ),
         Product(
             ean = "8991102100108",
@@ -61,7 +72,9 @@ object DummyData {
             shelfStock = 8,
             warehouseStock = 12,
             lastIncoming = "4 hari lalu",
-            imageRes = R.drawable.product_kopi
+            imageRes = R.drawable.product_kopi,
+            categories = Categories.of("Minuman"),
+            unitsPerBox = 20
         ),
         Product(
             ean = "8991002101017",
@@ -71,7 +84,9 @@ object DummyData {
             shelfStock = 2,
             warehouseStock = 9,
             lastIncoming = "6 hari lalu",
-            imageRes = R.drawable.product_beras
+            imageRes = R.drawable.product_beras,
+            categories = Categories.of("Sembako"),
+            unitsPerBox = 24
         )
     )
 

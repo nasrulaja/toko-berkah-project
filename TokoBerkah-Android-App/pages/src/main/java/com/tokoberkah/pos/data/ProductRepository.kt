@@ -22,12 +22,14 @@ object ProductRepository {
         val bimoli = Product(
             ean = "8992388012493",
             name = "Minyak Goreng Bimoli 2L",
-            category = "Kebutuhan Dapur",
+            categories = Categories.of("Sembako", "Bumbu Dapur"),
             stock = 48,
             location = "Rak B3",
             imageRes = R.drawable.img_bimoli,
             badge = "2L",
             price = 34_000,
+            unitsPerBox = 12,
+            lastIncoming = "2 hari lalu",
             history = mutableListOf(
                 PriceChange("12 Nov 2026", "09.15", 33_000, 34_000, "Pemilik toko", "Harga promo berakhir."),
                 PriceChange("05 Nov 2026", "14.30", 32_500, 33_000, "Pemilik toko", "Penyesuaian harga dari pemasok."),
@@ -39,12 +41,14 @@ object ProductRepository {
         val beras = Product(
             ean = "8992003300891",
             name = "Beras Pandan Wangi 5Kg",
-            category = "Bahan Pokok",
-            stock = 26,
+            categories = Categories.of("Sembako"),
+            stock = 0,
             location = "Rak A1",
             imageRes = R.drawable.img_beras,
             badge = "5kg",
             price = 75_000,
+            unitsPerBox = 1,
+            lastIncoming = "5 hari lalu",
             history = mutableListOf(
                 PriceChange("08 Nov 2026", "11.20", 74_000, 75_000, "Pemilik toko", "Harga dari distributor naik."),
                 PriceChange("20 Okt 2026", "09.05", 73_500, 74_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
@@ -54,12 +58,14 @@ object ProductRepository {
         val kopi = Product(
             ean = "8991002102493",
             name = "Kopi Kapal Api Spesial Mixx",
-            category = "Minuman",
-            stock = 64,
+            categories = Categories.of("Susu & Kopi", "Minuman", "Sembako"),
+            stock = 4,
             location = "Rak C2",
             imageRes = R.drawable.img_kopi,
             badge = "",
             price = 21_100,
+            unitsPerBox = 40,
+            lastIncoming = "3 hari lalu",
             history = mutableListOf(
                 PriceChange("11 Nov 2026", "16.45", 20_500, 21_100, "Pemilik toko", "Penyesuaian harga dari pemasok."),
                 PriceChange("01 Okt 2026", "13.10", 20_000, 20_500, "Pemilik toko", "Biaya transportasi bertambah.")
@@ -69,12 +75,14 @@ object ProductRepository {
         val indomie = Product(
             ean = "0089686170733",
             name = "Indomie Goreng",
-            category = "Makanan Instan",
-            stock = 120,
+            categories = Categories.of("Mie Instan", "Sembako"),
+            stock = 14,
             location = "Rak D5",
             imageRes = R.drawable.img_indomie,
-            badge = "",
+            badge = "Karton / Dus",
             price = 3_100,
+            unitsPerBox = 40,
+            lastIncoming = "1 hari lalu",
             history = mutableListOf(
                 PriceChange("09 Nov 2026", "08.30", 3_000, 3_100, "Pemilik toko", "Penyesuaian harga dari pemasok."),
                 PriceChange("15 Okt 2026", "17.00", 2_950, 3_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
@@ -84,12 +92,14 @@ object ProductRepository {
         val gula = Product(
             ean = "8991002107812",
             name = "Gula Pasir Gulaku 1kg",
-            category = "Bahan Pokok",
-            stock = 40,
+            categories = Categories.of("Sembako"),
+            stock = 11,
             location = "Rak A2",
             imageRes = R.drawable.img_gula,
             badge = "1kg",
             price = 17_500,
+            unitsPerBox = 24,
+            lastIncoming = "6 hari lalu",
             history = mutableListOf(
                 PriceChange("07 Nov 2026", "10.15", 17_000, 17_500, "Pemilik toko", "Harga gulaku dari pemasok naik."),
                 PriceChange("18 Okt 2026", "12.40", 16_800, 17_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
@@ -103,6 +113,13 @@ object ProductRepository {
     /** All products, in catalogue order (used by the scan page). */
     fun all(): List<Product> = products
 
+    /**
+     * Produk yang perlu restock (stok <= 5), terurut dari yang paling
+     * banyak stoknya — dipakai sebagai daftar awal halaman Barang Masuk.
+     */
+    fun restockList(): List<Product> =
+        products.filter { it.needsRestock }.sortedByDescending { it.stock }
+
     fun byEan(ean: String): Product? = products.find { it.ean == ean }
 
     /** Recently viewed products, newest first. */
@@ -114,8 +131,7 @@ object ProductRepository {
     }
 
     /** Applies a new price and records it in the product's history. */
-    fun updatePrice(product: Product, newPrice: Int, reason: String) {
-        val old = product.price
+    fun updatePrice(product: Product, newPrice: Int, reason: String) {        val old = product.price
         if (old == newPrice) return
         val now = Date()
         product.price = newPrice

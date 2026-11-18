@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/tag_chip_text">
+    <!-- Tiga garis slider (hugeicons:filter-horizontal) -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="@color/tag_chip_text"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M3,6 L21,6 M3,12 L21,12 M3,18 L21,18" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="@color/tag_chip_text"
+        android:strokeWidth="2"
+        android:pathData="M9,6 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="@color/tag_chip_text"
+        android:strokeWidth="2"
+        android:pathData="M15,12 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="@color/tag_chip_text"
+        android:strokeWidth="2"
+        android:pathData="M7,18 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+</vector>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tombol Reset pada dialog filter (Figma: #EDF6FC, r12) -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#33001D34">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="12dp" />
+            <solid android:color="@color/tag_chip_reset_bg" />
+        </shape>
+    </item>
+</ripple>

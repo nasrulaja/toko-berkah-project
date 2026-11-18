@@ -4,16 +4,17 @@
     android:id="@+id/cardRoot"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="24dp"
+    android:layout_marginBottom="16dp"
     android:background="@drawable/bg_card"
     android:elevation="6dp"
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Atas: foto + nama + EAN -->
+    <!-- Atas: foto + nama + EAN + tombol tambah (produk sehat) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <FrameLayout
@@ -74,46 +75,36 @@
                     tools:text="8991001100223" />
             </LinearLayout>
         </LinearLayout>
+
+        <!-- Tombol "+" (produk stok tersedia) -> buka Barang Masuk -->
+        <LinearLayout
+            android:id="@+id/btnAdd"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_soft_round"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:contentDescription="@string/stock_add_qty"
+                android:src="@drawable/ic_plus"
+                android:tint="@color/text_link" />
+        </LinearLayout>
     </LinearLayout>
 
-    <!-- Badge status -->
+    <!-- Baris status + tag kategori (mengalir wrap, maksimal 4 tag) -->
     <LinearLayout
-        android:id="@+id/badgeStatus"
-        android:layout_width="wrap_content"
+        android:id="@+id/tagRows"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:background="@drawable/bg_badge_low"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingTop="4dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="4dp">
-
-        <View
-            android:id="@+id/badgeDot"
-            android:layout_width="8dp"
-            android:layout_height="8dp"
-            android:background="@drawable/bg_dot_green"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/badgeIcon"
-            android:layout_width="15dp"
-            android:layout_height="13dp"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_warn_small" />
-
-        <TextView
-            android:id="@+id/badgeText"
-            style="@style/FontBold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:text="@string/stock_status_low"
-            android:textColor="@color/warning_badge_text"
-            android:textSize="12sp" />
-    </LinearLayout>
+        android:orientation="vertical" />
 
     <!-- Sisa stok total -->
     <LinearLayout
@@ -159,118 +150,56 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Per lokasi: rak + gudang -->
+    <!-- Bawah: terakhir masuk (stok habis) + tombol Restok -->
     <LinearLayout
-        android:id="@+id/boxLocations"
+        android:id="@+id/bottomRow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:background="@drawable/bg_box_location"
-        android:orientation="vertical"
-        android:padding="14dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="13dp"
-                android:layout_height="12dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_loc_shelf" />
-
-            <TextView
-                style="@style/FontMedium"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:text="@string/stock_on_shelf"
-                android:textColor="@color/text_primary"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/locShelfValue"
-                style="@style/FontBold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                tools:text="4 Buah" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="20dp"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="13dp"
-                android:layout_height="12dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_loc_warehouse" />
-
-            <TextView
-                style="@style/FontMedium"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="6dp"
-                android:layout_weight="1"
-                android:text="@string/stock_in_warehouse"
-                android:textColor="@color/text_primary"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/locWarehouseValue"
-                style="@style/FontBold"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp"
-                tools:text="0 Buah" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Baris khusus stok habis: terakhir masuk -->
-    <LinearLayout
-        android:id="@+id/boxLastIncoming"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/bg_box_location"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="14dp"
-        android:visibility="gone">
+        android:visibility="gone"
+        tools:visibility="visible">
 
-        <ImageView
-            android:layout_width="13dp"
-            android:layout_height="13dp"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_clock" />
-
-        <TextView
-            android:id="@+id/lastIncomingText"
-            style="@style/FontMedium"
+        <LinearLayout
+            android:id="@+id/lastIncomingRow"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
             android:layout_weight="1"
-            android:textColor="@color/text_primary"
-            android:textSize="12sp"
-            tools:text="Terakhir Masuk: 3 hari lalu" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_clock" />
+
+            <TextView
+                android:id="@+id/lastIncomingText"
+                style="@style/FontMedium"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:textColor="@color/text_primary"
+                android:textSize="12sp"
+                tools:text="Terakhir Masuk: 3 hari lalu" />
+        </LinearLayout>
 
         <TextView
-            android:id="@+id/urgencyText"
-            style="@style/FontBold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/stock_urgent"
-            android:textColor="@color/error"
-            android:textSize="11sp" />
+            android:id="@+id/btnRestok"
+            android:layout_width="110dp"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_soft_round"
+            android:clickable="true"
+            android:focusable="true"
+            android:fontFamily="@font/plus_jakarta_bold"
+            android:gravity="center"
+            android:text="@string/stock_action_restock"
+            android:textColor="@color/text_link"
+            android:textSize="13sp" />
     </LinearLayout>
 </LinearLayout>

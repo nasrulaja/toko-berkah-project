@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Toko Berkah POS</string>
 
@@ -23,4 +23,32 @@
     <string name="harga_kasir">HARGA JUAL KASIR</string>
     <string name="resmi_terdaftar">Resmi Terdaftar</string>
     <string name="per_unit">/1 Buah</string>
+    <!-- Barang Masuk -->
+    <string name="nav_masuk_full">Barang Masuk</string>
+    <string name="masuk_empty">Pindai Kode Batang untuk memasukan barang</string>
+    <string name="masuk_jumlah">Jumlah Masuk</string>
+    <string name="masuk_satuan">Satuan Dus</string>
+    <string name="masuk_unit">Dus</string>
+    <string name="masuk_stok_after">Stok setelah disimpan</string>
+    <string name="masuk_total">Total nilai barang masuk</string>
+    <string name="masuk_harga_beli">Harga Beli per Dus</string>
+    <string name="masuk_opsional">(Opsional)</string>
+    <string name="masuk_simpan">Simpan</string>
+    <string name="masuk_batalkan">Batalkan</string>
+    <string name="masuk_hint_title">Produk Baru Belum Terdaftar?</string>
+    <string name="masuk_hint_body">Jika barcode belum dikenali, daftarkan nama\nproduk &amp; harga modal melalui Web Admin Toko\nBerkah di komputer kasir.</string>
+    <string name="masuk_saved">Barang masuk disimpan</string>
+
+    <!-- Barang Masuk — reviisi: Isi Per Dus + Harga Jual per Buah -->
+    <string name="masuk_isi_per_dus">Isi Per Dus</string>
+    <string name="masuk_isi_format">%1$d Dus = %2$d Buah</string>
+    <string name="masuk_harga_jual">Harga Jual per Buah</string>
+    <string name="masuk_stok_after_unit">Stok setelah disimpan</string>
+    <string name="masuk_total_label">SISA STOK TOTAL</string>
+    <string name="masuk_status_out">Habis</string>
+    <string name="masuk_status_low">Stok Menipis</string>
+    <string name="masuk_status_ok">Stok Aman</string>
+    <string name="masuk_last_incoming">Terakhir Masuk: %1$s</string>
+    <string name="masuk_edit_isi">Ubah isi per dus</string>
+    <string name="masuk_restock_title">Produk perlu restock</string>
 </resources>

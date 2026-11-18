@@ -1,8 +1,7 @@
-package com.tokoberkah.pos
+﻿package com.tokoberkah.pos
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
 import com.tokoberkah.pos.databinding.ActivityMainBinding
@@ -67,7 +66,12 @@ class MainActivity : AppCompatActivity() {
                 ).also { overridePendingTransition(0, 0) }
 
             R.id.navMasuk ->
-                Toast.makeText(this, "Halaman Masuk belum tersedia.", Toast.LENGTH_SHORT).show()
+                startActivity(
+                    android.content.Intent(
+                        this,
+                        com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity::class.java
+                    ).addFlags(android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                ).also { overridePendingTransition(0, 0) }
         }
     }
 }

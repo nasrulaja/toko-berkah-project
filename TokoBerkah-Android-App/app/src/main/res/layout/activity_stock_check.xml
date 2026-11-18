@@ -243,6 +243,39 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                <!-- Tombol Filter (fitur dari reviisi guru): buka dialog tag kategori -->
+                <LinearLayout
+                    android:id="@+id/chipFilter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_filter_chip"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingStart="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="3dp">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:contentDescription="@string/stock_filter"
+                        android:src="@drawable/ic_filter" />
+
+                    <TextView
+                        android:id="@+id/chipFilterText"
+                        style="@style/FontBold"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/stock_filter"
+                        android:textColor="@color/tag_chip_text"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
                 <!-- Daftar produk -->
                 <LinearLayout
                     android:id="@+id/productList"
@@ -268,12 +301,13 @@
                         android:src="@drawable/ic_product_placeholder" />
 
                     <TextView
+                        android:id="@+id/emptyText"
                         style="@style/FontSemiBold"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:text="Tidak ada produk untuk ditampilkan"
-                        android:textColor="@color/text_secondary"
+                        android:text="@string/stock_empty"
+                        android:textColor="@color/text_hint"
                         android:textSize="14sp" />
                 </LinearLayout>
             </LinearLayout>

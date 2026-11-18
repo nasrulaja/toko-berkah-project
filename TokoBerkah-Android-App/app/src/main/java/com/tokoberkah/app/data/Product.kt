@@ -12,7 +12,11 @@ data class Product(
     val shelfStock: Int,
     val warehouseStock: Int,
     val lastIncoming: String,
-    val imageRes: Int
+    val imageRes: Int,
+    /** Tag kategori produk (maksimal 4), lihat [com.tokoberkah.pos.data.Categories]. */
+    val categories: List<String> = emptyList(),
+    /** Isi satu dus (konversi Dus -> Buah) untuk halaman Barang Masuk. */
+    val unitsPerBox: Int = 40
 ) {
     val totalStock: Int get() = shelfStock + warehouseStock
 

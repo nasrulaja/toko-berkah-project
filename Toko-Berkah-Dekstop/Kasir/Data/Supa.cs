@@ -23,8 +23,8 @@ namespace Kasir;
 // ---------------------------------------------------------------------------
 public static class Supa
 {
-    public const string Url = "https://tflawnflbyjgnqtdkjyq.supabase.co";
-    public const string Key = "sb_publishable_OjaTZ3hwwpvVlQDIb-D7qQ_E9lbEhse";
+    public const string Url = "https://ejohssqnhhtaveelmter.supabase.co";
+    public const string Key = "sb_publishable_PGbNjr7ySv7Mvwh0hGn8Uw_lz7uAGLs";
 
     static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
     static bool siap;

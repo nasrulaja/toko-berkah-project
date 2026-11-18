@@ -33,8 +33,7 @@
     radial-gradient(24% 30% at 50% 50%, rgba(255, 255, 255, 0.5), transparent 70%);
 }
 
-/* --- Permukaan kaca: topbar, rail, kartu, modal --- */
-:root:not([data-theme='dark']) .top,
+/* --- Permukaan kaca: rail, kartu, modal --- */
 :root:not([data-theme='dark']) .card,
 :root:not([data-theme='dark']) .md,
 :root:not([data-theme='dark']) .kpi,
@@ -49,8 +48,70 @@
 :root:not([data-theme='dark']) .kpi:hover {
   box-shadow: var(--lg-spec), 0 16px 40px rgba(31, 94, 150, 0.18);
 }
+/* Topbar Liquid Glass (gaya iOS 26/27): kaca SANGAT bening sehingga warna
+   aurora tembus dan ikut mewarnai bar, dengan rim cahaya tebal di tepi,
+   highlight spekular di sudut kiri-atas, dan bayangan lembut di bawah. */
 :root:not([data-theme='dark']) .top {
-  border-radius: 18px;
+  /* Lapisan 1 = spekular sudut atas; 2 = isi kaca hampir transparan */
+  background:
+    radial-gradient(90% 150% at 30% -55%, rgba(255, 255, 255, 0.5), transparent 62%),
+    linear-gradient(
+      168deg,
+      rgba(255, 255, 255, 0.13) 0%,
+      rgba(255, 255, 255, 0.05) 48%,
+      rgba(255, 255, 255, 0.09) 100%
+    );
+  -webkit-backdrop-filter: blur(26px) saturate(230%) brightness(1.1) contrast(1.03);
+  backdrop-filter: blur(26px) saturate(230%) brightness(1.1) contrast(1.03);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 22px;
+  box-shadow:
+    /* rim cahaya dalam (khas liquid glass) */
+    inset 0 1.5px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.55),
+    inset 1px 0 0 rgba(255, 255, 255, 0.62),
+    inset -1px 0 0 rgba(255, 255, 255, 0.5),
+    inset 0 0 18px rgba(255, 255, 255, 0.22),
+    /* pantulan area di bawah bar agar terlihat melayang */
+    0 1px 2px rgba(31, 94, 150, 0.08),
+    0 10px 30px rgba(31, 94, 150, 0.16);
+}
+/* Tombol ikon di dalam topbar: kaca kecil, rim tipis, bukan kotak putih solid. */
+:root:not([data-theme='dark']) .top .ic {
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.42) 0%,
+    rgba(255, 255, 255, 0.16) 55%,
+    rgba(255, 255, 255, 0.26) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  -webkit-backdrop-filter: blur(12px) saturate(200%);
+  backdrop-filter: blur(12px) saturate(200%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.4),
+    0 2px 8px rgba(31, 94, 150, 0.1);
+  transition:
+    background 0.28s var(--gx-spring),
+    box-shadow 0.28s var(--gx-spring),
+    transform 0.28s var(--gx-spring);
+}
+:root:not([data-theme='dark']) .top .ic:hover {
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(255, 255, 255, 0.32) 55%,
+    rgba(255, 255, 255, 0.42) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.5),
+    0 4px 16px rgba(31, 94, 150, 0.18);
+  transform: translateY(-1px);
+}
+:root:not([data-theme='dark']) .top .ic:active {
+  transform: scale(0.94);
 }
 :root:not([data-theme='dark']) .gx-rail {
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.5));
@@ -136,6 +197,293 @@
     background: rgba(255, 255, 255, 0.55);
     border-color: var(--lg-edge);
   }
+}
+
+/* ==========================================================================
+   BAGIAN 5 — TEMA iOS 26/27 (Liquid Glass) MENYELURUH
+   Topbar sudah dikerjakan di atas; bagian ini menyeragamkan SELURUH permukaan
+   (sidebar, rail, kartu, KPI, tabel, modal, toast, input, tombol, bar bawah HP)
+   ke satu bahasa desain: kaca tipis tembus pandang, rim cahaya berlapis,
+   sudut membulat besar, dan bayangan berwarna yang lembut.
+   Semua memakai token --ios-* di bawah, jadi cukup ubah satu tempat.
+   ========================================================================== */
+:root:not([data-theme='dark']) {
+  --ios-fill: rgba(255, 255, 255, 0.34);
+  --ios-fill-hi: rgba(255, 255, 255, 0.52);
+  --ios-fill-lo: rgba(255, 255, 255, 0.16);
+  --ios-edge: rgba(255, 255, 255, 0.7);
+  --ios-rim: inset 0 1px 0 rgba(255, 255, 255, 0.98), inset 0 -1px 0 rgba(255, 255, 255, 0.42),
+    inset 1px 0 0 rgba(255, 255, 255, 0.5), inset -1px 0 0 rgba(255, 255, 255, 0.42);
+  --ios-shadow: 0 2px 6px rgba(31, 94, 150, 0.07), 0 12px 32px rgba(31, 94, 150, 0.14);
+  --ios-shadow-lift: 0 4px 12px rgba(31, 94, 150, 0.1), 0 20px 48px rgba(31, 94, 150, 0.2);
+  --ios-blur: blur(22px) saturate(190%);
+  --ios-r-sm: 12px;
+  --ios-r-md: 18px;
+  --ios-r-lg: 24px;
+  --ios-r-xl: 28px;
+}
+
+/* --- 5.1 Permukaan kaca dasar: kartu, KPI, modal, sub-kartu --- */
+:root:not([data-theme='dark']) .card,
+:root:not([data-theme='dark']) .kpi,
+:root:not([data-theme='dark']) .lg-card,
+:root:not([data-theme='dark']) .md {
+  background: linear-gradient(168deg, var(--ios-fill-hi) 0%, var(--ios-fill) 46%, var(--ios-fill-lo) 100%);
+  -webkit-backdrop-filter: var(--ios-blur) brightness(1.05);
+  backdrop-filter: var(--ios-blur) brightness(1.05);
+  border: 1px solid var(--ios-edge);
+  border-radius: var(--ios-r-lg);
+  box-shadow: var(--ios-rim), var(--ios-shadow);
+}
+:root:not([data-theme='dark']) .kpi {
+  border-radius: var(--ios-r-md);
+}
+:root:not([data-theme='dark']) .card:hover,
+:root:not([data-theme='dark']) .kpi:hover {
+  box-shadow: var(--ios-rim), var(--ios-shadow-lift);
+}
+/* Sub-kartu di dalam kartu: lebih bening lagi */
+:root:not([data-theme='dark']) .mini,
+:root:not([data-theme='dark']) .nt,
+:root:not([data-theme='dark']) .gd,
+:root:not([data-theme='dark']) .tips > *,
+:root:not([data-theme='dark']) .tbinfo > div {
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.18));
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: var(--ios-r-md);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 14px rgba(31, 94, 150, 0.08);
+}
+
+/* --- 5.2 Sidebar & rail kaca mengapung --- */
+:root:not([data-theme='dark']) .side {
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.34));
+  -webkit-backdrop-filter: var(--ios-blur) brightness(1.04);
+  backdrop-filter: var(--ios-blur) brightness(1.04);
+  border-right: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.5), 8px 0 32px rgba(31, 94, 150, 0.1);
+}
+:root:not([data-theme='dark']) .gx-rail {
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.3));
+  -webkit-backdrop-filter: var(--ios-blur);
+  backdrop-filter: var(--ios-blur);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: var(--ios-rim), 0 18px 46px rgba(31, 94, 150, 0.18);
+}
+/* Item menu: pil membulat; yang aktif jadi kaca biru menyala */
+:root:not([data-theme='dark']) .nav {
+  border-radius: 14px;
+  transition: background 0.24s var(--gx-spring), color 0.24s var(--gx-spring),
+    box-shadow 0.24s var(--gx-spring), transform 0.24s var(--gx-spring);
+}
+:root:not([data-theme='dark']) .nav:hover {
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+:root:not([data-theme='dark']) .nav:active {
+  transform: scale(0.97);
+}
+:root:not([data-theme='dark']) .nav.on {
+  background: linear-gradient(160deg, rgba(61, 181, 255, 0.95), rgba(27, 143, 214, 0.9));
+  color: #04223a;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 18px rgba(44, 159, 230, 0.4);
+}
+:root:not([data-theme='dark']) .logo i {
+  border-radius: var(--ios-r-sm);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 6px 16px rgba(61, 181, 255, 0.38);
+}
+
+/* --- 5.3 Tabel: header kaca, garis halus --- */
+:root:not([data-theme='dark']) th {
+  background: rgba(255, 255, 255, 0.42);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: var(--hd);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+}
+:root:not([data-theme='dark']) td {
+  border-bottom: 1px solid rgba(9, 44, 76, 0.06);
+}
+:root:not([data-theme='dark']) tr:hover > td {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+/* --- 5.4 Kontrol: input & tombol kaca --- */
+:root:not([data-theme='dark']) input,
+:root:not([data-theme='dark']) select,
+:root:not([data-theme='dark']) textarea {
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: var(--ios-r-sm);
+  box-shadow:
+    inset 0 1px 2px rgba(31, 94, 150, 0.06),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+  transition: box-shadow 0.22s var(--gx-spring), background 0.22s var(--gx-spring);
+}
+:root:not([data-theme='dark']) input:focus,
+:root:not([data-theme='dark']) select:focus,
+:root:not([data-theme='dark']) textarea:focus {
+  background: rgba(255, 255, 255, 0.72);
+  outline: none;
+  border-color: rgba(61, 181, 255, 0.85);
+  box-shadow:
+    0 0 0 3.5px rgba(61, 181, 255, 0.26),
+    inset 0 1px 2px rgba(31, 94, 150, 0.05);
+}
+/* Semua tombol: pil membulat + kilau + tekan mengecil (khas iOS) */
+:root:not([data-theme='dark']) .btn {
+  border-radius: 999px;
+  transition:
+    background 0.24s var(--gx-spring),
+    box-shadow 0.24s var(--gx-spring),
+    transform 0.24s var(--gx-spring),
+    border-color 0.24s var(--gx-spring);
+}
+:root:not([data-theme='dark']) .btn:not(.bp):not(.bd) {
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.3));
+  -webkit-backdrop-filter: blur(14px) saturate(185%);
+  backdrop-filter: blur(14px) saturate(185%);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 14px rgba(31, 94, 150, 0.12);
+}
+:root:not([data-theme='dark']) .btn:not(.bp):not(.bd):hover {
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.46));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1), 0 8px 22px rgba(31, 94, 150, 0.18);
+  transform: translateY(-1px);
+}
+:root:not([data-theme='dark']) .bp {
+  background: linear-gradient(168deg, #7ad2ff 0%, #45aef0 48%, #2c9fe6 100%);
+  color: #04223a;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -1px 0 rgba(9, 44, 76, 0.12),
+    0 8px 22px rgba(44, 159, 230, 0.38);
+}
+:root:not([data-theme='dark']) .bp:hover {
+  background: linear-gradient(168deg, #8edaff 0%, #55b9f5 48%, #34a8ee 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(9, 44, 76, 0.12),
+    0 12px 30px rgba(44, 159, 230, 0.48);
+  transform: translateY(-1px);
+}
+:root:not([data-theme='dark']) .bd,
+:root:not([data-theme='dark']) .btn.bd {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.5),
+    0 8px 22px rgba(224, 79, 22, 0.32);
+}
+:root:not([data-theme='dark']) .btn:active,
+:root:not([data-theme='dark']) .ic:active {
+  transform: scale(0.96);
+}
+
+/* --- 5.5 Modal & toast: kaca tebal melayang --- */
+:root:not([data-theme='dark']) .ov {
+  background: rgba(20, 55, 88, 0.3);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  backdrop-filter: blur(10px) saturate(130%);
+}
+:root:not([data-theme='dark']) .md {
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.46));
+  -webkit-backdrop-filter: blur(34px) saturate(200%) brightness(1.06);
+  backdrop-filter: blur(34px) saturate(200%) brightness(1.06);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: var(--ios-r-xl);
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 1),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.5),
+    0 32px 80px rgba(9, 44, 76, 0.3);
+}
+:root:not([data-theme='dark']) .toast {
+  background: linear-gradient(168deg, rgba(9, 44, 76, 0.88), rgba(9, 44, 76, 0.76));
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 16px 40px rgba(9, 44, 76, 0.34);
+}
+
+/* --- 5.6 Badge: pil membulat lembut --- */
+:root:not([data-theme='dark']) .b {
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+/* --- 5.7 Bar menu bawah HP & lembar "Lainnya" --- */
+@media (max-width: 991px) {
+  :root:not([data-theme='dark']) .bnav {
+    background: linear-gradient(168deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.38));
+    -webkit-backdrop-filter: var(--ios-blur) brightness(1.05);
+    backdrop-filter: var(--ios-blur) brightness(1.05);
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    border-radius: var(--ios-r-lg);
+    box-shadow: var(--ios-rim), 0 14px 36px rgba(31, 94, 150, 0.26);
+  }
+  :root:not([data-theme='dark']) .tw tr {
+    background: linear-gradient(168deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.34));
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: var(--ios-r-md);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 6px 18px rgba(31, 94, 150, 0.1);
+  }
+  :root:not([data-theme='dark']) .mlist a,
+  :root:not([data-theme='dark']) .mlist button {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: var(--ios-r-md);
+  }
+  /* Topbar HP: sudut lebih kecil agar tidak makan ruang */
+  :root:not([data-theme='dark']) .top {
+    border-radius: var(--ios-r-md);
+  }
+}
+
+/* --- 5.8 Indikator menu aktif di rail: pil biru iOS yang meluncur --- */
+:root:not([data-theme='dark']) .gx-rail-ind {
+  background: linear-gradient(160deg, rgba(122, 210, 255, 0.95), rgba(44, 159, 230, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1.5px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(9, 44, 76, 0.14),
+    0 8px 22px rgba(44, 159, 230, 0.42);
+  transition:
+    transform 0.38s var(--gx-spring),
+    top 0.38s var(--gx-spring),
+    height 0.38s var(--gx-spring),
+    border-radius 0.35s var(--gx-spring);
+}
+:root:not([data-theme='dark']) .gx-rail-ind::after {
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0.42), transparent 42%);
+}
+:root:not([data-theme='dark']) .gx-rail-item.active {
+  color: #04223a;
+}
+:root:not([data-theme='dark']) .gx-rail-item {
+  border-radius: 14px;
+  transition:
+    color 0.25s,
+    background 0.25s var(--gx-spring),
+    border-radius 0.35s var(--gx-spring);
+}
+:root:not([data-theme='dark']) .gx-rail-item:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+:root:not([data-theme='dark']) .gx-rail-item.active:hover {
+  background: none;
 }
 
 /* Tanpa dukungan blur: pakai warna solid agar tetap terbaca */

@@ -358,3 +358,179 @@
     display: none;
   }
 }
+
+/* ==========================================================================
+   Tabel jadi kartu di HP (versi rapi): label di kiri, isi di kanan, satu baris
+   per kolom; kolom "No" disembunyikan; tombol aksi berjajar di bawah kartu.
+   Menimpa aturan rata tengah global (light.css) khusus di layar kecil.
+   ========================================================================== */
+@media (max-width: 720px) {
+  .tw tr {
+    padding: 4px 14px 6px;
+    margin: 0 0 12px;
+    border-radius: 16px;
+    box-shadow: 0 2px 10px rgba(9, 44, 76, 0.06);
+  }
+  .tw td,
+  .tw td.r,
+  .tw td[data-label] {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px;
+    padding: 9px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--bd) 70%, transparent);
+    text-align: right !important;
+    font-size: 14px;
+  }
+  .tw td[data-label]::before {
+    text-align: left !important;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--mt, #5b7188);
+    flex: 0 0 38%;
+    max-width: 42%;
+  }
+  .tw td[data-label='No'] {
+    display: none !important;
+  }
+  .tw td b {
+    font-weight: 700;
+  }
+  .tw td:nth-last-child(1):not(:has(.btn)) {
+    border-bottom: 0;
+  }
+  .tw td[colspan] {
+    display: block !important;
+    text-align: center !important;
+    border: 0;
+    padding: 14px 0;
+  }
+  /* kolom aksi: tombol sejajar, lebar sama, di bawah kartu */
+  .tw td:last-child:has(.btn) {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    justify-content: center !important;
+    gap: 8px;
+    padding: 10px 0 4px;
+    margin-top: 2px;
+    border-top: 1px dashed var(--bd);
+    border-bottom: 0;
+  }
+  .tw td:last-child:has(.btn) .btn {
+    flex: 1 1 0;
+    min-width: 96px;
+    text-align: center;
+  }
+  /* pager tabel */
+  .pgn {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+}
+
+/* ==========================================================================
+   HP: kartu KPI & statistik 2 kolom, header kartu dan filter tidak saling
+   menimpa, kolom isian selebar layar.
+   ========================================================================== */
+@media (max-width: 640px) {
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px;
+  }
+  .kpi {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px;
+  }
+  .kpi-ic {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+  }
+  .kpi-ic svg {
+    width: 18px;
+    height: 18px;
+  }
+  .kpi-b {
+    width: 100%;
+  }
+  .kpi-l {
+    font-size: 12px;
+  }
+  .kpi h3 {
+    font-size: 17px;
+  }
+  .kpi-f {
+    gap: 4px;
+  }
+  .kpi > svg,
+  .kpi .spk,
+  .kpi .spark {
+    display: none;
+  }
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px;
+  }
+  .stats .st {
+    padding: 12px 14px;
+    min-width: 0;
+  }
+  .stats .st h3 {
+    font-size: 18px;
+    overflow-wrap: anywhere;
+  }
+  .stats .st span {
+    font-size: 12.5px;
+  }
+  .stats > .st:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  /* header kartu: judul di atas, filter/tombol turun satu baris penuh */
+  .ch {
+    padding: 14px 16px;
+  }
+  .ch > h4 {
+    flex: 1 1 100%;
+  }
+  .ch > .flt,
+  .flt {
+    width: 100%;
+    gap: 8px;
+  }
+  .flt input,
+  .flt select {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+  .flt .btn,
+  .flt button {
+    flex: 1 1 calc(50% - 4px);
+    text-align: center;
+  }
+}
+
+/* HP: daftar notifikasi — nomor, ikon, dan teks sebaris; waktu di baris bawah */
+@media (max-width: 640px) {
+  .nt {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+  .nt > .nic,
+  .nt > span:first-child:not(.ntx) {
+    flex: none;
+  }
+  .nt .ntx {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .nt .ntm {
+    flex: 1 0 100%;
+    padding-left: 4px;
+  }
+}
