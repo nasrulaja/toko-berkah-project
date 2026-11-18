@@ -878,7 +878,7 @@ export function laporan() {
       .join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}</select></div>`;
   return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b> — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
-  <div class="card"><div class="ch"><h4>Transaksi terbanyak harian</h4></div><div class="tw">${
+  <div class="card"><div class="ch"><h4>Transaksi terbanyak</h4></div><div class="tw">${
     ramai.length
       ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : empty('Belum ada transaksi', 'Daftar muncul setelah ada transaksi.')
