@@ -30,7 +30,11 @@ let S = {};
 /** Mengisi filter halaman dari tautan (mis. #laporan?lp=hari) sebelum halaman digambar. | param: o (objek kunci-nilai) | return: void */
 export const terapkanFilter = (o) => Object.assign(S, o);
 
-/** Daftar periode filter. | param: - | return: array [kunci, label] */
+/** Nama bulan singkat untuk label filter. | param: - | return: array 12 nama */
+const NAMA_BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+/** Daftar periode filter tetap. Pilihan bulan spesifik ditambahkan terpisah
+ *  oleh opsiPeriode() karena bergantung pada data yang ada. | param: - | return: array [kunci, label] */
 const PERIODE = [
   ['semua', 'Semua data'],
   ['hari', 'Hari ini'],
@@ -40,6 +44,33 @@ const PERIODE = [
   ['bulankmr', 'Bulan kemarin'],
   ['tahun', 'Tahun ini']
 ];
+
+/** Bulan yang punya transaksi, terbaru lebih dulu. | param: - | return: array [{ kunci, label }] */
+const bulanAdaData = () => {
+  const set = new Set();
+  db.transaksi.forEach((t) => {
+    const w = new Date(t.waktu);
+    if (!isNaN(w)) set.add(w.getFullYear() * 12 + w.getMonth()); // kunci unik per bulan
+  });
+  return [...set]
+    .sort((a, b) => b - a) // terbaru dulu
+    .map((n) => {
+      const th = Math.floor(n / 12),
+        bl = n % 12;
+      return { kunci: 'bl:' + th + '-' + String(bl + 1).padStart(2, '0'), label: NAMA_BULAN[bl] + ' ' + th };
+    });
+};
+
+/** Gabungan periode tetap + pilihan bulan. | param: - | return: array [kunci, label] */
+const opsiPeriode = () => [...PERIODE, ...bulanAdaData().map((b) => [b.kunci, b.label])];
+
+/** label "Okt 2026" untuk kunci bl:2026-10. | param: kunci (string) | return: string */
+const labelBulanKunci = (kunci) => {
+  const m = /^bl:(\d{4})-(\d{2})$/.exec(kunci);
+  if (!m) return '';
+  return NAMA_BULAN[Number(m[2]) - 1] + ' ' + m[1];
+};
+
 /** Batas awal & akhir periode (ms). Akhir bersifat eksklusif (boleh undefined = tanpa batas). | param: tf (kunci periode) | return: { awal, akhir } */
 const rentangPeriode = (tf) => {
   const k = new Date(),
@@ -50,6 +81,13 @@ const rentangPeriode = (tf) => {
     // jadi otomatis benar walau kemarin Januari, atau Februari saat tahun kabisat.
     awalKmr = new Date(th, bl - 1, 1).getTime(),
     akhirKmr = new Date(th, bl, 1).getTime();
+  // Kunci bulan spesifik: bl:2026-10 -> 1 Okt .. 1 Nov 2026.
+  const pilih = /^bl:(\d{4})-(\d{2})$/.exec(tf || '');
+  if (pilih) {
+    const y = Number(pilih[1]),
+      m = Number(pilih[2]) - 1;
+    return { awal: new Date(y, m, 1).getTime(), akhir: new Date(y, m + 1, 1).getTime() };
+  }
   switch (tf) {
     case 'hari': return { awal: h, akhir: h + 864e5 };
     case '7hari': return { awal: h - 6 * 864e5 };
@@ -572,7 +610,7 @@ export function panduan() {
     ['layers', 'Catat Stok', 'Di Manajemen Stok catat barang masuk, barang keluar, atau penyesuaian bila jumlah di rak berbeda dari catatan.', '#stok'],
     ['alert', 'Pantau Stok Menipis', 'Barang yang hampir habis dikumpulkan di satu halaman supaya tahu apa yang harus dibeli lagi.', '#stok-menipis'],
     ['recv', 'Lihat Riwayat Transaksi', 'Daftar semua penjualan beserta kode, waktu, dan total. Tekan tombol Detail untuk melihat barang yang dibeli. Status Terkunci berarti periodenya sudah ditutup buku.', '#transaksi'],
-    ['chart', 'Baca Laporan', 'Pilih periode di bagian atas (hari ini, 7 hari, 30 hari, bulan ini, tahun ini, atau semua data). Angka dan tabel di bawahnya ikut berubah: laba per tanggal, hari dan tanggal tersibuk, produk terlaris, dan belanja terbesar.', '#laporan'],
+    ['chart', 'Baca Laporan', 'Pilih periode di bagian atas (hari ini, 7 hari, 30 hari, bulan ini, bulan kemarin, tahun ini, atau semua data). Untuk bulan tertentu, buka daftar "Pilih bulan" lalu pilih bulannya, misalnya Okt 2026. Angka dan tabel di bawahnya ikut berubah: laba per tanggal, hari dan tanggal tersibuk, produk terlaris, dan belanja terbesar.', '#laporan'],
     ['book', 'Tutup Buku', 'Halaman ini hanya menampilkan hasil tutup buku: jumlah periode yang sudah ditutup, periode yang ada selisih, total uang kurang, dan riwayat per periode (penjualan sistem, uang di laci, selisih). Proses tutup buku dilakukan di aplikasi Desktop. Kotak Selisih menunjukkan pemasukan dikurangi pengeluaran.', '#tutup-buku'],
     ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas. Gunakan filter (Semua, Belum dibaca, Penjualan, Stok, Tutup buku) atau kotak Cari untuk memilih notifikasi. Klik satu notifikasi untuk membukanya; statusnya langsung jadi dibaca dan angka di lonceng berkurang. Sakelar aktif/nonaktif ada di Pengaturan.', '#notifikasi']
   ];
@@ -764,17 +802,19 @@ export function hasilTutupBuku() {
 
 export function laporan() {
   /* --- Filter periode: menyaring SEMUA angka & tabel di halaman ini --- */
-  const tf = PERIODE.some(([k]) => k === S.lp) ? S.lp : 'semua';
+  const opsi = opsiPeriode(); // periode tetap + daftar bulan yang ada datanya
+  const tf = opsi.some(([k]) => k === S.lp) ? S.lp : 'semua';
   const batas = awalPeriode(tf);
-  const labelPeriode = {
-    semua: 'seluruh data',
-    hari: 'hari ini',
-    '7hari': '7 hari terakhir',
-    '30hari': '30 hari terakhir',
-    bulan: 'bulan ini',
-    bulankmr: 'bulan kemarin',
-    tahun: 'tahun ini'
-  }[tf];
+  const labelPeriode =
+    {
+      semua: 'seluruh data',
+      hari: 'hari ini',
+      '7hari': '7 hari terakhir',
+      '30hari': '30 hari terakhir',
+      bulan: 'bulan ini',
+      bulankmr: 'bulan kemarin',
+      tahun: 'tahun ini'
+    }[tf] || labelBulanKunci(tf);
   // transaksi yang lolos filter; idOk dipakai untuk menyaring detail
   const trx = dalamPeriode(db.transaksi, tf),
     idOk = new Set(trx.map((t) => t.id));
@@ -838,8 +878,13 @@ export function laporan() {
         shellRef();
       };
   });
-  const opsi = PERIODE,
-    fltBar = `<div class="flt"><select id="flp" aria-label="Filter periode laporan">${opsi.map(([k, v]) => `<option value="${k}"${k === tf ? ' selected' : ''}>${v}</option>`).join('')}</select></div>`;
+  // Dropdown: "Periode cepat" + kelompok "Pilih bulan" (hanya bulan yang ada datanya).
+  const opsiTetap = opsi.filter(([k]) => !String(k).startsWith('bl:')),
+    opsiBulan = opsi.filter(([k]) => String(k).startsWith('bl:')),
+    opsiHtml = ([k, v]) => `<option value="${k}"${k === tf ? ' selected' : ''}>${v}</option>`,
+    fltBar = `<div class="flt"><select id="flp" aria-label="Filter periode laporan"><optgroup label="Periode cepat">${opsiTetap
+      .map(opsiHtml)
+      .join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}</select></div>`;
   return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b> — ${trx.length} dari ${db.transaksi.length} transaksi.</p></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
   <div class="card"><div class="ch"><h4>Penjualan &amp; laba harian</h4></div><div class="tw">${
@@ -869,13 +914,22 @@ export function laporan() {
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function transaksi() {
-  const tp = PERIODE.some(([k]) => k === S.tp) ? S.tp : 'semua',
+  const opsi = opsiPeriode(),
+    tp = opsi.some(([k]) => k === S.tp) ? S.tp : 'semua',
     tu = S.tu === 'total' ? 'total' : 'baru',
     batas = awalPeriode(tp),
     semua = [...db.transaksi].reverse(),
     rec = dalamPeriode(semua, tp).sort((a, b) => (tu === 'total' ? b.total - a.total : 0)),
     nKunci = rec.filter(terkunci).length,
-    label = PERIODE.find(([k]) => k === tp)[1].toLowerCase();
+    // Label periode: huruf kecil hanya untuk periode tetap ("bulan ini"),
+    // sedangkan nama bulan dibiarkan apa adanya ("Okt 2026").
+    label = (() => {
+      const tetap = { semua: 'seluruh data', hari: 'hari ini', '7hari': '7 hari terakhir', '30hari': '30 hari terakhir', bulan: 'bulan ini', bulankmr: 'bulan kemarin', tahun: 'tahun ini' };
+      return tetap[tp] || labelBulanKunci(tp) || 'semua data';
+    })();
+  const opsiTetap = opsi.filter(([k]) => !String(k).startsWith('bl:')),
+    opsiBulan = opsi.filter(([k]) => String(k).startsWith('bl:')),
+    opsiHtml = ([k, v]) => `<option value="${k}"${k === tp ? ' selected' : ''}>${v}</option>`;
   setTimeout(() => {
     const f = $('#ftp'),
       u = $('#ftu');
@@ -890,7 +944,7 @@ export function transaksi() {
         shellRef();
       };
   }, 0);
-  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${tp === 'semua' ? rec.length : rec.length + ' dari ' + semua.length})</h4><div class="flt"><select id="ftp" aria-label="Filter periode transaksi">${PERIODE.map(([k, v]) => `<option value="${k}"${k === tp ? ' selected' : ''}>${v}</option>`).join('')}</select><select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>.${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
+  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${tp === 'semua' ? rec.length : rec.length + ' dari ' + semua.length})</h4><div class="flt"><select id="ftp" aria-label="Filter periode transaksi"><optgroup label="Periode cepat">${opsiTetap.map(opsiHtml).join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}</select><select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>.${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th class="r">Aksi</th></tr>
   ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button></td></tr>`).join('') || `<tr><td colspan="6">Belum ada transaksi pada periode ini.</td></tr>`}</table></div></div>`;
 }
 
