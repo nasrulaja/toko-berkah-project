@@ -40,6 +40,12 @@ class StockCheckActivity : AppCompatActivity() {
     /** Tag kategori terpilih pada tombol Filter (urut sesuai desain). */
     private var selectedTags: List<String> = emptyList()
 
+    /**
+     * Nomor generasi render — tiap render baru membatalkan potongan (chunk)
+     * render sebelumnya yang masih tertunda, agar tak menumpuk.
+     */
+    private var renderGen = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityStockCheckBinding.inflate(layoutInflater)
@@ -235,14 +241,23 @@ class StockCheckActivity : AppCompatActivity() {
             else -> getString(R.string.stock_filter_more, selectedTags.first(), selectedTags.size - 1)
         }
 
-        // Isi daftar produk
+        // Isi daftar produk — per potongan kecil agar UI thread tetap
+        // responsif (308 kartu sekaligus memblokir >5 detik -> ANR).
         binding.productList.removeAllViews()
         val inflater = LayoutInflater.from(this)
-        list.forEach { product ->
-            val card = inflater.inflate(R.layout.item_product_stock, binding.productList, false)
-            bindCard(card, product)
-            binding.productList.addView(card)
+        renderGen++
+        val gen = renderGen
+        fun addChunk(start: Int) {
+            if (gen != renderGen || isFinishing) return
+            val end = minOf(start + CHUNK_SIZE, list.size)
+            for (i in start until end) {
+                val card = inflater.inflate(R.layout.item_product_stock, binding.productList, false)
+                bindCard(card, list[i])
+                binding.productList.addView(card)
+            }
+            if (end < list.size) binding.productList.post { addChunk(end) }
         }
+        addChunk(0)
 
         val empty = list.isEmpty()
         binding.emptyState.visibility = if (empty) View.VISIBLE else View.GONE
@@ -352,6 +367,9 @@ class StockCheckActivity : AppCompatActivity() {
 
     companion object {
         const val REQUEST_SCAN = 1001
+
+        /** Jumlah kartu dirender per potongan (jaga UI tetap responsif). */
+        private const val CHUNK_SIZE = 30
         const val EXTRA_SCANNED_EAN = "scanned_ean"
     }
 }
