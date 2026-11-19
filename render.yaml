@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: toko-berkah-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: SUPABASE_URL
+        value: https://ejohssqnhhtaveelmter.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: sb_publishable_PGbNjr7ySv7Mvwh0hGn8Uw_lz7uAGLs
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
