@@ -26,7 +26,13 @@ data class RemoteProduct(
  */
 object RemoteCatalog {
 
-    private const val PRODUK_COLS = "select=id,nama,barcode,harga_jual,stok,kategori_id&order=id"
+    /**
+     * Satu permintaan untuk semua produk + nama kategori (embed via relasi
+     * FK produk.kategori_id -> kategori.id) — ~4x lebih cepat daripada
+     * mengunduh produk lalu kategori terpisah.
+     */
+    private const val PRODUK_COLS =
+        "select=id,nama,barcode,harga_jual,stok,kategori_id,kategori:kategori_id(nama)&order=id"
 
     /** Waktu ISO-8001 ala backend (untuk kolom updated_at / waktu). */
     private fun isoNow(): String =
@@ -34,28 +40,26 @@ object RemoteCatalog {
             timeZone = TimeZone.getTimeZone("UTC")
         }.format(Date())
 
+    /** Nama kategori dari embed `kategori: { nama }`; null bila tak ada. */
+    private fun kategoriDari(o: org.json.JSONObject): String? {
+        val k = o.optJSONObject("kategori") ?: return null
+        return k.optString("nama").ifEmpty { null }
+    }
+
     /** GET produk — seluruh katalog dari database (dengan nama kategorinya). */
     fun fetchProducts(): List<RemoteProduct>? {
         val produkBody = ApiClient.get("produk?$PRODUK_COLS") ?: return null
-        val katBody = ApiClient.get("kategori?select=id,nama&order=id") ?: return null
         return try {
-            val katMap = HashMap<Int, String>()
-            val katArr = JSONArray(katBody)
-            for (i in 0 until katArr.length()) {
-                val k = katArr.getJSONObject(i)
-                katMap[k.optInt("id")] = k.optString("nama")
-            }
             val arr = JSONArray(produkBody)
             (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
-                val katId = o.optInt("kategori_id")
                 RemoteProduct(
                     id = o.optInt("id"),
                     ean = o.optString("barcode"),
                     name = o.optString("nama"),
                     price = o.optInt("harga_jual"),
                     stock = o.optInt("stok"),
-                    category = if (o.isNull("kategori_id")) null else katMap[katId]
+                    category = kategoriDari(o)
                 )
             }
         } catch (e: Exception) {
@@ -65,15 +69,13 @@ object RemoteCatalog {
     }
 
     /**
-     * Satu produk lewat barcode (pemindaian). null bila tidak ditemukan ATAU
-     * jaringan tidak tersedia (cek [ApiClient.lastError] untuk membedakan:
-     * "HTTP 404" = memang tidak ada).
+     * Satu produk lewat barcode (pemindaian) — satu permintaan. null bila
+     * tidak ditemukan ATAU jaringan tidak tersedia (cek [ApiClient.lastError]
+     * untuk membedakan: "HTTP 404" = memang tidak ada).
      */
     fun fetchByBarcode(ean: String): RemoteProduct? {
         val safe = java.net.URLEncoder.encode(ean, "UTF-8")
-        val body = ApiClient.get(
-            "produk?select=id,nama,barcode,harga_jual,stok,kategori_id&barcode=eq.$safe"
-        ) ?: return null
+        val body = ApiClient.get("produk?$PRODUK_COLS&barcode=eq.$safe") ?: return null
         val arr = try {
             JSONArray(body)
         } catch (e: Exception) {
@@ -85,18 +87,13 @@ object RemoteCatalog {
             return null
         }
         val o = arr.getJSONObject(0)
-        val katId = o.optInt("kategori_id")
-        val category = if (o.isNull("kategori_id")) null else {
-            val k = JSONArray(ApiClient.get("kategori?select=id,nama&id=eq.$katId") ?: "[]")
-            if (k.length() > 0) k.getJSONObject(0).optString("nama") else null
-        }
         return RemoteProduct(
             id = o.optInt("id"),
             ean = o.optString("barcode"),
             name = o.optString("nama"),
             price = o.optInt("harga_jual"),
             stock = o.optInt("stok"),
-            category = category
+            category = kategoriDari(o)
         )
     }
 

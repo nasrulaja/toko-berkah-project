@@ -366,7 +366,7 @@ class StockCheckActivity : AppCompatActivity() {
         const val REQUEST_SCAN = 1001
 
         /** Jumlah kartu dirender per potongan (jaga UI tetap responsif). */
-        private const val CHUNK_SIZE = 30
+        private const val CHUNK_SIZE = 60
         const val EXTRA_SCANNED_EAN = "scanned_ean"
     }
 }
