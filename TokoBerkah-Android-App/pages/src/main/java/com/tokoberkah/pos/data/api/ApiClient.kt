@@ -23,6 +23,7 @@ object ApiClient {
      * Ganti/diurutkan ulang sesuai lingkungan tim.
      */
     private val BASES = listOf(
+        "https://colored-transcription-secondary-please.trycloudflare.com/api/",
         "http://172.18.143.37:3000/api/",
         "http://127.0.0.1:3000/api/"
     )

@@ -41,3 +41,6 @@ t3.err
 
 # hasil build aplikasi desktop
 Toko-Berkah-Dekstop/out/
+cloudflared.exe
+tunnel.log
+tunnel.err
