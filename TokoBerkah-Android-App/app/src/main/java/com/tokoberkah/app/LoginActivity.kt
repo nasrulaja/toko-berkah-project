@@ -9,8 +9,8 @@ import com.tokoberkah.app.databinding.ActivityLoginBinding
 
 /**
  * Layar 1: Login Toko Berkah.
- * Kredensial lokal pemilik@tokoberkah.com / tokoberkah123 tetap berlaku (offline).
- * Kredensial lain diverifikasi ke backend (POST /api/auth/login).
+ * Kredensial lokal pemilik@tokoberkah.com / tokoberkah123 tetap berlaku.
+ * Kredensial lain: login dummy (tanpa server) — cukup email & sandi terisi.
  */
 class LoginActivity : AppCompatActivity() {
 
@@ -62,7 +62,7 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        // Kredensial lain: verifikasi ke backend (thread latar)
+        // Kredensial lain: login dummy, tanpa jaringan (thread latar)
         binding.btnLogin.isEnabled = false
         Thread {
             val hasil = com.tokoberkah.pos.data.api.ApiClient.login(email, password)
