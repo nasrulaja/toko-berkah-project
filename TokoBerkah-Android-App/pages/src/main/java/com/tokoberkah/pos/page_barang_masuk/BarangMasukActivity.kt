@@ -254,8 +254,6 @@ class BarangMasukActivity : AppCompatActivity() {
     )
 
     private fun bindRestockCard(card: View, p: Product) {
-        card.findViewById<android.widget.ImageView>(R.id.imgProduct)
-            .setImageResource(p.imageRes)
         card.findViewById<TextView>(R.id.tvName).text = p.name
         card.findViewById<TextView>(R.id.tvEan).text = "EAN: ${p.ean}"
         card.findViewById<TextView>(R.id.tvStockTotal).text = p.stock.toString()
@@ -303,7 +301,6 @@ class BarangMasukActivity : AppCompatActivity() {
         entry = e
         qty = 10
 
-        if (e.imageRes != 0) binding.imgProduct.setImageResource(e.imageRes)
         binding.tvProductName.text = e.name
         if (e.pack.isBlank()) {
             binding.tvProductPack.visibility = View.GONE

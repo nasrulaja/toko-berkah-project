@@ -12,7 +12,7 @@ import com.tokoberkah.app.data.Product
 
 /**
  * Adapter daftar hasil scan di layar Pemindai Barcode.
- * Kartu: thumbnail + badge jumlah, EAN, nama, harga, stepper +/-.
+ * Kartu: EAN, nama, harga, stepper +/-.
  *
  * @param onQtyChange dipanggil saat stepper ditekan (delta +1 / -1)
  */
@@ -22,8 +22,6 @@ class ScanResultAdapter(
 ) : RecyclerView.Adapter<ScanResultAdapter.Holder>() {
 
     class Holder(view: View) : RecyclerView.ViewHolder(view) {
-        val image: ImageView = view.findViewById(R.id.scanProductImage)
-        val qtyBadge: TextView = view.findViewById(R.id.scanQtyBadge)
         val ean: TextView = view.findViewById(R.id.scanEan)
         val name: TextView = view.findViewById(R.id.scanProductName)
         val price: TextView = view.findViewById(R.id.scanPrice)
@@ -45,15 +43,12 @@ class ScanResultAdapter(
         val product = items[position]
         val context = holder.itemView.context
 
-        holder.image.setImageResource(product.imageRes)
         holder.ean.text = product.ean
         holder.name.text = product.name
         holder.price.text = product.formattedPrice()
 
         val qty = CartManager.getQty(product.ean)
         holder.qty.text = qty.toString()
-        holder.qtyBadge.text = "+$qty"
-        holder.qtyBadge.visibility = if (qty > 0) View.VISIBLE else View.GONE
 
         // Batas atas: stok tersedia
         holder.btnPlus.alpha = if (qty < product.totalStock) 1f else 0.4f

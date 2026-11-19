@@ -11,46 +11,10 @@
     android:orientation="horizontal"
     android:padding="16dp">
 
-    <!-- Thumbnail + badge jumlah -->
-    <FrameLayout
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="@drawable/bg_thumb_scan"
-        android:clipToOutline="true">
-
-        <ImageView
-            android:id="@+id/scanProductImage"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            android:src="@drawable/product_indomie" />
-
-        <TextView
-            android:id="@+id/scanQtyBadge"
-            style="@style/FontBold"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginStart="-6dp"
-            android:layout_marginTop="-6dp"
-            android:background="@drawable/bg_plus_badge"
-            android:minWidth="20dp"
-            android:gravity="center"
-            android:paddingStart="5dp"
-            android:paddingTop="2dp"
-            android:paddingEnd="5dp"
-            android:paddingBottom="2dp"
-            android:textColor="@color/white"
-            android:textSize="10sp"
-            tools:text="+1" />
-    </FrameLayout>
-
     <!-- Info -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
         android:layout_weight="1"
         android:orientation="vertical">
 

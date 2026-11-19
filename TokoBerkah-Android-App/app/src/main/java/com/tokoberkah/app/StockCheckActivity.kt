@@ -273,9 +273,6 @@ class StockCheckActivity : AppCompatActivity() {
     }
 
     private fun bindCard(card: View, product: Product) {
-        card.findViewById<ImageView>(R.id.productImage)
-            .setImageResource(product.imageRes)
-
         card.findViewById<TextView>(R.id.productName).text = product.name
         card.findViewById<TextView>(R.id.productEan).text = product.ean
 

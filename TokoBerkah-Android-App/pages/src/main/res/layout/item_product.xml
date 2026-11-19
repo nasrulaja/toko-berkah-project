@@ -18,39 +18,9 @@
         android:orientation="horizontal"
         android:padding="12dp">
 
-        <FrameLayout
-            android:layout_width="72dp"
-            android:layout_height="72dp">
-
-            <ImageView
-                android:id="@+id/imgProduct"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:contentDescription="Gambar produk"
-                android:scaleType="centerCrop"
-                android:src="@drawable/img_bimoli" />
-
-            <TextView
-                android:id="@+id/tvBadge"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="3dp"
-                android:background="@drawable/bg_badge_size"
-                android:paddingStart="6dp"
-                android:paddingTop="1dp"
-                android:paddingEnd="6dp"
-                android:paddingBottom="1dp"
-                android:textColor="@color/blue_text"
-                android:textSize="10sp"
-                android:textStyle="bold"
-                tools:text="2L" />
-        </FrameLayout>
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:orientation="vertical">
 

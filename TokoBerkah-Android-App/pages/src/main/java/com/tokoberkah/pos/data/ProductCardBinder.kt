@@ -10,12 +10,4 @@ fun ViewProductCardBinding.show(product: Product) {
     tvName.text = product.name
     tvLocation.text = "Lokasi: ${product.location}"
     tvPrice.text = product.price.rp()
-    imgProduct.setImageResource(product.imageRes)
-
-    if (product.badge.isEmpty()) {
-        tvBadge.visibility = android.view.View.GONE
-    } else {
-        tvBadge.visibility = android.view.View.VISIBLE
-        tvBadge.text = product.badge
-    }
 }

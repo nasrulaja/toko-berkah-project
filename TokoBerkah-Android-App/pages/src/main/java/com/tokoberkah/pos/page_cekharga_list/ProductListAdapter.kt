@@ -18,8 +18,6 @@ class ProductListAdapter(
 ) : RecyclerView.Adapter<ProductListAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val image: ImageView = view.findViewById(R.id.imgProduct)
-        val badge: TextView = view.findViewById(R.id.tvBadge)
         val name: TextView = view.findViewById(R.id.tvName)
         val ean: TextView = view.findViewById(R.id.tvEan)
         val price: TextView = view.findViewById(R.id.tvPrice)
@@ -33,13 +31,9 @@ class ProductListAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val product = items[position]
-        holder.image.setImageResource(product.imageRes)
         holder.name.text = product.name
         holder.ean.text = "EAN: ${product.ean}"
         holder.price.text = product.price.rp()
-
-        holder.badge.isVisible = product.badge.isNotEmpty()
-        holder.badge.text = product.badge
 
         holder.itemView.setOnClickListener { onClick(product) }
     }
