@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
  * Semua pemanggilan memakai thread latar — jangan dipanggil di UI thread.
  *
  * Bila server/jaringan tidak tersedia, fungsi mengembalikan null dan halaman
- * jatuh ke data dummy lama supaya aplikasi tetap berfungsi offline.
+ * menampilkan keadaan kosong/gagal (bukan data dummy).
  */
 object ApiClient {
 

@@ -1,8 +1,7 @@
 package com.tokoberkah.app.data
 
 /**
- * Model produk (data dummy, frontend-only).
- * Akan disesuaikan dengan data dari aplikasi desktop nanti.
+ * Model produk (dipetakan dari baris backend, lihat StockCheckActivity.mapFromServer).
  */
 data class Product(
     val ean: String,

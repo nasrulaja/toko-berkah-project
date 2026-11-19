@@ -9,6 +9,11 @@ import java.util.Locale
  * In-memory catalogue + price history shared by all five pages.
  * Every page reads from here so a price change made on the
  * "Ubah Harga" page is instantly visible on the others.
+ *
+ * Katalog diisi HANYA dari backend (GET /api/products) lewat [applyRemote] —
+ * tidak ada data dummy, supaya angka yang tampil selalu sama dengan database.
+ * Bila server tidak terjangkau, daftar tetap kosong (halaman menampilkan
+ * keadaan kosong/gagal, bukan produk palsu).
  */
 object ProductRepository {
 
@@ -17,98 +22,6 @@ object ProductRepository {
 
     private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
     private val timeFormat = SimpleDateFormat("HH.mm", Locale("id", "ID"))
-
-    init {
-        val bimoli = Product(
-            ean = "8992388012493",
-            name = "Minyak Goreng Bimoli 2L",
-            categories = Categories.of("Sembako", "Bumbu Dapur"),
-            stock = 48,
-            location = "Rak B3",
-            imageRes = R.drawable.img_bimoli,
-            badge = "2L",
-            price = 34_000,
-            unitsPerBox = 12,
-            lastIncoming = "2 hari lalu",
-            history = mutableListOf(
-                PriceChange("12 Nov 2026", "09.15", 33_000, 34_000, "Pemilik toko", "Harga promo berakhir."),
-                PriceChange("05 Nov 2026", "14.30", 32_500, 33_000, "Pemilik toko", "Penyesuaian harga dari pemasok."),
-                PriceChange("22 Okt 2026", "10.00", 32_000, 32_500, "Pemilik toko", "Penyesuaian harga dari pemasok."),
-                PriceChange("10 Okt 2026", "08.45", 31_500, 32_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
-            )
-        )
-
-        val beras = Product(
-            ean = "8992003300891",
-            name = "Beras Pandan Wangi 5Kg",
-            categories = Categories.of("Sembako"),
-            stock = 0,
-            location = "Rak A1",
-            imageRes = R.drawable.img_beras,
-            badge = "5kg",
-            price = 75_000,
-            unitsPerBox = 1,
-            lastIncoming = "5 hari lalu",
-            history = mutableListOf(
-                PriceChange("08 Nov 2026", "11.20", 74_000, 75_000, "Pemilik toko", "Harga dari distributor naik."),
-                PriceChange("20 Okt 2026", "09.05", 73_500, 74_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
-            )
-        )
-
-        val kopi = Product(
-            ean = "8991002102493",
-            name = "Kopi Kapal Api Spesial Mixx",
-            categories = Categories.of("Susu & Kopi", "Minuman", "Sembako"),
-            stock = 4,
-            location = "Rak C2",
-            imageRes = R.drawable.img_kopi,
-            badge = "",
-            price = 21_100,
-            unitsPerBox = 40,
-            lastIncoming = "3 hari lalu",
-            history = mutableListOf(
-                PriceChange("11 Nov 2026", "16.45", 20_500, 21_100, "Pemilik toko", "Penyesuaian harga dari pemasok."),
-                PriceChange("01 Okt 2026", "13.10", 20_000, 20_500, "Pemilik toko", "Biaya transportasi bertambah.")
-            )
-        )
-
-        val indomie = Product(
-            ean = "0089686170733",
-            name = "Indomie Goreng",
-            categories = Categories.of("Mie Instan", "Sembako"),
-            stock = 14,
-            location = "Rak D5",
-            imageRes = R.drawable.img_indomie,
-            badge = "Karton / Dus",
-            price = 3_100,
-            unitsPerBox = 40,
-            lastIncoming = "1 hari lalu",
-            history = mutableListOf(
-                PriceChange("09 Nov 2026", "08.30", 3_000, 3_100, "Pemilik toko", "Penyesuaian harga dari pemasok."),
-                PriceChange("15 Okt 2026", "17.00", 2_950, 3_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
-            )
-        )
-
-        val gula = Product(
-            ean = "8991002107812",
-            name = "Gula Pasir Gulaku 1kg",
-            categories = Categories.of("Sembako"),
-            stock = 11,
-            location = "Rak A2",
-            imageRes = R.drawable.img_gula,
-            badge = "1kg",
-            price = 17_500,
-            unitsPerBox = 24,
-            lastIncoming = "6 hari lalu",
-            history = mutableListOf(
-                PriceChange("07 Nov 2026", "10.15", 17_000, 17_500, "Pemilik toko", "Harga gulaku dari pemasok naik."),
-                PriceChange("18 Okt 2026", "12.40", 16_800, 17_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
-            )
-        )
-
-        products.addAll(listOf(bimoli, beras, kopi, indomie, gula))
-        recentEans.addAll(listOf(beras.ean, indomie.ean, gula.ean, kopi.ean))
-    }
 
     /** All products, in catalogue order (used by the scan page). */
     fun all(): List<Product> = products
@@ -131,7 +44,8 @@ object ProductRepository {
     }
 
     /** Applies a new price and records it in the product's history. */
-    fun updatePrice(product: Product, newPrice: Int, reason: String) {        val old = product.price
+    fun updatePrice(product: Product, newPrice: Int, reason: String) {
+        val old = product.price
         if (old == newPrice) return
         val now = Date()
         product.price = newPrice
@@ -154,7 +68,7 @@ object ProductRepository {
      * adapter yang sudah memegang daftar ini ikut melihat perubahan.
      *
      * Stok & harga selalu dari server; gambar/lokasi/isi dus/riwayat lama
-     * dipakai ulang bila EAN-nya cocok dengan data dummy.
+     * dipakai ulang bila EAN-nya sudah pernah tampil (sinkron sebelumnya).
      */
     @Synchronized
     fun applyRemote(rows: List<com.tokoberkah.pos.data.api.RemoteProduct>) {
@@ -185,7 +99,7 @@ object ProductRepository {
         recentEans.retainAll(fresh.map { it.ean }.toSet())
     }
 
-    /** Gambar perkiraan untuk produk baru (belum ada di data dummy). */
+    /** Gambar perkiraan berdasarkan kategori (produk dari server tanpa gambar lama). */
     private fun imageFor(category: String?): Int = when (category) {
         "Mie Instan" -> R.drawable.img_indomie
         "Sembako", "Bumbu Dapur" -> R.drawable.img_bimoli

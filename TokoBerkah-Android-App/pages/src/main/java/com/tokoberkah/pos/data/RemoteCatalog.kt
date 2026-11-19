@@ -16,7 +16,7 @@ data class RemoteProduct(
 /**
  * Penghubung halaman aplikasi ke backend. Semua fungsi memakai thread latar
  * dan mengembalikan null bila server/jaringan tidak tersedia (halaman lalu
- * memakai data dummy seperti semula).
+ * menampilkan keadaan kosong/gagal, bukan data dummy).
  */
 object RemoteCatalog {
 
@@ -36,6 +36,28 @@ object RemoteCatalog {
                     category = if (o.isNull("kategori")) null else o.optString("kategori")
                 )
             }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * GET /api/products/barcode/:ean — satu produk lewat barcode (pemindaian).
+     * null bila tidak ditemukan ATAU server tidak terjangkau (cek
+     * [ApiClient.lastError] untuk membedakan: "HTTP 404" = memang tidak ada).
+     */
+    fun fetchByBarcode(ean: String): RemoteProduct? {
+        val body = ApiClient.get("products/barcode/$ean") ?: return null
+        return try {
+            val o = JSONObject(body)
+            RemoteProduct(
+                id = o.optInt("id"),
+                ean = o.optString("barcode"),
+                name = o.optString("nama"),
+                price = o.optInt("harga_jual"),
+                stock = o.optInt("stok"),
+                category = if (o.isNull("kategori")) null else o.optString("kategori")
+            )
         } catch (e: Exception) {
             null
         }

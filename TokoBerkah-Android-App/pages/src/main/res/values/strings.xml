@@ -38,6 +38,7 @@
     <string name="masuk_hint_title">Produk Baru Belum Terdaftar?</string>
     <string name="masuk_hint_body">Jika barcode belum dikenali, daftarkan nama\nproduk &amp; harga modal melalui Web Admin Toko\nBerkah di komputer kasir.</string>
     <string name="masuk_saved">Barang masuk disimpan</string>
+    <string name="masuk_save_failed">Gagal menyimpan ke server. Periksa koneksi lalu coba lagi.</string>
 
     <!-- Barang Masuk — reviisi: Isi Per Dus + Harga Jual per Buah -->
     <string name="masuk_isi_per_dus">Isi Per Dus</string>

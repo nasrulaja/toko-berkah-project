@@ -10,7 +10,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import com.tokoberkah.app.data.DummyData
 import com.tokoberkah.app.data.Product
 import com.tokoberkah.app.databinding.ActivityStockCheckBinding
 import com.tokoberkah.pos.data.Categories
@@ -21,16 +20,22 @@ import com.tokoberkah.pos.ui.TagFlow
  * Menampilkan daftar produk + status stok + tag kategori,
  * tombol Filter (dialog multi-select kategori — revisi guru),
  * tombol Restok / Tambah ke Barang Masuk, dan bottom navigation.
+ *
+ * Daftar hanya berisi data dari backend; bila server tidak terjangkau
+ * layar menampilkan keadaan kosong/gagal, bukan data dummy.
  */
 class StockCheckActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityStockCheckBinding
 
     /** Semua produk / hanya hasil scan (saat kembali dari scanner). */
-    private var products: List<Product> = DummyData.products
-    private var visibleProducts: List<Product> = DummyData.products
+    private var products: List<Product> = emptyList()
+    private var visibleProducts: List<Product> = emptyList()
     private var scanFilterActive = false
     private var restockFilterActive = false
+
+    /** True bila unduhan katalog dari server gagal (tampilkan pesan jujur). */
+    private var serverFailed = false
 
     /** Tag kategori terpilih pada tombol Filter (urut sesuai desain). */
     private var selectedTags: List<String> = emptyList()
@@ -95,15 +100,21 @@ class StockCheckActivity : AppCompatActivity() {
 
     /**
      * Unduh katalog dari backend (thread latar), petakan ke model halaman ini,
-     * lalu render ulang di UI thread. Bila server mati, data dummy tetap dipakai.
+     * lalu render ulang di UI thread. Bila server mati, daftar tetap kosong
+     * dan layar menampilkan pesan gagal-muat (bukan data dummy).
      */
     private fun refreshFromServer() {
         Thread {
-            val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts() ?: return@Thread
-            val mapped = rows.map { mapFromServer(it) }
+            val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts()
             runOnUiThread {
-                products = mapped
-                if (!scanFilterActive) visibleProducts = mapped
+                if (rows == null) {
+                    serverFailed = true
+                } else {
+                    serverFailed = false
+                    val mapped = rows.map { mapFromServer(it) }
+                    products = mapped
+                    if (!scanFilterActive) visibleProducts = mapped
+                }
                 render()
             }
         }.start()
@@ -111,23 +122,22 @@ class StockCheckActivity : AppCompatActivity() {
 
     /** Petakan baris backend ke model produk halaman Cek Stok. */
     private fun mapFromServer(r: com.tokoberkah.pos.data.api.RemoteProduct): Product {
-        val old = DummyData.findByEan(r.ean)
         val cat = r.category
         return Product(
             ean = r.ean,
             name = r.name,
             price = r.price,
-            unit = old?.unit ?: "Pcs",
+            unit = "Pcs",
             shelfStock = r.stock,
             warehouseStock = 0,
-            lastIncoming = old?.lastIncoming ?: "",
-            imageRes = old?.imageRes ?: imageFor(cat),
-            categories = if (cat != null) listOf(cat) else old?.categories ?: emptyList(),
-            unitsPerBox = old?.unitsPerBox ?: 40
+            lastIncoming = "",
+            imageRes = imageFor(cat),
+            categories = if (cat != null) listOf(cat) else emptyList(),
+            unitsPerBox = 40
         )
     }
 
-    /** Gambar perkiraan untuk produk yang belum ada di data dummy. */
+    /** Gambar perkiraan untuk produk dari server. */
     private fun imageFor(category: String?): Int = when (category) {
         "Mie Instan" -> R.drawable.product_indomie
         "Sembako", "Bumbu Dapur" -> R.drawable.product_bimoli
@@ -140,7 +150,7 @@ class StockCheckActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_SCAN && resultCode == RESULT_OK) {
             val ean = data?.getStringExtra(EXTRA_SCANNED_EAN)
-            val product = ean?.let { e -> products.find { it.ean == e } ?: DummyData.findByEan(e) }
+            val product = ean?.let { e -> products.find { it.ean == e } }
             if (product != null) {
                 scanFilterActive = true
                 visibleProducts = listOf(product)
@@ -238,8 +248,11 @@ class StockCheckActivity : AppCompatActivity() {
         binding.emptyState.visibility = if (empty) View.VISIBLE else View.GONE
         if (empty) {
             binding.emptyText.text = getString(
-                if (selectedTags.isNotEmpty()) R.string.stock_filter_empty
-                else R.string.stock_empty
+                when {
+                    selectedTags.isNotEmpty() -> R.string.stock_filter_empty
+                    serverFailed -> R.string.stock_server_error
+                    else -> R.string.stock_empty
+                }
             )
         }
     }

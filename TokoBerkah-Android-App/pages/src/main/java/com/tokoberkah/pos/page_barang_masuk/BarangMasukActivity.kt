@@ -192,7 +192,7 @@ class BarangMasukActivity : AppCompatActivity() {
             return
         }
 
-        // Produk dari halaman Cek Stok (dummy berbeda) — pakai data intent
+        // Produk dari halaman Cek Stok — pakai data intent bila belum ada di katalog
         val name = intent.getStringExtra(EXTRA_NAME)
         if (name != null) {
             showEntry(Entry(
@@ -366,8 +366,9 @@ class BarangMasukActivity : AppCompatActivity() {
     /**
      * Simpan barang masuk. Utamakan backend (POST /api/stock/masuk) supaya
      * stok & harga tercatat di database — satu sumber kebenaran dengan web
-     * dan desktop. Bila server/jaringan tidak tersedia, jatuh ke pembaruan
-     * lokal (dummy) agar halaman tetap berfungsi offline.
+     * dan desktop. Bila server/jaringan tidak tersedia, TIDAK ada pembaruan
+     * lokal: pengguna diberi pesan gagal agar angka stok tidak pernah
+     * berbeda dari database.
      */
     private fun saveEntry(e: Entry) {
         val n = qty
@@ -397,23 +398,19 @@ class BarangMasukActivity : AppCompatActivity() {
                 }
             }
 
-            // Fallback offline: perbarui data lokal seperti perilaku lama
-            if (!tersimpan && target != null) {
-                target.stock += n
-                if (sellPrice != null && sellPrice > 0 && sellPrice != target.price) {
-                    target.price = sellPrice
-                }
-            }
-
             runOnUiThread {
                 binding.btnSave.isEnabled = true
-                val catatan = if (tersimpan) "" else " — offline, disimpan lokal"
-                Toast.makeText(
-                    this,
-                    "${getString(R.string.masuk_saved)}: $n ${getString(R.string.masuk_unit)} ${e.name}$catatan",
-                    Toast.LENGTH_SHORT
-                ).show()
-                reset()
+                if (tersimpan) {
+                    Toast.makeText(
+                        this,
+                        "${getString(R.string.masuk_saved)}: $n ${getString(R.string.masuk_unit)} ${e.name}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    reset()
+                } else {
+                    // Jangan ubah stok lokal — database adalah satu-satunya sumber kebenaran.
+                    Toast.makeText(this, R.string.masuk_save_failed, Toast.LENGTH_LONG).show()
+                }
             }
         }.start()
     }

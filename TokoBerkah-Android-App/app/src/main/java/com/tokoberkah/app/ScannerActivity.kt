@@ -30,7 +30,6 @@ import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 import com.tokoberkah.app.data.CartManager
-import com.tokoberkah.app.data.DummyData
 import com.tokoberkah.app.data.Product
 import com.tokoberkah.app.databinding.ActivityScannerBinding
 import java.util.concurrent.ExecutorService
@@ -222,18 +221,57 @@ class ScannerActivity : AppCompatActivity() {
         lastScannedCode = code
         lastScanAt = now
 
-        val product = DummyData.findByEan(code)
-        runOnUiThread {
-            if (product == null) {
-                showNotFound(code)
-            } else if (CartManager.getQty(product.ean) >= product.totalStock) {
-                // Tidak boleh melebihi stok tersedia (termasuk stok 0)
-                showWarning(getString(R.string.scan_out_of_stock, product.totalStock))
-            } else {
-                feedbackSuccess()
-                addResult(product)
+        // Cari produk di DATABASE (thread latar) — tidak ada data dummy.
+        Thread {
+            val remote = com.tokoberkah.pos.data.api.RemoteCatalog.fetchByBarcode(code)
+            val serverError = remote == null &&
+                com.tokoberkah.pos.data.api.ApiClient.lastError != "HTTP 404"
+            runOnUiThread {
+                when {
+                    remote == null && serverError -> showServerError()
+                    remote == null -> showNotFound(code)
+                    else -> {
+                        val product = mapFromServer(remote)
+                        if (CartManager.getQty(product.ean) >= product.totalStock) {
+                            // Tidak boleh melebihi stok tersedia (termasuk stok 0)
+                            showWarning(getString(R.string.scan_out_of_stock, product.totalStock))
+                        } else {
+                            feedbackSuccess()
+                            addResult(product)
+                        }
+                    }
+                }
             }
-        }
+        }.start()
+    }
+
+    /** Petakan baris backend ke model produk pemindai. */
+    private fun mapFromServer(r: com.tokoberkah.pos.data.api.RemoteProduct): Product {
+        val cat = r.category
+        return Product(
+            ean = r.ean,
+            name = r.name,
+            price = r.price,
+            unit = "Pcs",
+            shelfStock = r.stock,
+            warehouseStock = 0,
+            lastIncoming = "",
+            imageRes = imageFor(cat),
+            categories = if (cat != null) listOf(cat) else emptyList(),
+            unitsPerBox = 40
+        )
+    }
+
+    /** Gambar perkiraan berdasarkan kategori produk dari server. */
+    private fun imageFor(category: String?): Int = when (category) {
+        "Mie Instan" -> R.drawable.product_indomie
+        "Sembako", "Bumbu Dapur" -> R.drawable.product_bimoli
+        "Susu & Kopi", "Minuman" -> R.drawable.product_kopi
+        else -> R.drawable.product_beras
+    }
+
+    private fun showServerError() {
+        showWarning(getString(R.string.scan_server_error))
     }
 
     private fun addResult(product: Product) {

@@ -48,6 +48,7 @@
     <string name="scan_close">Tutup pemindai barcode</string>
     <string name="scan_out_of_stock">Stok habis, tidak bisa ditambahkan! (Stok: %1$d)</string>
     <string name="scan_not_found_format">Produk tidak ditemukan! Barcode: %1$s</string>
+    <string name="scan_server_error">Tidak dapat memeriksa barcode. Periksa koneksi lalu coba lagi.</string>
     <string name="scan_input_manual">Input Manual</string>
     <string name="scan_permission_needed">Izin kamera diperlukan untuk scan barcode</string>
     <string name="scan_permission_grant">Izinkan kamera</string>
@@ -90,6 +91,7 @@
     <string name="stock_action_restock">Restok</string>
     <string name="stock_add_qty">Tambah jumlah</string>
     <string name="stock_empty">Tidak ada produk untuk ditampilkan</string>
+    <string name="stock_server_error">Tidak dapat memuat data dari server. Periksa koneksi lalu muat ulang.</string>
 
     <!-- ===== Format harga ===== -->
     <string name="price_format">Rp %1$s</string>
