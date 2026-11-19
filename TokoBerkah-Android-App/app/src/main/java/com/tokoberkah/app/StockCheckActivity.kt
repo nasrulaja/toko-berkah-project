@@ -37,6 +37,9 @@ class StockCheckActivity : AppCompatActivity() {
     /** True bila unduhan katalog dari server gagal (tampilkan pesan jujur). */
     private var serverFailed = false
 
+    /** Baris katalog terakhir yang dirender — deteksi "data tidak berubah". */
+    private var lastRows: List<com.tokoberkah.pos.data.api.RemoteProduct>? = null
+
     /** Tag kategori terpilih pada tombol Filter (urut sesuai desain). */
     private var selectedTags: List<String> = emptyList()
 
@@ -99,29 +102,35 @@ class StockCheckActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        render()
-        // Sinkronkan dari backend: harga/stok terbaru (web/desktop) tampil di sini.
+        // Tanpa render() di sini: aktivitas dipakai ulang (REORDER_TO_FRONT),
+        // daftar di layar masih utuh — render ulang justru menunda transisi.
+        // Bila data berubah, render() dipanggil dari refreshFromServer.
         refreshFromServer()
     }
 
     /**
-     * Unduh katalog dari backend (thread latar), petakan ke model halaman ini,
-     * lalu render ulang di UI thread. Bila server mati, daftar tetap kosong
-     * dan layar menampilkan pesan gagal-muat (bukan data dummy).
+     * Unduh katalog dari database (thread latar). Hanya render ulang bila
+     * data BENAR-BENAR berubah (atau saat pulih dari gagal-muat) — data sama
+     * = layar dibiarkan, transisi halaman tetap halus tanpa kedip.
      */
     private fun refreshFromServer() {
         Thread {
             val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts()
             runOnUiThread {
                 if (rows == null) {
-                    serverFailed = true
-                } else {
+                    if (!serverFailed) {
+                        serverFailed = true
+                        render()
+                    }
+                } else if (rows != lastRows || serverFailed) {
+                    lastRows = rows
                     serverFailed = false
                     val mapped = rows.map { mapFromServer(it) }
                     products = mapped
                     if (!scanFilterActive) visibleProducts = mapped
+                    render()
                 }
-                render()
+                // data sama → tidak ada render ulang (tanpa kedip/lag)
             }
         }.start()
     }
@@ -163,6 +172,8 @@ class StockCheckActivity : AppCompatActivity() {
                 binding.scanResultBanner.visibility = View.VISIBLE
                 binding.scanResultText.text =
                     getString(R.string.ean_format, product.ean) + " — " + product.name
+                // render dipanggil di sini (bukan onResume) agar transisi halus
+                render()
             }
         }
     }
