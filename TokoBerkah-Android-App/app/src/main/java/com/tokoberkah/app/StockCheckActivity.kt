@@ -40,6 +40,9 @@ class StockCheckActivity : AppCompatActivity() {
     /** Baris katalog terakhir yang dirender — deteksi "data tidak berubah". */
     private var lastRows: List<com.tokoberkah.pos.data.api.RemoteProduct>? = null
 
+    /** Cegah permintaan sinkronisasi menumpuk saat layar dibuka berulang. */
+    private var refreshInFlight = false
+
     /** Tag kategori terpilih pada tombol Filter (urut sesuai desain). */
     private var selectedTags: List<String> = emptyList()
 
@@ -82,22 +85,41 @@ class StockCheckActivity : AppCompatActivity() {
             render()
         }
 
-        binding.navCheckPrice.setOnClickListener {
-            // Buka halaman Cek Harga (modul pages)
-            startActivity(
-                Intent(this, com.tokoberkah.pos.MainActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+        binding.glassNav.setItems(
+            listOf(
+                getString(R.string.nav_check_price),
+                getString(R.string.nav_check_stock),
+                getString(R.string.nav_incoming)
+            ),
+            listOf(
+                R.drawable.ic_nav_tag,
+                R.drawable.ic_nav_box,
+                R.drawable.ic_nav_truck
             )
-            overridePendingTransition(0, 0)
+        )
+        binding.glassNav.setOnItemSelectedListener { index ->
+            when (index) {
+                0 -> {
+                    // Buka halaman Cek Harga (modul pages)
+                    startActivity(
+                        Intent(this, com.tokoberkah.pos.MainActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    )
+                    overridePendingTransition(0, 0)
+                }
+                2 -> {
+                    // Buka halaman Barang Masuk (modul pages)
+                    startActivity(
+                        Intent(this, com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    )
+                    overridePendingTransition(0, 0)
+                }
+                // index 1 = Cek Stok (halaman ini sendiri)
+            }
+            true
         }
-        binding.navIncoming.setOnClickListener {
-            // Buka halaman Barang Masuk (modul pages)
-            startActivity(
-                Intent(this, com.tokoberkah.pos.page_barang_masuk.BarangMasukActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-            )
-            overridePendingTransition(0, 0)
-        }
+        binding.glassNav.selectedIndex = 1
     }
 
     override fun onResume() {
@@ -105,6 +127,8 @@ class StockCheckActivity : AppCompatActivity() {
         // Tanpa render() di sini: aktivitas dipakai ulang (REORDER_TO_FRONT),
         // daftar di layar masih utuh — render ulang justru menunda transisi.
         // Bila data berubah, render() dipanggil dari refreshFromServer.
+        // Flag direset tiap resume supaya activity yang dibuat ulang tetap bisa sync.
+        refreshInFlight = false
         refreshFromServer()
     }
 
@@ -114,9 +138,15 @@ class StockCheckActivity : AppCompatActivity() {
      * = layar dibiarkan, transisi halaman tetap halus tanpa kedip.
      */
     private fun refreshFromServer() {
+        // Jangan tumpuk permintaan: onResume bisa terpanggil berkali-kali
+        // (bolak-balik tab) dan tiap panggilan membuat Thread + request baru.
+        if (refreshInFlight) return
+        refreshInFlight = true
         Thread {
             val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts()
             runOnUiThread {
+                refreshInFlight = false
+                if (isFinishing || isDestroyed) return@runOnUiThread
                 if (rows == null) {
                     if (!serverFailed) {
                         serverFailed = true

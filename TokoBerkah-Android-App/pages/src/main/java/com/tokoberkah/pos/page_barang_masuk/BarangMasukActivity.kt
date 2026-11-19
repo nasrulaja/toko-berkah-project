@@ -73,8 +73,19 @@ class BarangMasukActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tvBreadcrumb).text =
             getString(R.string.nav_masuk_full)
 
-        // Tab Masuk aktif di bottom nav
-        binding.navIncoming.isSelected = true
+        // Liquid Glass navbar (3 tab, tab Masuk aktif)
+        binding.glassNav.setItems(
+            listOf(
+                getString(com.tokoberkah.pos.R.string.nav_cek_harga),
+                getString(com.tokoberkah.pos.R.string.nav_cek_stok),
+                getString(com.tokoberkah.pos.R.string.nav_masuk)
+            ),
+            listOf(
+                com.tokoberkah.pos.R.drawable.ic_nav_tag,
+                com.tokoberkah.pos.R.drawable.ic_nav_box,
+                com.tokoberkah.pos.R.drawable.ic_nav_truck
+            )
+        )
 
         binding.btnScan.setOnClickListener {
             startActivityForResult(
@@ -118,22 +129,29 @@ class BarangMasukActivity : AppCompatActivity() {
         binding.btnCancel.setOnClickListener { reset() }
 
         // Navigasi tab lain (instant, tanpa animasi)
-        binding.navCheckPrice.setOnClickListener {
-            startActivity(
-                Intent(this, com.tokoberkah.pos.MainActivity::class.java)
-                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-            )
-            overridePendingTransition(0, 0)
+        binding.glassNav.setOnItemSelectedListener { index ->
+            when (index) {
+                0 -> {
+                    startActivity(
+                        Intent(this, com.tokoberkah.pos.MainActivity::class.java)
+                            .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    )
+                    overridePendingTransition(0, 0)
+                }
+                1 -> {
+                    startActivity(
+                        Intent().setClassName(
+                            "com.tokoberkah.app",
+                            "com.tokoberkah.app.StockCheckActivity"
+                        ).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+                    )
+                    overridePendingTransition(0, 0)
+                }
+                // index 2 = Masuk (halaman ini sendiri)
+            }
+            true
         }
-        binding.navCheckStock.setOnClickListener {
-            startActivity(
-                Intent().setClassName(
-                    "com.tokoberkah.app",
-                    "com.tokoberkah.app.StockCheckActivity"
-                ).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
-            )
-            overridePendingTransition(0, 0)
-        }
+        binding.glassNav.selectedIndex = 2
 
         if (savedInstanceState == null) handleIncomingIntent(intent)
         renderRestockList()

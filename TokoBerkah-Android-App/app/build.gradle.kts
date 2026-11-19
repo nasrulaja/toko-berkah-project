@@ -20,9 +20,19 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            // R8 + resource shrinking dimatikan sebelumnya -> APK 28 MB.
+            // Dengan aktif: kode & resource tak terpakai dibuang, di-rename,
+            // dan dex dikompres. Ini penyebab utama APK berat.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+        debug {
+            // Perkecil APK debug juga (tanpa R8 agar build tetap cepat/debuggable)
+            isCrunchPngs = true
         }
     }
     compileOptions {
@@ -31,6 +41,36 @@ android {
     }
     buildFeatures {
         viewBinding = true
+    }
+
+    // ML Kit barcode (~600 MB lib tiap ABI) mendukung SEMUA arsitektur kalau
+    // tidak dibatasi. APK universal membawa 4 ABI sekaligus = ~19 MB cuma
+    // untuk .so. Batasi ke 32+64-bit ARM (semua HP Android modern) dan
+    // hasilkan APK terpisah per ABI.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
+
+    packaging {
+        resources {
+            // File resource yang tidak pernah dipakai runtime Android
+            excludes += setOf(
+                "/META-INF/{AL2.0,LGPL2.1}",
+                "/META-INF/*.kotlin_module",
+                "/META-INF/DEPENDENCIES",
+                "/META-INF/LICENSE*",
+                "/META-INF/NOTICE*",
+                "/META-INF/versions/**",
+                "/kotlin/**",
+                "/DebugProbesKt.bin",
+                "/okhttp3/internal/publicsuffix/**"
+            )
+        }
     }
 }
 

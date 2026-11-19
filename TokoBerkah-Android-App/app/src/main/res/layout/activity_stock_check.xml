@@ -312,117 +312,17 @@
                 </LinearLayout>
             </LinearLayout>
         </ScrollView>
-
-        <!-- ===== Bottom navigation ===== -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:background="@color/background"
-            android:elevation="12dp"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <!-- Cek Harga -->
-            <LinearLayout
-                android:id="@+id/navCheckPrice"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <FrameLayout
-                    android:layout_width="52dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_nav_item">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/nav_check_price"
-                        android:src="@drawable/ic_nav_tag" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/plus_jakarta_bold"
-                    android:text="@string/nav_check_price"
-                    android:textColor="@color/nav_inactive"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <!-- Cek Stok (aktif) -->
-            <LinearLayout
-                android:id="@+id/navCheckStock"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <FrameLayout
-                    android:layout_width="52dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_nav_active_pill">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/nav_check_stock"
-                        android:src="@drawable/ic_nav_box" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/plus_jakarta_bold"
-                    android:text="@string/nav_check_stock"
-                    android:textColor="@color/text_primary"
-                    android:textSize="11sp" />
-            </LinearLayout>
-
-            <!-- Masuk -->
-            <LinearLayout
-                android:id="@+id/navIncoming"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:background="?attr/selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <FrameLayout
-                    android:layout_width="52dp"
-                    android:layout_height="28dp"
-                    android:background="@drawable/bg_nav_item">
-
-                    <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/nav_incoming"
-                        android:src="@drawable/ic_nav_truck" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:fontFamily="@font/plus_jakarta_bold"
-                    android:text="@string/nav_incoming"
-                    android:textColor="@color/nav_inactive"
-                    android:textSize="11sp" />
-            </LinearLayout>
-        </LinearLayout>
     </LinearLayout>
+
+    <!-- ===== Liquid Glass floating navbar ===== -->
+    <com.tokoberkah.pos.ui.LiquidGlassNavbar
+        android:id="@+id/glassNav"
+        android:layout_width="match_parent"
+        android:layout_height="72dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="18dp"
+        android:layout_alignParentBottom="true"
+        android:elevation="16dp" />
+
 </RelativeLayout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Liquid Glass Navbar: warna bisa dioverride dari layout / theme -->
+    <declare-styleable name="LiquidGlassNavbar">
+        <attr name="lgnAccent" format="color" />
+        <attr name="lgnGlassColor" format="color" />
+        <attr name="lgnInactiveColor" format="color" />
+        <attr name="lgnActiveColor" format="color" />
+    </declare-styleable>
+</resources>

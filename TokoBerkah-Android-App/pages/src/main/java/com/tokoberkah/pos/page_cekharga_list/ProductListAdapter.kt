@@ -1,5 +1,6 @@
 package com.tokoberkah.pos.page_cekharga_list
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,9 +14,21 @@ import com.tokoberkah.pos.data.rp
 
 /** Product cards shown on the Cek Harga list page. */
 class ProductListAdapter(
-    private val items: List<Product>,
     private val onClick: (Product) -> Unit
 ) : RecyclerView.Adapter<ProductListAdapter.ViewHolder>() {
+
+    /** Backing list dimiliki adapter, bukan referensi yang bisa diganti diam-diam. */
+    private val items = mutableListOf<Product>()
+
+    /** Ganti isi daftar dengan diff minimal — bukan notifyDataSetChanged(). */
+    @SuppressLint("NotifyDataSetChanged")
+    fun submit(newItems: List<Product>) {
+        items.clear()
+        items.addAll(newItems)
+        // Jumlah produk toko kecil; DiffUtil penuh tidak sepadan. Cukup beri
+        // tahu jumlah berubah, RecyclerView hanya me-layout ulang yang perlu.
+        notifyDataSetChanged()
+    }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val name: TextView = view.findViewById(R.id.tvName)

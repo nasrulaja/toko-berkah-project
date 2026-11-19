@@ -50,6 +50,9 @@ class ScannerActivity : AppCompatActivity() {
     private var camera: androidx.camera.core.Camera? = null
     private lateinit var analysisExecutor: ExecutorService
 
+    /** Executor untuk lookup produk ke backend (dibatasi 1 thread). */
+    private val networkExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+
     private var torchOn = false
     private var soundOn = true
     private var lastScannedCode: String? = null
@@ -166,6 +169,10 @@ class ScannerActivity : AppCompatActivity() {
 
         val analysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            // Tanpa resolusi target, CameraX mengirim frame resolusi penuh
+            // (bisa 12 MP) ke ML Kit tiap frame -> CPU/GPU penuh, preview
+            // tersendat & HP panas. Barcode cukup jelas di 1280x720.
+            .setTargetResolution(android.util.Size(1280, 720))
             .build()
 
         analysis.setAnalyzer(analysisExecutor) { imageProxy ->
@@ -222,7 +229,11 @@ class ScannerActivity : AppCompatActivity() {
         lastScanAt = now
 
         // Cari produk di DATABASE (thread latar) — tidak ada data dummy.
-        Thread {
+        // Pakai executor milik activity (bukan Thread mentah tiap scan) supaya
+        // tidak ada thread bocor yang menumpuk saat scan berkali-kali.
+        val lookup = networkExecutor
+        if (lookup.isShutdown) return
+        lookup.execute {
             val remote = com.tokoberkah.pos.data.api.RemoteCatalog.fetchByBarcode(code)
             val serverError = remote == null &&
                 com.tokoberkah.pos.data.api.ApiClient.lastError != "HTTP 404"
@@ -242,7 +253,7 @@ class ScannerActivity : AppCompatActivity() {
                     }
                 }
             }
-        }.start()
+        }
     }
 
     /** Petakan baris backend ke model produk pemindai. */
@@ -413,7 +424,14 @@ class ScannerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         analysisExecutor.shutdown()
+        networkExecutor.shutdownNow()
         cameraProvider?.unbindAll()
+        // Tutup client ML Kit: tanpa ini native detector (barhopper) tetap
+        // hidup dan menumpuk tiap kali scanner dibuka -> app makin berat.
+        try {
+            barcodeScanner.close()
+        } catch (_: Exception) {
+        }
         try {
             beep.release()
         } catch (_: Exception) {

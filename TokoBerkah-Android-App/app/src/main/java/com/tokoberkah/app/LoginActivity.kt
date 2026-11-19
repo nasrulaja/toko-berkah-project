@@ -21,7 +21,9 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Toggle tampilkan/sembunyikan kata sandi
+        // Toggle tampilkan/sembunyikan kata sandi. Dulu setImageResource()
+        // dipanggil dengan drawable yang SAMA di kedua cabang, jadi selalu
+        // decode ulang bitmap -> alokasi tiap klik. Cukup ganti contentDescription.
         binding.btnTogglePassword.setOnClickListener {
             val input = binding.inputPassword
             val isHidden = input.inputType and android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD != 0
@@ -32,9 +34,6 @@ class LoginActivity : AppCompatActivity() {
                 android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD
             }
             input.setSelection(if (selection < 0) input.text.length else selection)
-            binding.btnTogglePassword.setImageResource(
-                if (isHidden) R.drawable.ic_eye else R.drawable.ic_eye
-            )
             binding.btnTogglePassword.contentDescription = getString(
                 if (isHidden) R.string.login_hide_password else R.string.login_show_password
             )

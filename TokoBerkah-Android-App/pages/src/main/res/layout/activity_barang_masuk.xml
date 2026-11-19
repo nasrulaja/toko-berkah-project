@@ -303,7 +303,7 @@
                         android:focusable="true"
                         android:fontFamily="@font/plus_jakarta_bold"
                         android:gravity="center"
-                        android:text="−"
+                        android:text="âˆ’"
                         android:textColor="@color/navy"
                         android:textSize="20sp" />
 
@@ -733,131 +733,17 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- ===== Bottom navigation (identical to Cek Stok / Cek Harga) ===== -->
-    <LinearLayout
-        android:id="@+id/bottomBar"
+    <!-- ===== Liquid Glass floating navbar ===== -->
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:background="@color/bg_page"
-        android:elevation="12dp"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content">
 
-        <!-- Cek Harga -->
-        <LinearLayout
-            android:id="@+id/navCheckPrice"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <FrameLayout
-                android:layout_width="52dp"
-                android:layout_height="28dp"
-                android:background="@drawable/bg_nav_pill"
-                android:duplicateParentState="true">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@string/nav_cek_harga"
-                    android:duplicateParentState="true"
-                    android:src="@drawable/ic_tag"
-                    android:tint="@color/nav_icon_tint" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:duplicateParentState="true"
-                android:fontFamily="@font/plus_jakarta_bold"
-                android:text="@string/nav_cek_harga"
-                android:textColor="@color/nav_label_tint"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <!-- Cek Stok -->
-        <LinearLayout
-            android:id="@+id/navCheckStock"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <FrameLayout
-                android:layout_width="52dp"
-                android:layout_height="28dp"
-                android:background="@drawable/bg_nav_pill"
-                android:duplicateParentState="true">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@string/nav_cek_stok"
-                    android:duplicateParentState="true"
-                    android:src="@drawable/ic_box"
-                    android:tint="@color/nav_icon_tint" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:duplicateParentState="true"
-                android:fontFamily="@font/plus_jakarta_bold"
-                android:text="@string/nav_cek_stok"
-                android:textColor="@color/nav_label_tint"
-                android:textSize="11sp" />
-        </LinearLayout>
-
-        <!-- Masuk (aktif) -->
-        <LinearLayout
-            android:id="@+id/navIncoming"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
-
-            <FrameLayout
-                android:layout_width="52dp"
-                android:layout_height="28dp"
-                android:background="@drawable/bg_nav_pill"
-                android:duplicateParentState="true">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_gravity="center"
-                    android:contentDescription="@string/nav_masuk"
-                    android:duplicateParentState="true"
-                    android:src="@drawable/ic_truck"
-                    android:tint="@color/nav_icon_tint" />
-            </FrameLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:duplicateParentState="true"
-                android:fontFamily="@font/plus_jakarta_bold"
-                android:text="@string/nav_masuk"
-                android:textColor="@color/nav_label_tint"
-                android:textSize="11sp" />
-        </LinearLayout>
-    </LinearLayout>
+        <com.tokoberkah.pos.ui.LiquidGlassNavbar
+            android:id="@+id/glassNav"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="18dp" />
+    </FrameLayout>
 </LinearLayout>

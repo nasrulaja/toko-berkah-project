@@ -27,7 +27,10 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
     private var _binding: FragmentCekhargaListBinding? = null
     private val binding get() = _binding!!
 
-    private var listAdapter: androidx.recyclerview.widget.RecyclerView.Adapter<*>? = null
+    private var listAdapter: ProductListAdapter? = null
+
+    /** Sinkronisasi katalog yang sedang berjalan (agar tidak menumpuk). */
+    private var syncJob: Thread? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         _binding = FragmentCekhargaListBinding.bind(view)
@@ -45,24 +48,36 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
         }
 
         binding.rvProducts.layoutManager = LinearLayoutManager(requireContext())
-        listAdapter = ProductListAdapter(ProductRepository.all()) { openDetail(it) }
-        binding.rvProducts.adapter = listAdapter
+        // Setiap baris produk punya ukuran tetap -> RecyclerView tidak perlu
+        // mengukur ulang tiap item (menghilangkan jank saat scroll).
+        binding.rvProducts.setHasFixedSize(true)
+        listAdapter = ProductListAdapter { openDetail(it) }.also { adapter ->
+            binding.rvProducts.adapter = adapter
+            adapter.submit(ProductRepository.all())
+        }
     }
 
     override fun onResume() {
         super.onResume()
         // Harga bisa saja berubah dari halaman Ubah Harga / Barang Masuk
-        listAdapter?.notifyDataSetChanged()
+        listAdapter?.submit(ProductRepository.all())
 
-        // Sinkronkan katalog dari backend (thread latar, terapkan di UI thread)
-        Thread {
-            val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts() ?: return@Thread
+        // Sinkronkan katalog dari backend (thread latar, terapkan di UI thread).
+        // Dibatasi: cukup sekali per tampil halaman, dan tidak menumpuk kalau
+        // pengguna bolak-balik tab dengan cepat.
+        if (syncJob != null) return
+        syncJob = Thread {
+            val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts() ?: run {
+                syncJob = null
+                return@Thread
+            }
             activity?.runOnUiThread {
+                syncJob = null
                 if (_binding == null) return@runOnUiThread
                 ProductRepository.applyRemote(rows)
-                listAdapter?.notifyDataSetChanged()
+                listAdapter?.submit(ProductRepository.all())
             }
-        }.start()
+        }.also { it.start() }
     }
 
     @Deprecated("Deprecated in Java")
@@ -93,6 +108,11 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Lepas referensi sync: fragment bisa dipakai ulang (view baru) dan
+        // syncJob lama tidak boleh memblokir sinkronisasi berikutnya.
+        syncJob = null
+        binding.rvProducts.adapter = null
+        listAdapter = null
         _binding = null
     }
 }

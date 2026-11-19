@@ -20,6 +20,9 @@ object ProductRepository {
     private val products = mutableListOf<Product>()
     private val recentEans = mutableListOf<String>()
 
+    /** Indeks EAN -> produk: byEan() dipanggil tiap scan & tiap baris riwayat. */
+    private val byEanIndex = HashMap<String, Product>()
+
     private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
     private val timeFormat = SimpleDateFormat("HH.mm", Locale("id", "ID"))
 
@@ -33,7 +36,7 @@ object ProductRepository {
     fun restockList(): List<Product> =
         products.filter { it.needsRestock }.sortedByDescending { it.stock }
 
-    fun byEan(ean: String): Product? = products.find { it.ean == ean }
+    fun byEan(ean: String): Product? = byEanIndex[ean]
 
     /** Recently viewed products, newest first. */
     fun recentProducts(): List<Product> = recentEans.mapNotNull { byEan(it) }
@@ -96,6 +99,8 @@ object ProductRepository {
         }
         products.clear()
         products.addAll(fresh)
+        byEanIndex.clear()
+        fresh.forEach { byEanIndex[it.ean] = it }
         recentEans.retainAll(fresh.map { it.ean }.toSet())
     }
 
