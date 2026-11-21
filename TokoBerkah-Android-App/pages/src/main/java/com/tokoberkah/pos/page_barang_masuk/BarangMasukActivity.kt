@@ -81,9 +81,9 @@ class BarangMasukActivity : AppCompatActivity() {
                 getString(com.tokoberkah.pos.R.string.nav_masuk)
             ),
             listOf(
-                com.tokoberkah.pos.R.drawable.ic_nav_tag,
-                com.tokoberkah.pos.R.drawable.ic_nav_box,
-                com.tokoberkah.pos.R.drawable.ic_nav_truck
+                com.tokoberkah.pos.R.drawable.ic_tag,
+                com.tokoberkah.pos.R.drawable.ic_box,
+                com.tokoberkah.pos.R.drawable.ic_truck
             )
         )
 
@@ -159,6 +159,7 @@ class BarangMasukActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        binding.glassNav.selectedIndex = 2
         // Sinkronkan katalog dari backend supaya daftar & stok selalu terbaru.
         refreshFromServer()
     }

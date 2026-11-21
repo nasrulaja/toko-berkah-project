@@ -47,6 +47,13 @@ class MainActivity : AppCompatActivity() {
         setupNavbar()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Re-assert tab selection: aktivitas dipakai ulang via REORDER_TO_FRONT
+        // sehingga onCreate tidak selalu dijalankan saat kembali ke layar ini.
+        binding.glassNav.selectedIndex = 0
+    }
+
     // ------------------------------------------------------------- navbar
     private fun setupNavbar() {
         binding.glassNav.setItems(

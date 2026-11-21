@@ -63,6 +63,8 @@ class StockCheckActivity : AppCompatActivity() {
             v.setPadding(v.paddingLeft, top, v.paddingRight, v.paddingBottom)
             insets
         }
+        findViewById<TextView>(com.tokoberkah.pos.R.id.tvBreadcrumb).text =
+            getString(R.string.nav_check_stock)
 
         binding.btnScanBarcode.setOnClickListener {
             startActivityForResult(
@@ -92,9 +94,9 @@ class StockCheckActivity : AppCompatActivity() {
                 getString(R.string.nav_incoming)
             ),
             listOf(
-                R.drawable.ic_nav_tag,
-                R.drawable.ic_nav_box,
-                R.drawable.ic_nav_truck
+                com.tokoberkah.pos.R.drawable.ic_tag,
+                com.tokoberkah.pos.R.drawable.ic_box,
+                com.tokoberkah.pos.R.drawable.ic_truck
             )
         )
         binding.glassNav.setOnItemSelectedListener { index ->
@@ -124,6 +126,7 @@ class StockCheckActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        binding.glassNav.selectedIndex = 1
         // Tanpa render() di sini: aktivitas dipakai ulang (REORDER_TO_FRONT),
         // daftar di layar masih utuh — render ulang justru menunda transisi.
         // Bila data berubah, render() dipanggil dari refreshFromServer.
