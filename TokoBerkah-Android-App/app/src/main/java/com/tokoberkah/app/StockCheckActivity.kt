@@ -2,7 +2,6 @@ package com.tokoberkah.app
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -40,17 +39,17 @@ class StockCheckActivity : AppCompatActivity() {
     /** Baris katalog terakhir yang dirender — deteksi "data tidak berubah". */
     private var lastRows: List<com.tokoberkah.pos.data.api.RemoteProduct>? = null
 
+    /** Adapter daftar produk (RecyclerView) — header + kartu. */
+    private var stockAdapter: StockListAdapter? = null
+
+    /** Teks baris hasil scan (banner pada item header). */
+    private var scanResultLine: String = ""
+
     /** Cegah permintaan sinkronisasi menumpuk saat layar dibuka berulang. */
     private var refreshInFlight = false
 
     /** Tag kategori terpilih pada tombol Filter (urut sesuai desain). */
     private var selectedTags: List<String> = emptyList()
-
-    /**
-     * Nomor generasi render — tiap render baru membatalkan potongan (chunk)
-     * render sebelumnya yang masih tertunda, agar tak menumpuk.
-     */
-    private var renderGen = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,26 +65,31 @@ class StockCheckActivity : AppCompatActivity() {
         findViewById<TextView>(com.tokoberkah.pos.R.id.tvBreadcrumb).text =
             getString(R.string.nav_check_stock)
 
-        binding.btnScanBarcode.setOnClickListener {
-            startActivityForResult(
-                Intent(this, ScannerActivity::class.java),
-                REQUEST_SCAN
-            )
-        }
-
-        binding.chipRestock.setOnClickListener {
-            restockFilterActive = !restockFilterActive
-            render()
-        }
-
-        // Tombol Filter -> dialog tag kategori (multi-select)
-        binding.chipFilter.setOnClickListener { showFilterDialog() }
-
-        binding.btnCloseScanResult.setOnClickListener {
-            scanFilterActive = false
-            visibleProducts = products
-            render()
-        }
+        // Daftar via RecyclerView: hanya kartu yang terlihat yang jadi view,
+        // header (scan/hitungan/chip) jadi item ke-0 di dalam daftar.
+        binding.rvProducts.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(this)
+        stockAdapter = StockListAdapter(
+            onScanClick = {
+                startActivityForResult(
+                    Intent(this, ScannerActivity::class.java),
+                    REQUEST_SCAN
+                )
+            },
+            onCloseBanner = {
+                scanFilterActive = false
+                visibleProducts = products
+                render()
+            },
+            onRestockToggle = {
+                restockFilterActive = !restockFilterActive
+                render()
+            },
+            // Tombol Filter -> dialog tag kategori (multi-select)
+            onFilterClick = { showFilterDialog() },
+            onProductAction = { openBarangMasuk(it) }
+        )
+        binding.rvProducts.adapter = stockAdapter
 
         binding.glassNav.setItems(
             listOf(
@@ -202,8 +206,7 @@ class StockCheckActivity : AppCompatActivity() {
             if (product != null) {
                 scanFilterActive = true
                 visibleProducts = listOf(product)
-                binding.scanResultBanner.visibility = View.VISIBLE
-                binding.scanResultText.text =
+                scanResultLine =
                     getString(R.string.ean_format, product.ean) + " — " + product.name
                 // render dipanggil di sini (bukan onResume) agar transisi halus
                 render()
@@ -274,34 +277,30 @@ class StockCheckActivity : AppCompatActivity() {
 
         // Header count
         val restockCount = base.count { it.needsRestock }
-        binding.itemCount.text = getString(R.string.stock_items_format, base.size)
-        binding.chipRestockText.text = getString(R.string.stock_restock_format, restockCount)
-        binding.chipRestock.alpha = if (restockFilterActive) 1f else 0.75f
+        val countText = getString(R.string.stock_items_format, base.size)
+        val restockText = getString(R.string.stock_restock_format, restockCount)
+        val restockAlpha = if (restockFilterActive) 1f else 0.75f
 
         // Label tombol Filter: "Filter" -> "Sembako" -> "Sembako +1"
-        binding.chipFilterText.text = when (selectedTags.size) {
+        val filterLabel = when (selectedTags.size) {
             0 -> getString(R.string.stock_filter)
             1 -> selectedTags.first()
             else -> getString(R.string.stock_filter_more, selectedTags.first(), selectedTags.size - 1)
         }
 
-        // Isi daftar produk — per potongan kecil agar UI thread tetap
-        // responsif (308 kartu sekaligus memblokir >5 detik -> ANR).
-        binding.productList.removeAllViews()
-        val inflater = LayoutInflater.from(this)
-        renderGen++
-        val gen = renderGen
-        fun addChunk(start: Int) {
-            if (gen != renderGen || isFinishing) return
-            val end = minOf(start + CHUNK_SIZE, list.size)
-            for (i in start until end) {
-                val card = inflater.inflate(R.layout.item_product_stock, binding.productList, false)
-                bindCard(card, list[i])
-                binding.productList.addView(card)
-            }
-            if (end < list.size) binding.productList.post { addChunk(end) }
-        }
-        addChunk(0)
+        // Daftar via RecyclerView: cukup submit data — hanya kartu yang
+        // terlihat yang di-bind, tanpa timbunan 308 view (transisi halus).
+        stockAdapter?.submit(
+            StockListAdapter.HeaderState(
+                countText = countText,
+                restockText = restockText,
+                restockAlpha = restockAlpha,
+                filterLabel = filterLabel,
+                bannerVisible = scanFilterActive,
+                bannerText = scanResultLine
+            ),
+            list
+        )
 
         val empty = list.isEmpty()
         binding.emptyState.visibility = if (empty) View.VISIBLE else View.GONE
@@ -314,84 +313,6 @@ class StockCheckActivity : AppCompatActivity() {
                 }
             )
         }
-    }
-
-    private fun bindCard(card: View, product: Product) {
-        card.findViewById<TextView>(R.id.productName).text = product.name
-        card.findViewById<TextView>(R.id.productEan).text = product.ean
-
-        // Baris status (baris sendiri) + tag kategori (di bawahnya, wrap max 4)
-        val tagRows = card.findViewById<LinearLayout>(R.id.tagRows)
-        TagFlow.fill(
-            container = tagRows,
-            tags = product.categories.take(Categories.MAX_PER_PRODUCT),
-            maxLineWidthPx = TagFlow.maxLineWidth(this),
-            chipBgRes = R.drawable.bg_tag_chip,
-            chipTextColor = getColor(R.color.tag_chip_text)
-        )
-        tagRows.addView(createStatusPill(product), 0)
-
-        // Stok total
-        card.findViewById<TextView>(R.id.stockNumber).text = product.totalStock.toString()
-        card.findViewById<TextView>(R.id.stockUnit).text = product.unit
-
-        // Tombol aksi: Restok (stok menipis/habis) vs + (stok sehat)
-        val bottomRow = card.findViewById<LinearLayout>(R.id.bottomRow)
-        val lastIncomingRow = card.findViewById<LinearLayout>(R.id.lastIncomingRow)
-        val btnRestok = card.findViewById<TextView>(R.id.btnRestok)
-        val btnAdd = card.findViewById<LinearLayout>(R.id.btnAdd)
-
-        if (product.needsRestock) {
-            bottomRow.visibility = View.VISIBLE
-            btnRestok.visibility = View.VISIBLE
-            // Baris terakhir masuk hanya bila ada catatannya
-            lastIncomingRow.visibility = if (product.lastIncoming.isEmpty()) View.GONE else View.VISIBLE
-            card.findViewById<TextView>(R.id.lastIncomingText).text =
-                getString(R.string.stock_last_incoming_format, product.lastIncoming)
-            btnRestok.setOnClickListener { openBarangMasuk(product) }
-            btnAdd.visibility = View.GONE
-        } else {
-            bottomRow.visibility = View.GONE
-            btnAdd.visibility = View.VISIBLE
-            btnAdd.setOnClickListener { openBarangMasuk(product) }
-        }
-    }
-
-    /** Pill status: baris pertama sebelum tag kategori. */
-    private fun createStatusPill(product: Product): TextView {
-        val pill = TextView(this)
-        pill.text = when {
-            product.isOutOfStock -> getString(R.string.stock_status_out)
-            product.needsRestock -> getString(R.string.stock_status_low)
-            else -> getString(R.string.stock_status_safe)
-        }
-        pill.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 11f)
-        pill.typeface = android.graphics.Typeface.DEFAULT_BOLD
-        pill.setPadding(
-            TagFlow.dp(this, 10), TagFlow.dp(this, 4),
-            TagFlow.dp(this, 10), TagFlow.dp(this, 4)
-        )
-        pill.background = getDrawable(
-            when {
-                product.isOutOfStock -> R.drawable.bg_badge_out
-                product.needsRestock -> R.drawable.bg_badge_low
-                else -> R.drawable.bg_badge_ok
-            }
-        )
-        pill.setTextColor(
-            getColor(
-                when {
-                    product.isOutOfStock -> R.color.error_dark
-                    product.needsRestock -> R.color.warning_badge_text
-                    else -> R.color.on_success
-                }
-            )
-        )
-        pill.layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        ).apply { bottomMargin = TagFlow.dp(this@StockCheckActivity, 8) }
-        return pill
     }
 
     /** Buka halaman Barang Masuk dengan produk ini terisi otomatis. */
@@ -409,8 +330,6 @@ class StockCheckActivity : AppCompatActivity() {
     companion object {
         const val REQUEST_SCAN = 1001
 
-        /** Jumlah kartu dirender per potongan (jaga UI tetap responsif). */
-        private const val CHUNK_SIZE = 60
         const val EXTRA_SCANNED_EAN = "scanned_ean"
     }
 }

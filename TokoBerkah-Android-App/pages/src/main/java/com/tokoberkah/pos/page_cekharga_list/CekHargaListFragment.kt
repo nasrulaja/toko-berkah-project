@@ -32,6 +32,12 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
     /** Sinkronisasi katalog yang sedang berjalan (agar tidak menumpuk). */
     private var syncJob: Thread? = null
 
+    /**
+     * Baris sinkronisasi terakhir — bila server tidak berubah, lewati
+     * applyRemote + rebind (pemicu hitch tiap kali halaman dibuka).
+     */
+    private var lastSyncedRows: List<com.tokoberkah.pos.data.api.RemoteProduct>? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         _binding = FragmentCekhargaListBinding.bind(view)
         setBreadcrumb(getString(R.string.nav_cek_harga))
@@ -74,6 +80,12 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
             activity?.runOnUiThread {
                 syncJob = null
                 if (_binding == null) return@runOnUiThread
+                // Data sama dengan sinkronisasi sebelumnya → tidak ada yang
+                // berubah; lewati apply + rebind (menghilangkan hitch tiap
+                // halaman dibuka). Perubahan lokal (Ubah Harga) tetap tampil
+                // lewat submit(all()) di onResume.
+                if (rows == lastSyncedRows) return@runOnUiThread
+                lastSyncedRows = rows
                 ProductRepository.applyRemote(rows)
                 listAdapter?.submit(ProductRepository.all())
             }
