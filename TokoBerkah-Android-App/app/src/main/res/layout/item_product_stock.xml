@@ -83,13 +83,28 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Baris status + tag kategori (mengalir wrap, maksimal 4 tag) -->
+    <!-- Baris status + tag kategori: pill di KIRI, tag rata KANAN, sebaris -->
     <LinearLayout
-        android:id="@+id/tagRows"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:orientation="vertical" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/pillRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+
+        <LinearLayout
+            android:id="@+id/tagRows"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical" />
+    </LinearLayout>
 
     <!-- Sisa stok total -->
     <LinearLayout

@@ -76,14 +76,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun showCekHarga() {
         // Kembali ke beranda Cek Harga: buang semua halaman di back stack.
+        // Cukup pop saja — fragment daftar ASLI masih hidup di dasar back
+        // stack dan akan dipulihkan. (Sebelumnya diganti fragment BARU tiap
+        // kali, menyebabkan inflate + rebind ulang -> lag saat pindah tab.)
         if (supportFragmentManager.backStackEntryCount > 0) {
             supportFragmentManager.popBackStack(
                 null,
                 FragmentManager.POP_BACK_STACK_INCLUSIVE
             )
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, CekHargaListFragment())
-                .commit()
         }
     }
 

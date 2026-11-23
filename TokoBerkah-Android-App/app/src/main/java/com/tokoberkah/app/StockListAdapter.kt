@@ -97,6 +97,7 @@ class StockListAdapter(
         private val name: TextView = view.findViewById(R.id.productName)
         private val ean: TextView = view.findViewById(R.id.productEan)
         private val tagRows: LinearLayout = view.findViewById(R.id.tagRows)
+        private val pillRow: LinearLayout = view.findViewById(R.id.pillRow)
         private val stockNumber: TextView = view.findViewById(R.id.stockNumber)
         private val stockUnit: TextView = view.findViewById(R.id.stockUnit)
         private val bottomRow: LinearLayout = view.findViewById(R.id.bottomRow)
@@ -115,9 +116,11 @@ class StockListAdapter(
                 tags = p.categories.take(Categories.MAX_PER_PRODUCT),
                 maxLineWidthPx = TagFlow.maxLineWidth(ctx),
                 chipBgRes = R.drawable.bg_tag_chip,
-                chipTextColor = ctx.getColor(R.color.tag_chip_text)
+                chipTextColor = ctx.getColor(R.color.tag_chip_text),
+                alignEnd = true
             )
-            tagRows.addView(createStatusPill(p), 0)
+            pillRow.removeAllViews()
+            pillRow.addView(createStatusPill(p))
 
             // Stok total
             stockNumber.text = p.totalStock.toString()

@@ -26,6 +26,101 @@ object ProductRepository {
     private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale("id", "ID"))
     private val timeFormat = SimpleDateFormat("HH.mm", Locale("id", "ID"))
 
+    init {
+        val bimoli = Product(
+            ean = "8992388012493",
+            name = "Minyak Goreng Bimoli 2L",
+            categories = Categories.of("Sembako", "Bumbu Dapur"),
+            stock = 48,
+            location = "Rak B3",
+            imageRes = R.drawable.img_bimoli,
+            badge = "2L",
+            price = 34_000,
+            unitsPerBox = 12,
+            lastIncoming = "2 hari lalu",
+            history = mutableListOf(
+                PriceChange("12 Nov 2026", "09.15", 33_000, 34_000, "Pemilik toko", "Harga promo berakhir."),
+                PriceChange("05 Nov 2026", "14.30", 32_500, 33_000, "Pemilik toko", "Penyesuaian harga dari pemasok."),
+                PriceChange("22 Okt 2026", "10.00", 32_000, 32_500, "Pemilik toko", "Penyesuaian harga dari pemasok."),
+                PriceChange("10 Okt 2026", "08.45", 31_500, 32_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
+            )
+        )
+
+        val beras = Product(
+            ean = "8992003300891",
+            name = "Beras Pandan Wangi 5Kg",
+            categories = Categories.of("Sembako"),
+            stock = 0,
+            location = "Rak A1",
+            imageRes = R.drawable.img_beras,
+            badge = "5kg",
+            price = 75_000,
+            unitsPerBox = 1,
+            lastIncoming = "5 hari lalu",
+            history = mutableListOf(
+                PriceChange("08 Nov 2026", "11.20", 74_000, 75_000, "Pemilik toko", "Harga dari distributor naik."),
+                PriceChange("20 Okt 2026", "09.05", 73_500, 74_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
+            )
+        )
+
+        val kopi = Product(
+            ean = "8991002102493",
+            name = "Kopi Kapal Api Spesial Mixx",
+            categories = Categories.of("Susu & Kopi", "Minuman", "Sembako"),
+            stock = 4,
+            location = "Rak C2",
+            imageRes = R.drawable.img_kopi,
+            badge = "",
+            price = 21_100,
+            unitsPerBox = 40,
+            lastIncoming = "3 hari lalu",
+            history = mutableListOf(
+                PriceChange("11 Nov 2026", "16.45", 20_500, 21_100, "Pemilik toko", "Penyesuaian harga dari pemasok."),
+                PriceChange("01 Okt 2026", "13.10", 20_000, 20_500, "Pemilik toko", "Biaya transportasi bertambah.")
+            )
+        )
+
+        val indomie = Product(
+            ean = "0089686170733",
+            name = "Indomie Goreng",
+            categories = Categories.of("Mie Instan", "Sembako"),
+            stock = 14,
+            location = "Rak D5",
+            imageRes = R.drawable.img_indomie,
+            badge = "Karton / Dus",
+            price = 3_100,
+            unitsPerBox = 40,
+            lastIncoming = "1 hari lalu",
+            history = mutableListOf(
+                PriceChange("09 Nov 2026", "08.30", 3_000, 3_100, "Pemilik toko", "Penyesuaian harga dari pemasok."),
+                PriceChange("15 Okt 2026", "17.00", 2_950, 3_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
+            )
+        )
+
+        val gula = Product(
+            ean = "8991002107812",
+            name = "Gula Pasir Gulaku 1kg",
+            categories = Categories.of("Sembako"),
+            stock = 11,
+            location = "Rak A2",
+            imageRes = R.drawable.img_gula,
+            badge = "1kg",
+            price = 17_500,
+            unitsPerBox = 24,
+            lastIncoming = "6 hari lalu",
+            history = mutableListOf(
+                PriceChange("07 Nov 2026", "10.15", 17_000, 17_500, "Pemilik toko", "Harga gulaku dari pemasok naik."),
+                PriceChange("18 Okt 2026", "12.40", 16_800, 17_000, "Pemilik toko", "Penyesuaian harga dari pemasok.")
+            )
+        )
+
+        products.addAll(listOf(bimoli, beras, kopi, indomie, gula))
+        recentEans.addAll(listOf(beras.ean, indomie.ean, gula.ean, kopi.ean))
+        // Indeks EAN harus terisi sejak awal: byEan() dipakai scanner & riwayat
+        // dan hanya diisi applyRemote() yang sekarang tak pernah dipanggil.
+        products.forEach { byEanIndex[it.ean] = it }
+    }
+
     /** All products, in catalogue order (used by the scan page). */
     fun all(): List<Product> = products
 

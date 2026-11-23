@@ -22,7 +22,8 @@ object TagFlow {
         maxLineWidthPx: Int,
         chipBgRes: Int,
         chipTextColor: Int,
-        textSizeSp: Float = 11f
+        textSizeSp: Float = 11f,
+        alignEnd: Boolean = false
     ): List<TextView> {
         container.removeAllViews()
         if (tags.isEmpty()) return emptyList()
@@ -55,7 +56,10 @@ object TagFlow {
 
             val current = row
             if (current == null || (current.childCount > 0 && used + gap + chipWidth > maxLineWidthPx)) {
-                val newRow = LinearLayout(ctx).apply { orientation = LinearLayout.HORIZONTAL }
+                val newRow = LinearLayout(ctx).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    if (alignEnd) gravity = Gravity.END
+                }
                 container.addView(
                     newRow,
                     LinearLayout.LayoutParams(

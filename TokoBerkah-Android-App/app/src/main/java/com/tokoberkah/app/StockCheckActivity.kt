@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tokoberkah.app.data.Product
 import com.tokoberkah.app.databinding.ActivityStockCheckBinding
 import com.tokoberkah.pos.data.Categories
+import com.tokoberkah.pos.data.ProductRepository
 import com.tokoberkah.pos.ui.TagFlow
 
 /**
@@ -36,17 +37,11 @@ class StockCheckActivity : AppCompatActivity() {
     /** True bila unduhan katalog dari server gagal (tampilkan pesan jujur). */
     private var serverFailed = false
 
-    /** Baris katalog terakhir yang dirender — deteksi "data tidak berubah". */
-    private var lastRows: List<com.tokoberkah.pos.data.api.RemoteProduct>? = null
-
     /** Adapter daftar produk (RecyclerView) — header + kartu. */
     private var stockAdapter: StockListAdapter? = null
 
     /** Teks baris hasil scan (banner pada item header). */
     private var scanResultLine: String = ""
-
-    /** Cegah permintaan sinkronisasi menumpuk saat layar dibuka berulang. */
-    private var refreshInFlight = false
 
     /** Tag kategori terpilih pada tombol Filter (urut sesuai desain). */
     private var selectedTags: List<String> = emptyList()
@@ -133,68 +128,35 @@ class StockCheckActivity : AppCompatActivity() {
         binding.glassNav.selectedIndex = 1
         // Tanpa render() di sini: aktivitas dipakai ulang (REORDER_TO_FRONT),
         // daftar di layar masih utuh — render ulang justru menunda transisi.
-        // Bila data berubah, render() dipanggil dari refreshFromServer.
-        // Flag direset tiap resume supaya activity yang dibuat ulang tetap bisa sync.
-        refreshInFlight = false
+        // Data dimuat dari ProductRepository (data lokal/dummy) saat refresh.
         refreshFromServer()
     }
 
     /**
-     * Unduh katalog dari database (thread latar). Hanya render ulang bila
-     * data BENAR-BENAR berubah (atau saat pulih dari gagal-muat) — data sama
-     * = layar dibiarkan, transisi halaman tetap halus tanpa kedip.
+     * Muat katalog dari ProductRepository (data lokal/dummy) dan render ulang
+     * layar. Digantikan permintaan jaringan karena database Supabase belum
+     * siap — aplikasi bekerja sepenuhnya offline.
      */
     private fun refreshFromServer() {
-        // Jangan tumpuk permintaan: onResume bisa terpanggil berkali-kali
-        // (bolak-balik tab) dan tiap panggilan membuat Thread + request baru.
-        if (refreshInFlight) return
-        refreshInFlight = true
-        Thread {
-            val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts()
-            runOnUiThread {
-                refreshInFlight = false
-                if (isFinishing || isDestroyed) return@runOnUiThread
-                if (rows == null) {
-                    if (!serverFailed) {
-                        serverFailed = true
-                        render()
-                    }
-                } else if (rows != lastRows || serverFailed) {
-                    lastRows = rows
-                    serverFailed = false
-                    val mapped = rows.map { mapFromServer(it) }
-                    products = mapped
-                    if (!scanFilterActive) visibleProducts = mapped
-                    render()
-                }
-                // data sama → tidak ada render ulang (tanpa kedip/lag)
-            }
-        }.start()
+        products = ProductRepository.all().map { mapFromRepository(it) }
+        if (!scanFilterActive) visibleProducts = products
+        render()
     }
 
-    /** Petakan baris backend ke model produk halaman Cek Stok. */
-    private fun mapFromServer(r: com.tokoberkah.pos.data.api.RemoteProduct): Product {
-        val cat = r.category
+    /** Petakan produk katalog lokal (pages) ke model produk halaman Cek Stok. */
+    private fun mapFromRepository(p: com.tokoberkah.pos.data.Product): Product {
         return Product(
-            ean = r.ean,
-            name = r.name,
-            price = r.price,
+            ean = p.ean,
+            name = p.name,
+            price = p.price,
             unit = "Pcs",
-            shelfStock = r.stock,
+            shelfStock = p.stock,
             warehouseStock = 0,
-            lastIncoming = "",
-            imageRes = imageFor(cat),
-            categories = if (cat != null) listOf(cat) else emptyList(),
-            unitsPerBox = 40
+            lastIncoming = p.lastIncoming,
+            imageRes = p.imageRes,
+            categories = p.categories,
+            unitsPerBox = p.unitsPerBox
         )
-    }
-
-    /** Gambar perkiraan untuk produk dari server. */
-    private fun imageFor(category: String?): Int = when (category) {
-        "Mie Instan" -> R.drawable.product_indomie
-        "Sembako", "Bumbu Dapur" -> R.drawable.product_bimoli
-        "Susu & Kopi", "Minuman" -> R.drawable.product_kopi
-        else -> R.drawable.product_beras
     }
 
     @Deprecated("Deprecated in Java")

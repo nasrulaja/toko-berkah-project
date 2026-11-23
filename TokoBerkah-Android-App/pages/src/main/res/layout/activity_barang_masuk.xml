@@ -309,7 +309,7 @@
                         android:focusable="true"
                         android:fontFamily="@font/plus_jakarta_bold"
                         android:gravity="center"
-                        android:text="âˆ’"
+                        android:text="-"
                         android:textColor="@color/navy"
                         android:textSize="20sp" />
 

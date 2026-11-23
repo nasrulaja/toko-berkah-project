@@ -32,6 +32,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.tokoberkah.app.data.CartManager
 import com.tokoberkah.app.data.Product
 import com.tokoberkah.app.databinding.ActivityScannerBinding
+import com.tokoberkah.pos.data.ProductRepository
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -49,9 +50,6 @@ class ScannerActivity : AppCompatActivity() {
     private var cameraProvider: ProcessCameraProvider? = null
     private var camera: androidx.camera.core.Camera? = null
     private lateinit var analysisExecutor: ExecutorService
-
-    /** Executor untuk lookup produk ke backend (dibatasi 1 thread). */
-    private val networkExecutor: ExecutorService = Executors.newSingleThreadExecutor()
 
     private var torchOn = false
     private var soundOn = true
@@ -228,57 +226,36 @@ class ScannerActivity : AppCompatActivity() {
         lastScannedCode = code
         lastScanAt = now
 
-        // Cari produk di DATABASE (thread latar) — tidak ada data dummy.
-        // Pakai executor milik activity (bukan Thread mentah tiap scan) supaya
-        // tidak ada thread bocor yang menumpuk saat scan berkali-kali.
-        val lookup = networkExecutor
-        if (lookup.isShutdown) return
-        lookup.execute {
-            val remote = com.tokoberkah.pos.data.api.RemoteCatalog.fetchByBarcode(code)
-            val serverError = remote == null &&
-                com.tokoberkah.pos.data.api.ApiClient.lastError != "HTTP 404"
-            runOnUiThread {
-                when {
-                    remote == null && serverError -> showServerError()
-                    remote == null -> showNotFound(code)
-                    else -> {
-                        val product = mapFromServer(remote)
-                        if (CartManager.getQty(product.ean) >= product.totalStock) {
-                            // Tidak boleh melebihi stok tersedia (termasuk stok 0)
-                            showWarning(getString(R.string.scan_out_of_stock, product.totalStock))
-                        } else {
-                            feedbackSuccess()
-                            addResult(product)
-                        }
-                    }
-                }
+        // Cari produk di katalog lokal (ProductRepository) — offline, tanpa jaringan.
+        val product: Product? = ProductRepository.byEan(code)?.let { mapFromRepository(it) }
+        runOnUiThread {
+            if (product == null) {
+                // Produk tidak ada di katalog dummy — pemberitahuan "tidak ditemukan" seperti biasa.
+                showNotFound(code)
+            } else if (CartManager.getQty(product.ean) >= product.totalStock) {
+                // Tidak boleh melebihi stok tersedia (termasuk stok 0)
+                showWarning(getString(R.string.scan_out_of_stock, product.totalStock))
+            } else {
+                feedbackSuccess()
+                addResult(product)
             }
         }
     }
 
-    /** Petakan baris backend ke model produk pemindai. */
-    private fun mapFromServer(r: com.tokoberkah.pos.data.api.RemoteProduct): Product {
-        val cat = r.category
+    /** Petakan produk katalog lokal (pages) ke model produk pemindai. */
+    private fun mapFromRepository(p: com.tokoberkah.pos.data.Product): Product {
         return Product(
-            ean = r.ean,
-            name = r.name,
-            price = r.price,
+            ean = p.ean,
+            name = p.name,
+            price = p.price,
             unit = "Pcs",
-            shelfStock = r.stock,
+            shelfStock = p.stock,
             warehouseStock = 0,
-            lastIncoming = "",
-            imageRes = imageFor(cat),
-            categories = if (cat != null) listOf(cat) else emptyList(),
-            unitsPerBox = 40
+            lastIncoming = p.lastIncoming,
+            imageRes = p.imageRes,
+            categories = p.categories,
+            unitsPerBox = p.unitsPerBox
         )
-    }
-
-    /** Gambar perkiraan berdasarkan kategori produk dari server. */
-    private fun imageFor(category: String?): Int = when (category) {
-        "Mie Instan" -> R.drawable.product_indomie
-        "Sembako", "Bumbu Dapur" -> R.drawable.product_bimoli
-        "Susu & Kopi", "Minuman" -> R.drawable.product_kopi
-        else -> R.drawable.product_beras
     }
 
     private fun showServerError() {
@@ -424,7 +401,6 @@ class ScannerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         analysisExecutor.shutdown()
-        networkExecutor.shutdownNow()
         cameraProvider?.unbindAll()
         // Tutup client ML Kit: tanpa ini native detector (barhopper) tetap
         // hidup dan menumpuk tiap kali scanner dibuka -> app makin berat.

@@ -29,15 +29,6 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
 
     private var listAdapter: ProductListAdapter? = null
 
-    /** Sinkronisasi katalog yang sedang berjalan (agar tidak menumpuk). */
-    private var syncJob: Thread? = null
-
-    /**
-     * Baris sinkronisasi terakhir — bila server tidak berubah, lewati
-     * applyRemote + rebind (pemicu hitch tiap kali halaman dibuka).
-     */
-    private var lastSyncedRows: List<com.tokoberkah.pos.data.api.RemoteProduct>? = null
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         _binding = FragmentCekhargaListBinding.bind(view)
         setBreadcrumb(getString(R.string.nav_cek_harga))
@@ -67,29 +58,6 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
         super.onResume()
         // Harga bisa saja berubah dari halaman Ubah Harga / Barang Masuk
         listAdapter?.submit(ProductRepository.all())
-
-        // Sinkronkan katalog dari backend (thread latar, terapkan di UI thread).
-        // Dibatasi: cukup sekali per tampil halaman, dan tidak menumpuk kalau
-        // pengguna bolak-balik tab dengan cepat.
-        if (syncJob != null) return
-        syncJob = Thread {
-            val rows = com.tokoberkah.pos.data.api.RemoteCatalog.fetchProducts() ?: run {
-                syncJob = null
-                return@Thread
-            }
-            activity?.runOnUiThread {
-                syncJob = null
-                if (_binding == null) return@runOnUiThread
-                // Data sama dengan sinkronisasi sebelumnya → tidak ada yang
-                // berubah; lewati apply + rebind (menghilangkan hitch tiap
-                // halaman dibuka). Perubahan lokal (Ubah Harga) tetap tampil
-                // lewat submit(all()) di onResume.
-                if (rows == lastSyncedRows) return@runOnUiThread
-                lastSyncedRows = rows
-                ProductRepository.applyRemote(rows)
-                listAdapter?.submit(ProductRepository.all())
-            }
-        }.also { it.start() }
     }
 
     @Deprecated("Deprecated in Java")
@@ -120,9 +88,6 @@ class CekHargaListFragment : Fragment(R.layout.fragment_cekharga_list) {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        // Lepas referensi sync: fragment bisa dipakai ulang (view baru) dan
-        // syncJob lama tidak boleh memblokir sinkronisasi berikutnya.
-        syncJob = null
         binding.rvProducts.adapter = null
         listAdapter = null
         _binding = null

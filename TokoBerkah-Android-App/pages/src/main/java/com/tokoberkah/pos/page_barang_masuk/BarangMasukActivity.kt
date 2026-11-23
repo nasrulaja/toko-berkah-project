@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.tokoberkah.pos.R
 import com.tokoberkah.pos.data.Product
 import com.tokoberkah.pos.data.ProductRepository
-import com.tokoberkah.pos.data.api.RemoteCatalog
 import com.tokoberkah.pos.data.grouped
 import com.tokoberkah.pos.databinding.ActivityBarangMasukBinding
 import com.tokoberkah.pos.ui.TagFlow
@@ -160,26 +159,12 @@ class BarangMasukActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         binding.glassNav.selectedIndex = 2
-        // Sinkronkan katalog dari backend supaya daftar & stok selalu terbaru.
-        refreshFromServer()
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIncomingIntent(intent)
         renderRestockList()
-        refreshFromServer()
-    }
-
-    /** Unduh katalog dari backend (thread latar) lalu terapkan di UI thread. */
-    private fun refreshFromServer() {
-        Thread {
-            val rows = RemoteCatalog.fetchProducts() ?: return@Thread
-            runOnUiThread {
-                ProductRepository.applyRemote(rows)
-                if (entry == null) renderRestockList()
-            }
-        }.start()
     }
 
     @Deprecated("Deprecated in Java")
@@ -380,55 +365,40 @@ class BarangMasukActivity : AppCompatActivity() {
     }
 
     /**
-     * Simpan barang masuk. Utamakan backend (POST /api/stock/masuk) supaya
-     * stok & harga tercatat di database — satu sumber kebenaran dengan web
-     * dan desktop. Bila server/jaringan tidak tersedia, TIDAK ada pembaruan
-     * lokal: pengguna diberi pesan gagal agar angka stok tidak pernah
-     * berbeda dari database.
+     * Simpan barang masuk secara LOKAL: stok bertambah dan harga jual diperbarui
+     * langsung di ProductRepository (memori). Aplikasi bekerja offline; tidak
+     * ada pemanggilan jaringan lagi.
      */
     private fun saveEntry(e: Entry) {
         val n = qty
         val sellPrice = binding.etSellPrice.text.toString().toIntOrNull()
         binding.btnSave.isEnabled = false
 
-        Thread {
-            // Pastikan produk punya ID server (bila katalog belum tersinkron, unduh dulu)
-            val target = e.source
-            if (target != null && target.serverId == null) {
-                RemoteCatalog.fetchProducts()
-                    ?.find { it.ean == target.ean }
-                    ?.let { target.serverId = it.id }
+        // Terapkan ke katalog dalam memori (produk yang dikenal dari ProductRepository).
+        val target = e.source
+        var tersimpan = false
+        if (target != null) {
+            target.stock += n
+            if (sellPrice != null && sellPrice > 0 && sellPrice != target.price) {
+                ProductRepository.updatePrice(
+                    target, sellPrice,
+                    "Penyesuaian harga saat simpan barang masuk."
+                )
             }
+            tersimpan = true
+        }
 
-            val id = target?.serverId
-            var tersimpan = false
-            if (id != null) {
-                tersimpan = RemoteCatalog.postStockMasuk(id, n)
-                if (tersimpan && sellPrice != null && sellPrice > 0 && sellPrice != target.price) {
-                    RemoteCatalog.patchPrice(id, sellPrice)
-                }
-                if (tersimpan) {
-                    RemoteCatalog.fetchProducts()?.let {
-                        runOnUiThread { ProductRepository.applyRemote(it) }
-                    }
-                }
-            }
-
-            runOnUiThread {
-                binding.btnSave.isEnabled = true
-                if (tersimpan) {
-                    Toast.makeText(
-                        this,
-                        "${getString(R.string.masuk_saved)}: $n ${getString(R.string.masuk_unit)} ${e.name}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    reset()
-                } else {
-                    // Jangan ubah stok lokal — database adalah satu-satunya sumber kebenaran.
-                    Toast.makeText(this, R.string.masuk_save_failed, Toast.LENGTH_LONG).show()
-                }
-            }
-        }.start()
+        binding.btnSave.isEnabled = true
+        if (tersimpan) {
+            Toast.makeText(
+                this,
+                "${getString(R.string.masuk_saved)}: $n ${getString(R.string.masuk_unit)} ${e.name}",
+                Toast.LENGTH_SHORT
+            ).show()
+            reset()
+        } else {
+            Toast.makeText(this, R.string.masuk_save_failed, Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun renderQty() {

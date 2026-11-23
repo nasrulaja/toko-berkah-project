@@ -559,6 +559,12 @@ class LiquidGlassNavbar @JvmOverloads constructor(
                 if (index != currentIndex) {
                     // setSelectedIndex sudah memanggil listener (notify default true).
                     setSelectedIndex(index)
+                } else {
+                    // Tab AKTIF ditap lagi: listener tetap dipanggil agar halaman
+                    // bisa bereaksi (mis. Cek Harga -> kembali ke daftar dari
+                    // halaman detail). setSelectedIndex melewati listener bila
+                    // indeks sama, jadi panggil langsung.
+                    onItemSelected?.invoke(index)
                 }
                 performClick()
                 return true
