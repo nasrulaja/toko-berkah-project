@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/masukRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_page"
-    android:orientation="vertical">
+    android:background="@color/bg_page">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
     <include layout="@layout/view_store_header" />
 
@@ -14,7 +19,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:paddingBottom="90dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -733,17 +739,16 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- ===== Liquid Glass floating navbar ===== -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    </LinearLayout>
 
-        <com.tokoberkah.pos.ui.LiquidGlassNavbar
-            android:id="@+id/glassNav"
-            android:layout_width="match_parent"
-            android:layout_height="72dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="18dp" />
-    </FrameLayout>
-</LinearLayout>
+    <!-- ===== Liquid Glass floating navbar ===== -->
+    <com.tokoberkah.pos.ui.LiquidGlassNavbar
+        android:id="@+id/glassNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        app:lgnAccent="@color/nav_pill"
+        app:lgnGlassColor="@color/glass_fill"
+        app:lgnActiveColor="@color/navy_soft"
+        app:lgnInactiveColor="@color/gray_muted" />
+</FrameLayout>

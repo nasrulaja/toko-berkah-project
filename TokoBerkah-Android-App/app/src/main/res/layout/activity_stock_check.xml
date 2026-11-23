@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/stockRoot"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/bg_page"
     tools:context=".StockCheckActivity">
 
     <LinearLayout
@@ -13,64 +14,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- ===== Header ===== -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="64dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/stockTitle"
-                    style="@style/FontExtraBold"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/stock_title"
-                    android:textColor="@color/text_primary"
-                    android:textSize="22sp" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="3dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="6dp"
-                        android:layout_height="6dp"
-                        android:background="@drawable/bg_dot_green" />
-
-                    <TextView
-                        android:id="@+id/storeName"
-                        style="@style/FontMedium"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:text="@string/store_name"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <ImageView
-                android:id="@+id/avatar"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_circle_blue"
-                android:contentDescription="@string/store_name"
-                android:elevation="3dp"
-                android:padding="7dp"
-                android:src="@drawable/ic_nav_tag" />
-        </LinearLayout>
+        <include layout="@layout/view_store_header" />
 
         <!-- ===== Scrollable content ===== -->
         <ScrollView
@@ -318,11 +262,11 @@
     <com.tokoberkah.pos.ui.LiquidGlassNavbar
         android:id="@+id/glassNav"
         android:layout_width="match_parent"
-        android:layout_height="72dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="18dp"
+        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:elevation="16dp" />
+        app:lgnAccent="@color/nav_pill"
+        app:lgnGlassColor="@color/glass_fill"
+        app:lgnActiveColor="@color/navy_soft"
+        app:lgnInactiveColor="@color/gray_muted" />
 
 </RelativeLayout>
