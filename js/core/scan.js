@@ -64,8 +64,30 @@ function muatZXing() {
 async function mulaiKamera(video, onKode) {
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('Browser ini tidak mendukung kamera');
   if (!isSecureContext) throw new Error('Kamera hanya bisa dipakai lewat HTTPS');
-  const kamera = { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }, audio: false };
+  // Resolusi tinggi (Full HD) supaya barcode kecil/QR tetap tajam saat dibaca.
+  // 'ideal' = usulan, bukan paksa: kamera yang tidak sanggup 1080p akan memberi
+  // resolusi terdekat, jadi tidak gagal hanya karena perangkatnya terbatas.
+  const kamera = {
+    video: {
+      facingMode: { ideal: 'environment' },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+      // Minta kamera terus fokus otomatis; tanpa ini gambar sering blur dan
+      // barcode tidak terbaca sampai pengguna menjauhkan/mendekatkan HP manual.
+      focusMode: 'continuous'
+    },
+    audio: false
+  };
   let aktif = true;
+  // QR & barcode bisa terbaca berulang tiap frame. Tanpa penjaga ini onKode
+  // dipanggil berkali-kali dalam sekejap (bunyi "tit" dobel, jendela ditutup
+  // lalu dibuka lagi oleh pemanggil).
+  let sudah = false;
+  const terima = (kode) => {
+    if (!aktif || sudah || !kode) return;
+    sudah = true;
+    onKode(kode);
+  };
   if ('BarcodeDetector' in window) {
     let fmt = FORMAT;
     try {
@@ -80,7 +102,7 @@ async function mulaiKamera(video, onKode) {
       if (!aktif || video.readyState < 2) return;
       try {
         const h = await det.detect(video);
-        if (aktif && h.length && h[0].rawValue) onKode(h[0].rawValue);
+        if (h.length && h[0].rawValue) terima(h[0].rawValue);
       } catch (e) {}
     }, 250);
     return () => {
@@ -96,11 +118,32 @@ async function mulaiKamera(video, onKode) {
   const stream = await navigator.mediaDevices.getUserMedia(kamera);
   video.srcObject = stream;
   await video.play().catch(() => {});
-  const rd = new Z.BrowserMultiFormatReader();
+  // Tanpa hints, ZXing memakai mode cepat yang sering GAGAL untuk QR (terutama
+  // QR kecil / sudut miring / cahaya kurang). TRY_HARDER membuatnya memeriksa
+  // lebih banyak kemungkinan; POSSIBLE_FORMATS membatasi ke format yang dipakai
+  // toko supaya tetap tidak terlalu lambat.
+  const Hints = Z.DecodeHintType;
+  const hints = new Map();
+  if (Hints) {
+    hints.set(Hints.TRY_HARDER, true);
+    if (Z.BarcodeFormat) {
+      hints.set(Hints.POSSIBLE_FORMATS, [
+        Z.BarcodeFormat.QR_CODE,
+        Z.BarcodeFormat.EAN_13,
+        Z.BarcodeFormat.EAN_8,
+        Z.BarcodeFormat.UPC_A,
+        Z.BarcodeFormat.UPC_E,
+        Z.BarcodeFormat.CODE_128,
+        Z.BarcodeFormat.CODE_39,
+        Z.BarcodeFormat.ITF
+      ]);
+    }
+  }
+  const rd = new Z.BrowserMultiFormatReader(hints);
   // decodeContinuously = baca terus sampai berhenti. (decodeFromConstraints
   // hanya membaca sekali lalu berhenti, jadi barcode sering tidak terdeteksi.)
   rd.decodeContinuously(video, (hasil) => {
-    if (aktif && hasil?.getText) onKode(hasil.getText());
+    if (hasil?.getText) terima(hasil.getText());
   });
   return () => {
     aktif = false;
