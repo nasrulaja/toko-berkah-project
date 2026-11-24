@@ -336,8 +336,7 @@ class BarangMasukActivity : AppCompatActivity() {
     /** Badge stok: kebenaran dalam Buah; "dus" hanya turunan tampilan. */
     private fun renderStockBadge() {
         val e = entry ?: return
-        binding.tvStockBadge.text =
-            "Stok: ${e.stock} Buah (≈ ${e.stock / e.unitsPerBox} dus)"
+        binding.tvStockBadge.text = "Stok: ${e.stock} Buah"
     }
 
     private fun renderIsiPerDus() {
