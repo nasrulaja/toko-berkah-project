@@ -13,7 +13,11 @@
         berhenti() menghentikannya.
      3. Ubah PAKAI_ANDROID menjadi true. Tidak ada kode lain yang perlu diubah.
    ========================================================================== */
-import { db } from './db.js?v=20261117m';
+// ?v= HARUS sama dengan yang dipakai app.js & pages.js untuk './core/db.js'.
+// Bila berbeda, browser memuat core/db.js DUA KALI sebagai modul terpisah:
+// setDB() mengisi salinan A, sedangkan `db` di sini tetap undefined sehingga
+// bukaScan() melempar galat dan tombol Scan seolah tidak berfungsi.
+import { db } from './db.js?v=20261119a';
 
 /** Ubah ke true setelah aplikasi Android siap dan penyambungAndroid() diisi. */
 export const PAKAI_ANDROID = false;
@@ -150,7 +154,7 @@ function bunyiTit() {
 export function bukaScan(onKode) {
   tutupScan();
   const pny = PAKAI_ANDROID ? penyambungAndroid() : penyambungSimulasi();
-  const contoh = db.produk.filter((p) => p.barcode).slice(0, 3);
+  const contoh = (db?.produk || []).filter((p) => p.barcode).slice(0, 3);
   const w = document.createElement('div');
   w.id = 'scan';
   w.className = 'scn-ov';
