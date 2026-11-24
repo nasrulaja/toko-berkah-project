@@ -286,7 +286,8 @@ class BarangMasukActivity : AppCompatActivity() {
             tags = p.categories,
             maxLineWidthPx = TagFlow.maxLineWidth(this),
             chipBgRes = R.drawable.bg_tag_chip,
-            chipTextColor = getColor(R.color.tag_chip_text)
+            chipTextColor = getColor(R.color.tag_chip_text),
+            alignEnd = true
         )
 
         val lastRow = card.findViewById<View>(R.id.lastIncomingRow)
@@ -312,7 +313,7 @@ class BarangMasukActivity : AppCompatActivity() {
             binding.tvProductPack.visibility = View.VISIBLE
             binding.tvProductPack.text = "Kemasan: ${e.pack}"
         }
-        binding.tvStockBadge.text = "Stok: ${e.stock} ${getString(R.string.masuk_unit)}"
+        renderStockBadge()
         binding.tvEan.text = e.ean
         binding.etBuyPrice.text.clear()
         binding.etSellPrice.setText(e.source?.price?.toString().orEmpty())
@@ -330,6 +331,13 @@ class BarangMasukActivity : AppCompatActivity() {
         binding.etBuyPrice.text.clear()
         binding.etSellPrice.text.clear()
         renderRestockList()
+    }
+
+    /** Badge stok: kebenaran dalam Buah; "dus" hanya turunan tampilan. */
+    private fun renderStockBadge() {
+        val e = entry ?: return
+        binding.tvStockBadge.text =
+            "Stok: ${e.stock} Buah (≈ ${e.stock / e.unitsPerBox} dus)"
     }
 
     private fun renderIsiPerDus() {
@@ -357,6 +365,7 @@ class BarangMasukActivity : AppCompatActivity() {
                     e.unitsPerBox = value
                     e.source?.unitsPerBox = value
                     renderIsiPerDus()
+                    renderStockBadge()
                     renderSummary()
                 }
             }
@@ -378,7 +387,7 @@ class BarangMasukActivity : AppCompatActivity() {
         val target = e.source
         var tersimpan = false
         if (target != null) {
-            target.stock += n
+            target.stock += n * e.unitsPerBox
             if (sellPrice != null && sellPrice > 0 && sellPrice != target.price) {
                 ProductRepository.updatePrice(
                     target, sellPrice,
@@ -392,7 +401,7 @@ class BarangMasukActivity : AppCompatActivity() {
         if (tersimpan) {
             Toast.makeText(
                 this,
-                "${getString(R.string.masuk_saved)}: $n ${getString(R.string.masuk_unit)} ${e.name}",
+                "${getString(R.string.masuk_saved)}: $n dus (${n * e.unitsPerBox} buah) ${e.name}",
                 Toast.LENGTH_SHORT
             ).show()
             reset()
@@ -409,15 +418,13 @@ class BarangMasukActivity : AppCompatActivity() {
     private fun renderSummary() {
         val e = entry ?: return
 
-        // Kalkulasi satuan Dus
-        val after = e.stock + qty
-        binding.tvStockAfter.text = "$after ${getString(R.string.masuk_unit)}"
-        binding.tvStockDelta.text = "(+$qty)"
+        // Headline = stok saat ini (baru bertambah SETELAH Simpan); delta di kurung = barang yang akan masuk.
+        binding.tvStockAfter.text = "${e.stock} Buah"
+        binding.tvStockDelta.text = "(+${qty * e.unitsPerBox})"
 
-        // Kalkulasi satuan Buah (dari Isi Per Dus)
-        val addedUnits = qty * e.unitsPerBox
-        binding.tvStockAfterUnit.text = "${after * e.unitsPerBox} Buah"
-        binding.tvStockDeltaUnit.text = "(+$addedUnits)"
+        // Baris kedua: setara dus (≈), ikut perubahan Isi Per Dus saja.
+        binding.tvStockAfterUnit.text = "≈ ${e.stock / e.unitsPerBox} dus"
+        binding.tvStockDeltaUnit.text = "(+${qty} dus)"
 
         val buyPrice = binding.etBuyPrice.text.toString().toIntOrNull() ?: 0
         binding.tvTotal.text = "Rp ${(qty * buyPrice).grouped()}"

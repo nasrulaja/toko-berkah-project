@@ -31,7 +31,7 @@ object TagFlow {
         val ctx = container.context
         val hPad = dp(ctx, 8)
         val vPad = dp(ctx, 4)
-        val gap = dp(ctx, 6)
+        val gap = dp(ctx, 3)
         val rowGap = dp(ctx, 6)
 
         val chips = mutableListOf<TextView>()
@@ -77,7 +77,7 @@ object TagFlow {
                 LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
-                ).apply { if (target.childCount > 1) leftMargin = gap }
+                ).apply { if (target.childCount > 0) leftMargin = gap }
             )
             used += chipWidth + (if (target.childCount > 1) gap else 0)
             chips += chip

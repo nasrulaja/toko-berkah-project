@@ -82,7 +82,12 @@ class StockCheckActivity : AppCompatActivity() {
             },
             // Tombol Filter -> dialog tag kategori (multi-select)
             onFilterClick = { showFilterDialog() },
-            onProductAction = { openBarangMasuk(it) }
+            onProductAction = { openBarangMasuk(it) },
+            onTagClick = { tag ->
+                val next = if (tag in selectedTags) selectedTags - tag else selectedTags + tag
+                selectedTags = Categories.ALL.filter { it in next }
+                render()
+            }
         )
         binding.rvProducts.adapter = stockAdapter
 
@@ -149,7 +154,7 @@ class StockCheckActivity : AppCompatActivity() {
             ean = p.ean,
             name = p.name,
             price = p.price,
-            unit = "Pcs",
+            unit = "Buah",
             shelfStock = p.stock,
             warehouseStock = 0,
             lastIncoming = p.lastIncoming,

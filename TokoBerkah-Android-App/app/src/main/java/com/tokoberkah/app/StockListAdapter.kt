@@ -24,7 +24,8 @@ class StockListAdapter(
     private val onCloseBanner: () -> Unit,
     private val onRestockToggle: () -> Unit,
     private val onFilterClick: () -> Unit,
-    private val onProductAction: (Product) -> Unit
+    private val onProductAction: (Product) -> Unit,
+    private val onTagClick: (String) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     /** Isi baris header — teks hitungan/label diisi ulang tiap render. */
@@ -111,14 +112,18 @@ class StockListAdapter(
             ean.text = p.ean
 
             // Baris status (pill pertama) + tag kategori (di bawahnya, wrap max 4)
-            TagFlow.fill(
+            val tags = p.categories.take(Categories.MAX_PER_PRODUCT)
+            val tagChips = TagFlow.fill(
                 container = tagRows,
-                tags = p.categories.take(Categories.MAX_PER_PRODUCT),
+                tags = tags,
                 maxLineWidthPx = TagFlow.maxLineWidth(ctx),
                 chipBgRes = R.drawable.bg_tag_chip,
                 chipTextColor = ctx.getColor(R.color.tag_chip_text),
                 alignEnd = true
             )
+            tagChips.forEachIndexed { i, chip ->
+                chip.setOnClickListener { onTagClick(tags[i]) }
+            }
             pillRow.removeAllViews()
             pillRow.addView(createStatusPill(p))
 

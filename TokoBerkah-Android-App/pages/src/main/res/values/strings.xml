@@ -28,8 +28,8 @@
     <string name="masuk_empty">Pindai Kode Batang untuk memasukan barang</string>
     <string name="masuk_jumlah">Jumlah Masuk</string>
     <string name="masuk_satuan">Satuan Dus</string>
-    <string name="masuk_unit">Dus</string>
-    <string name="masuk_stok_after">Stok setelah disimpan</string>
+    <string name="masuk_unit">Buah</string>
+    <string name="masuk_stok_after">Stok saat ini</string>
     <string name="masuk_total">Total nilai barang masuk</string>
     <string name="masuk_harga_beli">Harga Beli per Dus</string>
     <string name="masuk_opsional">(Opsional)</string>
@@ -44,7 +44,7 @@
     <string name="masuk_isi_per_dus">Isi Per Dus</string>
     <string name="masuk_isi_format">%1$d Dus = %2$d Buah</string>
     <string name="masuk_harga_jual">Harga Jual per Buah</string>
-    <string name="masuk_stok_after_unit">Stok setelah disimpan</string>
+    <string name="masuk_stok_after_unit">Setara dus</string>
     <string name="masuk_total_label">SISA STOK TOTAL</string>
     <string name="masuk_status_out">Habis</string>
     <string name="masuk_status_low">Stok Menipis</string>

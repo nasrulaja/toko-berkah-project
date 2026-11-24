@@ -248,7 +248,7 @@ class ScannerActivity : AppCompatActivity() {
             ean = p.ean,
             name = p.name,
             price = p.price,
-            unit = "Pcs",
+            unit = "Buah",
             shelfStock = p.stock,
             warehouseStock = 0,
             lastIncoming = p.lastIncoming,
