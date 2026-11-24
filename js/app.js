@@ -242,7 +242,7 @@ function pakaiScan(btn) {
   bukaScan((kode) => {
     t.value = kode;
     t.dispatchEvent(new Event('input', { bubbles: true }));
-    const p = db.produk.find((x) => String(x.barcode) === kode);
+    const p = (db?.produk || []).find((x) => String(x.barcode) === kode);
     if (t.name === 'barcode') toast(p ? 'Barcode sudah dipakai: ' + p.nama : 'Barcode terisi: ' + kode, p ? 'err' : 'ok');
     else toast(p ? 'Ditemukan: ' + p.nama : 'Barcode belum terdaftar', p ? 'ok' : 'err');
     t.focus();
