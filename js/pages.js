@@ -568,7 +568,7 @@ export function dashboard() {
     ringkasJam = [
       ['Jam tersibuk', tj ? String(tj[0]).padStart(2, '0') + '.00' : '-'],
       ['Hari tersibuk', th ? nmHari[th[0]] : '-'],
-      ['Rata-rata / hari', tglSet.size ? (trxSah.length / tglSet.size).toFixed(1).replace('.', ',') + ' transaksi' : '-']
+      ['Rata-rata / hari', tglSet.size ? (trxSah.length / tglSet.size).toFixed(1).replace('.', ',') + '<i>transaksi</i>' : '-']
     ];
   // kartu stok: bila tidak ada yang menipis, tampilkan 5 produk dengan stok paling sedikit
   const sedikit = L.length ? L : [...db.produk].sort((a, b) => a.stok / Math.max(a.stok_minimum, 1) - b.stok / Math.max(b.stok_minimum, 1)).slice(0, 5);
