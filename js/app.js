@@ -548,5 +548,78 @@ if (me && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
   setTimeout(() => loader(false), LOAD_FEEDBACK_MS);
 }
 
+/* ==========================================================================
+   BAGIAN 6 - SEGARKAN DATA (LIVE)
+   Data diambil ulang dari Supabase secara berkala supaya transaksi/stok yang
+   dikirim aplikasi kasir desktop langsung terlihat di web tanpa harus
+   menekan F5. Hanya memuat ulang saat tab terlihat, dan halaman dirender
+   ulang hanya bila isi database benar-benar berubah (tanda tangan data).
+   Saat pengguna sedang mengetik / membuka dialog, penyegaran ditunda.
+   ========================================================================== */
+
+/** Tanda tangan isi DB: berubah bila ada baris baru/berubah di tabel mana pun. */
+function sidik(d) {
+  if (!d) return '';
+  const bagian = (arr, kol) => (arr || []).map((r) => (kol ? kol.map((k) => r[k]).join(':') : '')).join(',');
+  return [
+    (d.produk || []).length, bagian(d.produk, ['id', 'stok', 'harga', 'nama']),
+    (d.transaksi || []).length, bagian(d.transaksi, ['id', 'status']),
+    (d.detail || []).length, bagian(d.detail, ['id']),
+    (d.mutasi || []).length, bagian(d.mutasi, ['id']),
+    (d.tutup || []).length, bagian(d.tutup, ['id', 'selisih']),
+    (d.kategori || []).length, bagian(d.kategori, ['id', 'nama'])
+  ].join('|');
+}
+
+let sidikKini = sidik(db);
+let sedangSegarkan = false;
+
+/** Boleh menyegarkan sekarang? Tidak saat pengguna mengetik atau ada dialog terbuka. */
+function bolehSegarkan() {
+  if (document.hidden || sedangSegarkan) return false;
+  if (document.querySelector('.md, .modal, [data-dialog]')) return false;
+  const a = document.activeElement;
+  if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return false;
+  if (document.body.dataset && document.body.dataset.sibuk === '1') return false;
+  return true;
+}
+
+/** Ambil ulang data dari Supabase; render ulang halaman hanya bila berubah. */
+async function segarkan(paksa = false) {
+  if (!me || !bolehSegarkan()) return;
+  sedangSegarkan = true;
+  try {
+    const d = await load();
+    const baru = sidik(d);
+    if (paksa || baru !== sidikKini) {
+      sidikKini = baru;
+      const aktif = document.activeElement;
+      const fokusId = aktif && aktif.id ? aktif.id : '';
+      const posisi = window.scrollY;
+      setDB(d);
+      route(); // gambar ulang halaman aktif dengan data terbaru
+      if (fokusId) {
+        const lagi = document.getElementById(fokusId);
+        if (lagi && lagi.focus) lagi.focus();
+      }
+      window.scrollTo(0, posisi);
+    }
+  } catch (e) {
+    /* offline / server sibuk: diamkan, percobaan berikutnya menyusul */
+  } finally {
+    sedangSegarkan = false;
+  }
+}
+
+/* Segarkan saat tab kembali aktif (paling terasa: pindah dari desktop ke web). */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) segarkan(true);
+});
+addEventListener('focus', () => segarkan(true));
+
+/* Interval cepat: 2 detik - transaksi kasir desktop muncul hampir seketika. */
+setInterval(() => segarkan(false), 2000);
+
+
 // Splash kini statis di index.html (bukan lagi dibuat dari app.js): tampil
 // sebelum skrip ini jalan, jadi tidak menunggu modul selesai dimuat.
