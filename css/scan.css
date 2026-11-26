@@ -52,9 +52,3 @@
 .scn-s > span { font-size: 12.5px; font-weight: 700; color: var(--mt, #5b7188); }
 body.scn-on { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .scn-line, .scn-dot, .scn-box, .scn-ov { animation: none; } }
-.scn-vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.scn-ov.kam-on .scn-view::before { display: none; }
-.scn-ov.kam-on .scn-view { height: 230px; }
-.scn-ov.kam-on .scn-dot { background: #22c55e; animation: none; }
-@keyframes scn-sapu-k { 50% { transform: translateY(185px); } }
-.scn-ov.kam-on .scn-line { animation-name: scn-sapu-k; }
