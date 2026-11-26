@@ -339,3 +339,30 @@ export function tutupScan() {
   w.remove();
   document.body.classList.remove('scn-on');
 }
+
+/** Dengarkan alat scanner fisik (USB/Bluetooth) di seluruh aplikasi, tanpa membuka jendela scan.
+ *  Hanya bereaksi bila fokus TIDAK di kolom ketik (di kolom, scanner mengetik sendiri seperti biasa)
+ *  dan jendela scan tidak sedang terbuka (jendela itu punya pendengar sendiri).
+ *  param: onKode(kode) | return: void */
+export function dengarScanner(onKode) {
+  let buf = '',
+    last = 0;
+  addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.altKey || e.metaKey || document.getElementById('scan')) return;
+    const t = e.target;
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (e.key === 'Enter') {
+      const kode = buf.trim();
+      buf = '';
+      if (kode.length >= 4) {
+        e.preventDefault();
+        onKode(kode);
+      }
+      return;
+    }
+    if (e.key.length !== 1) return;
+    const kini = Date.now();
+    buf = kini - last <= 45 ? buf + e.key : e.key;
+    last = kini;
+  });
+}
