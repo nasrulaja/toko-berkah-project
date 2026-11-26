@@ -317,13 +317,15 @@
 :root:not([data-theme='dark']) input,
 :root:not([data-theme='dark']) select,
 :root:not([data-theme='dark']) textarea {
-  background: rgba(255, 255, 255, 0.5);
+  /* Bingkai harus terlihat jelas di atas kartu putih-bening; sebelumnya putih
+     di atas putih sehingga kolom isian seperti "hilang". */
+  background: rgba(255, 255, 255, 0.78);
   -webkit-backdrop-filter: blur(12px) saturate(180%);
   backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(31, 94, 150, 0.28);
   border-radius: var(--ios-r-sm);
   box-shadow:
-    inset 0 1px 2px rgba(31, 94, 150, 0.06),
+    inset 0 1px 2px rgba(31, 94, 150, 0.1),
     inset 0 -1px 0 rgba(255, 255, 255, 0.6);
   transition: box-shadow 0.22s var(--gx-spring), background 0.22s var(--gx-spring);
 }

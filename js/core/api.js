@@ -213,7 +213,8 @@ export async function muatDB() {
     mutasi: mutasi.map((m) => ({
       id: m.id,
       produk_id: m.produk_id,
-      jenis: m.jenis,
+      // Data lama: barang keluar sempat tersimpan sebagai 'masuk'. Stok yang berkurang pasti 'keluar'.
+      jenis: m.jenis === 'masuk' && m.stok_sesudah < m.stok_sebelum ? 'keluar' : m.jenis,
       jumlah: m.jumlah,
       stok_sebelum: m.stok_sebelum,
       stok_sesudah: m.stok_sesudah,
@@ -333,7 +334,7 @@ export async function simpanDB(data) {
       .filter((m) => !m._db)
       .map((m) => ({
         produk_id: petaProd.get(m.produk_id) ?? m.produk_id,
-        jenis: m.jenis === 'jual' ? 'keluar' : m.jenis === 'penyesuaian' ? 'penyesuaian' : 'masuk',
+        jenis: m.jenis === 'jual' || m.jenis === 'keluar' ? 'keluar' : m.jenis === 'penyesuaian' ? 'penyesuaian' : 'masuk',
         jumlah: m.jumlah,
         stok_sebelum: m.stok_sebelum,
         stok_sesudah: m.stok_sesudah,

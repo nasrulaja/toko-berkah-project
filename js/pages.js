@@ -22,9 +22,9 @@
    ========================================================================== */
 
 import { db, me, save, mut, KS, setMe, terkunci, sah, setStatusTransaksi, dbGalat } from './core/db.js?v=20261119a';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261126i';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261126m';
 import { barChart, donut, spark, short } from './charts.js?v=20261117m';
-import { unduhXls } from './core/excel.js?v=20261126h';
+import { unduhXls } from './core/excel.js?v=20261126m';
 
 let S = {};
 
@@ -1047,7 +1047,7 @@ export function stok() {
       };
   });
   return `<div class="card"><div class="ch"><h4>Input Mutasi / Penyesuaian Stok</h4></div><div class="cb"><form id="mform"><div class="row"><div class="fg"><label for="mpcari">Produk</label>${kotakProduk('mp', S.mpid)}<small class="hint" id="mhint"></small></div><div class="fg"><label>Jenis Mutasi</label><select id="mjenis"><option value="masuk">Barang Masuk (+)</option><option value="keluar">Barang Keluar (-)</option><option value="penyesuaian">Penyesuaian (ubah stok langsung)</option></select></div></div><div class="row"><div class="fg"><label id="mjml-l" for="mjml">Jumlah</label><input id="mjml" type="number" min="1" step="1" required></div><div class="fg" id="mhb-w"><label for="mhb">Harga beli (Rp)</label><input id="mhb" type="number" min="0" step="any"></div></div><div class="fg"><label for="mcat">Catatan / alasan</label><input id="mcat" placeholder="Misal: rusak, hilang, bonus supplier"></div><button class="btn bp">Simpan</button></form></div></div>
-  <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length}${semua.length > rec.length ? ' terbaru' : ''})</h4><div class="flt"><select id="fjenis" aria-label="Filter jenis mutasi"><option value="">Semua jenis</option>${Object.entries(jb).map(([k, v]) => `<option value="${k}"${k === fj ? ' selected' : ''}>${v[1]}</option>`).join('')}</select></div></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
+  <div class="card"><div class="ch"><h4>Riwayat Mutasi Stok (${rec.length}${semua.length > rec.length ? ' terbaru' : ''})</h4><div class="flt"><select id="fjenis" aria-label="Filter jenis mutasi"><option value="">Semua jenis</option>${Object.entries(jb).map(([k, v]) => `<option value="${k}"${k === fj ? ' selected' : ''}>${v[1]}</option>`).join('')}</select></div></div><p class="note" style="margin:0;padding:12px 20px 0">Kolom <b>Perubahan</b> = selisih stok: <b class="pos">+</b> artinya stok bertambah, <b class="neg">−</b> artinya stok berkurang (dibanding kolom Sebelum).</p><div class="tw"><table data-size="5"><tr><th>No</th><th>Waktu</th><th>Produk</th><th>Jenis</th><th class="r">Perubahan</th><th class="r">Sebelum</th><th class="r">Sesudah</th><th>Catatan</th></tr>
   ${rec
     .map((m, i) => {
       const p = prod(m.produk_id),
