@@ -19,8 +19,8 @@
    ========================================================================== */
 
 import { load, db, setDB, me, setMe, KS, save, setStatusTransaksi } from './core/db.js?v=20261119a';
-import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
-import { bukaScan, dengarScanner } from './core/scan.js?v=20261126l';
+import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261126m';
+import { bukaScan, dengarScanner } from './core/scan.js?v=20261126m';
 import {
   terapkanFilter,
   dashboard,
@@ -41,7 +41,7 @@ import {
   kform,
   stBadge,
   sah
-} from './pages.js?v=20261126l';
+} from './pages.js?v=20261126m';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },
