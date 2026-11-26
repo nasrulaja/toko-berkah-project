@@ -682,9 +682,10 @@
 .ban-c i { font-style: normal; font-size: 11.5px; color: var(--mt, #6b7a90); }
 .ban-c b { font-size: 15px; color: var(--hd); }
 .ban-a { flex: none; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-.mini { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; align-items: end; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--bd); }
-.mini > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.mini span { font-size: 11.5px; color: var(--mt, #6b7a90); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini { display: grid; grid-template-columns: repeat(3, 1fr); align-items: start; gap: 0; margin-top: 14px; padding: 12px 6px; border: 1px solid var(--bd); border-radius: 16px; }
+.mini > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 0 12px; }
+.mini > div + div { border-left: 1px solid var(--bd); }
+.mini span { font-size: 11.5px; line-height: 1.25; color: var(--mt, #6b7a90); }
 .mini b { font-size: 14px; color: var(--hd); overflow-wrap: anywhere; white-space: nowrap; }
 .mini b i { font-style: normal; font-size: 11.5px; font-weight: 500; color: var(--mt, #6b7a90); margin-left: 3px; }
 .note.ok { color: var(--ok); margin: 0 0 10px; }
@@ -693,7 +694,8 @@
   .dash .ban .ban-a { width: 100%; justify-content: stretch; }
   .dash .ban .ban-a .btn { flex: 1; }
   .ban-c { gap: 8px 16px; }
-  .mini { grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .mini { grid-template-columns: 1fr 1fr 1fr; padding: 10px 2px; }
+  .mini > div { padding: 0 10px; }
   /* di layar sempit, satuan turun ke baris sendiri agar tidak meluber */
   .mini b { font-size: 12.5px; white-space: normal; }
   .mini b i { display: block; margin-left: 0; font-size: 10.5px; }
