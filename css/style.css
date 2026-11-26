@@ -395,6 +395,38 @@ th.r {
   height: 16px;
   flex: none;
 }
+/* Warna hijau khas Excel supaya tombolnya langsung dikenali; lebar mengikuti isi
+   (di HP tidak ikut melebar penuh seperti tombol filter lain). */
+.flt .btn.xls,
+.ch-baris .btn.xls {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+  color: #0b6b3a;
+  border-color: rgba(16, 124, 65, 0.4);
+  background: rgba(16, 124, 65, 0.1);
+  font-weight: 600;
+}
+.flt .btn.xls:hover,
+.ch-baris .btn.xls:hover {
+  background: rgba(16, 124, 65, 0.18);
+}
+html[data-theme='dark'] .btn.xls {
+  color: #6fe3a5;
+  border-color: rgba(111, 227, 165, 0.4);
+  background: rgba(16, 124, 65, 0.22);
+}
+/* Judul kartu + tombol Excel satu baris; filter turun ke baris berikutnya. */
+.ch-baris {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex: 1 1 100%;
+}
+.ch-baris h4 {
+  margin: 0;
+}
 /* Rata kiri untuk kolom teks panjang (nama produk, kategori, catatan).
    Angka dan kolom pendek tetap di tengah agar mudah dibandingkan sekilas. */
 td.l,
