@@ -20,7 +20,7 @@
 
 import { load, db, setDB, me, setMe, KS, save, setStatusTransaksi } from './core/db.js?v=20261119a';
 import { $, esc, rp, dt, ico, toast, modal, ask } from './ui.js?v=20261117m';
-import { bukaScan } from './core/scan.js?v=20261126b';
+import { bukaScan, dengarScanner } from './core/scan.js?v=20261126c';
 import {
   terapkanFilter,
   dashboard,
@@ -248,6 +248,17 @@ function pakaiScan(btn) {
     t.focus();
   });
 }
+
+/** Hasil tembakan alat scanner di luar kolom ketik: isi kolom barcode/cari yang ada di layar, atau tampilkan produknya. */
+dengarScanner((kode) => {
+  const t = document.querySelector('#ov input[name=barcode]') || document.querySelector('#fcari') || document.querySelector('#mcari');
+  const p = db.produk.find((x) => String(x.barcode) === kode);
+  if (t) {
+    t.value = kode;
+    t.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  toast(p ? `Ditemukan: ${p.nama} · stok ${p.stok}` : 'Barcode belum terdaftar: ' + kode);
+});
 
 function onClick(e) {
   {
