@@ -24,7 +24,7 @@
 import { db, me, save, mut, KS, setMe, terkunci, sah, setStatusTransaksi, dbGalat } from './core/db.js?v=20261119a';
 import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117m';
 import { barChart, donut, spark, short } from './charts.js?v=20261117m';
-import { unduhXls } from './core/excel.js?v=20261126g';
+import { unduhXls } from './core/excel.js?v=20261126h';
 
 let S = {};
 
