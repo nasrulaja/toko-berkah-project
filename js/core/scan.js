@@ -208,7 +208,8 @@ export function bukaScan(onKode) {
     <div class="scn-view"><video class="scn-vid" muted playsinline hidden></video><span class="scn-c a"></span><span class="scn-c b"></span><span class="scn-c c"></span><span class="scn-c d"></span><span class="scn-line"></span></div>
     <p class="scn-st"><i class="scn-dot"></i><span id="scn-tx">Menyalakan kamera…</span></p>
     <p class="scn-mode" id="scn-md">Arahkan kamera ke barcode. Bisa juga ketik atau tempel kodenya di bawah.</p>
-    <div class="scn-m"><label for="scn-in">Ketik atau tempel barcode</label><div class="scn-r"><input id="scn-in" inputmode="numeric" autocomplete="off" placeholder="Contoh: 8999999000011"><button type="button" class="btn bp" data-sc="kirim">Pakai</button></div><small class="hint">Scanner USB juga bisa dipakai: arahkan kursor ke kolom ini lalu scan.</small></div>
+    <p class="scn-usb" id="scn-usb" hidden><b>Alat scanner siap</b> — tembakkan laser ke barcode, kode langsung masuk.</p>
+    <div class="scn-m"><label for="scn-in">Ketik atau tempel barcode</label><div class="scn-r"><input id="scn-in" inputmode="numeric" autocomplete="off" placeholder="Contoh: 8999999000011"><button type="button" class="btn bp" data-sc="kirim">Pakai</button></div><small class="hint">Alat scanner USB/Bluetooth juga bisa dipakai: arahkan kursor ke kolom ini lalu tembakkan laser ke barcode.</small></div>
     ${contoh.length ? `<div class="scn-s"><span>Contoh (tanpa kamera):</span>${contoh.map((p) => `<button type="button" class="btn sm" data-sc="contoh" data-k="${esc(p.barcode)}">${esc(p.nama)}</button>`).join('')}<button type="button" class="btn sm" data-sc="contoh" data-k="${Date.now().toString().slice(-13)}">Barcode baru</button></div>` : ''}</div>`;
   document.body.append(w);
   document.body.classList.add('scn-on');
@@ -241,6 +242,65 @@ export function bukaScan(onKode) {
   } catch (e) {
     w.querySelector('.scn-st').textContent = 'Tidak dapat tersambung ke Android: ' + e.message;
   }
+  /* ---- ALAT SCANNER FISIK (USB / Bluetooth) ----
+     Alat scanner tidak butuh izin atau API khusus: ia bekerja seperti keyboard
+     yang mengetik sangat cepat lalu menekan Enter. Karena itu caranya cukup
+     "dengar" ketikan yang masuk dalam waktu singkat, tanpa harus fokus ke
+     kolom tertentu — jadi pengguna bisa langsung menembak walaupun kursor
+     ada di mana saja di jendela ini.
+     Bedanya dengan orang mengetik: jeda antar karakter sangat kecil
+     (< AMBANG_BERUNTUN ms). Itu yang dipakai untuk membedakan keduanya,
+     supaya ketikan manual tidak salah dianggap hasil scan. */
+  const AMBANG_BERUNTUN = 45; // ms antar karakter; scanner asli jauh lebih cepat
+  const JEDA_SELESAI = 120; // ms tanpa ketikan -> rangkaian dianggap selesai
+  let buf = '',
+    waktuTerakhir = 0,
+    timerSelesai = 0;
+  const usb = w.querySelector('#scn-usb');
+  const tandaiUsb = () => {
+    if (!usb.hidden) return;
+    usb.hidden = false;
+    // Beri tahu sekali bahwa alat terdeteksi; tidak mengganggu status kamera.
+    w.querySelector('#scn-tx').textContent = 'Alat scanner terdeteksi — siap menerima hasil tembakan';
+    w.querySelector('.scn-dot').style.background = '#0E9384';
+  };
+  w._usb = (e) => {
+    // Abaikan bila pengguna sedang mengetik manual: biarkan kolom teks bekerja normal.
+    // (Ketikan manual tetap masuk ke kolom, lalu ditekan Enter / tombol Pakai.)
+    const diKolom = e.target === inp;
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    if (e.key === 'Enter') {
+      if (timerSelesai) clearTimeout(timerSelesai);
+      timerSelesai = 0;
+      const kode = buf.trim();
+      buf = '';
+      waktuTerakhir = 0;
+      // Enter dari scanner datang setelah rangkaian cepat; Enter manual di kolom
+      // sudah ditangani pendengar di atas, jadi jangan diproses dua kali.
+      if (diKolom) return;
+      if (kode.length >= 4) return selesai(kode);
+      return;
+    }
+    if (e.key === 'Escape' || e.key === 'Tab' || e.key.length !== 1) return;
+    if (diKolom) return; // kolom teks: pakai alur normal
+    const kini = Date.now();
+    const cepat = kini - waktuTerakhir <= AMBANG_BERUNTUN;
+    waktuTerakhir = kini;
+    buf = cepat ? buf + e.key : e.key;
+    if (buf.length >= 4) tandaiUsb();
+    if (timerSelesai) clearTimeout(timerSelesai);
+    timerSelesai = setTimeout(() => {
+      // Rangkaian berhenti tanpa Enter: alat scanner yang tidak mengirim Enter,
+      // atau ketikan manual. Simpan hanya bila memang cepat & cukup panjang.
+      const kode = buf.trim();
+      buf = '';
+      waktuTerakhir = 0;
+      timerSelesai = 0;
+      if (kode.length >= 6) selesai(kode);
+    }, JEDA_SELESAI);
+    w._timer = timerSelesai;
+  };
+  addEventListener('keydown', w._usb);
   const tx = w.querySelector('#scn-tx');
   const vid = w.querySelector('.scn-vid');
   if (PAKAI_ANDROID) tx.textContent = 'Menunggu scan dari aplikasi Android…';
@@ -273,7 +333,9 @@ export function tutupScan() {
     w._pny?.berhenti();
     w._kam?.();
   } catch (e) {}
+  clearTimeout(w._timer);
   removeEventListener('keydown', w._esc);
+  removeEventListener('keydown', w._usb);
   w.remove();
   document.body.classList.remove('scn-on');
 }
