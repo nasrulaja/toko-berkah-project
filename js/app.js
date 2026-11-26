@@ -41,7 +41,7 @@ import {
   kform,
   stBadge,
   sah
-} from './pages.js?v=20261126a';
+} from './pages.js?v=20261126b';
 
 const PG = {
   dashboard: { t: 'Beranda', s: 'Ringkasan toko hari ini', html: dashboard },

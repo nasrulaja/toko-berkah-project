@@ -582,7 +582,7 @@ export function dashboard() {
 
   <div class="dgrid">
     <div class="card"><div class="ch"><h4>Penjualan &amp; Laba</h4><div class="chips" role="group" aria-label="Rentang waktu">${[7, 14, 30].map((r) => `<button type="button" data-r="${r}" class="${r === range ? 'on' : ''}">${r}H</button>`).join('')}</div><a href="#laporan" class="btn sm">Selengkapnya</a></div>
-      <div class="cb"><div class="lgd"><span><i class="dot s1"></i>Penjualan <b>${rp(rSales)}</b></span><span><i class="dot s2"></i>Laba kotor <b>${rp(rProfit)}</b></span></div><div class="chart-wrap">${chart}</div><div class="mini">${ringkasJual.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div></div></div>
+      <div class="cb cb-grafik"><div class="lgd"><span><i class="dot s1"></i>Penjualan <b>${rp(rSales)}</b></span><span><i class="dot s2"></i>Laba kotor <b>${rp(rProfit)}</b></span></div><div class="chart-wrap">${chart}</div><div class="mini">${ringkasJual.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div></div></div>
     <div class="card"><div class="ch"><h4>Penjualan per Kategori</h4><a href="#laporan" class="btn sm">Selengkapnya</a></div><div class="cb">${
       totKat
         ? `<div class="dn-wrap">${dn.svg}</div><ul class="lgl">${dn.legend}</ul>`
@@ -609,7 +609,7 @@ export function dashboard() {
         })
         .join('') || empty('Belum ada produk', 'Tambahkan produk lebih dulu.')
     }</div></div>
-    <div class="card"><div class="ch"><h4>Jam Tersibuk</h4><a href="#laporan" class="btn sm">Selengkapnya</a></div><div class="cb"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p><div class="mini">${ringkasJam.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>${top3Jam.map(([h, c]) => `<div class="tp" style="margin-top:12px"><span class="rk">${String(h).padStart(2, '0')}</span><div class="tp-b"><div class="tp-h"><b>Pukul ${String(h).padStart(2, '0')}.00</b><span>${c} transaksi</span></div><div class="bar"><i style="width:${Math.round((c / maxJam) * 100)}%"></i></div></div></div>`).join('')}</div></div>
+    <div class="card"><div class="ch"><h4>Jam Tersibuk</h4><a href="#laporan" class="btn sm">Selengkapnya</a></div><div class="cb cb-grafik"><div class="chart-wrap sm">${hchart}</div><p class="note">Jumlah transaksi per jam (semua data).</p><div class="mini">${ringkasJam.map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join('')}</div>${top3Jam.map(([h, c]) => `<div class="tp" style="margin-top:12px"><span class="rk">${String(h).padStart(2, '0')}</span><div class="tp-b"><div class="tp-h"><b>Pukul ${String(h).padStart(2, '0')}.00</b><span>${c} transaksi</span></div><div class="bar"><i style="width:${Math.round((c / maxJam) * 100)}%"></i></div></div></div>`).join('')}</div></div>
   </div>
 
   <div class="card"><div class="ch"><h4>Transaksi Terbaru</h4><a href="#transaksi" class="btn sm">Selengkapnya</a></div><div class="tw"><table data-size="99"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Barang</th><th class="r">Total</th><th>Status</th></tr>${

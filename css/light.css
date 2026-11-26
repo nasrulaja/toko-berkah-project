@@ -134,7 +134,6 @@
 }
 
 /* --- Kartu di dalam kartu & ringkasan kecil --- */
-:root:not([data-theme='dark']) .mini,
 :root:not([data-theme='dark']) .nt,
 :root:not([data-theme='dark']) .gd,
 :root:not([data-theme='dark']) .tips > * {
@@ -242,8 +241,10 @@
 :root:not([data-theme='dark']) .kpi:hover {
   box-shadow: var(--ios-rim), var(--ios-shadow-lift);
 }
-/* Sub-kartu di dalam kartu: lebih bening lagi */
-:root:not([data-theme='dark']) .mini,
+/* Sub-kartu di dalam kartu: lebih bening lagi.
+   .mini sengaja TIDAK ikut: ia panel ringkasan di dalam kartu, bukan kartu
+   tersendiri. Kalau diberi latar + border + shadow, ia tampak mengapung dan
+   memotong alur kartu induknya. */
 :root:not([data-theme='dark']) .nt,
 :root:not([data-theme='dark']) .gd,
 :root:not([data-theme='dark']) .tips > *,

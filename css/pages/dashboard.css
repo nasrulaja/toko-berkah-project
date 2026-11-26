@@ -341,14 +341,35 @@
 .chart-wrap {
   overflow-x: auto;
   overflow-y: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+/* ==========================================================================
+   BAGIAN 3b — RAPIIKAN KARTU GRAFIK
+   Dua masalah yang diperbaiki:
+   1. SVG ber-viewBox berskala ikut lebar kartu, jadi tingginya melar dan
+      menyisakan ruang kosong besar di bawah grafik. Tingginya dibatasi.
+   2. Panel ringkasan (.mini) harus menempel ke dasar kartu, bukan mengambang.
+   ========================================================================== */
+.cb-grafik {
+  display: flex;
+  flex-direction: column;
+}
+.cb-grafik > .mini {
+  margin-top: auto;
 }
 .chart {
   display: block;
+  vertical-align: bottom; /* buang sisa descent SVG agar tidak ada celah tipis */
   min-width: 520px;
+  /* Tinggi dibatasi agar SVG ber-viewBox tidak melar mengikuti lebar kartu
+     dan menyisakan ruang kosong besar di bawahnya. */
+  max-height: 240px;
 }
 /* kecil: skala mengikuti lebar kartu (viewBox), jangan memaksa lebar minimum yang membuat batang terakhir terpotong */
 .chart-wrap.sm .chart {
   min-width: 0;
+  max-height: 190px;
 }
 .chart .ca {
   fill: var(--tx);
@@ -682,7 +703,7 @@
 .ban-c i { font-style: normal; font-size: 11.5px; color: var(--mt, #6b7a90); }
 .ban-c b { font-size: 15px; color: var(--hd); }
 .ban-a { flex: none; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-.mini { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; align-items: end; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--bd); }
+.mini { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; align-items: end; gap: 10px; margin: 14px 0 0; padding: 14px 0 0; border-top: 1px dashed var(--bd); }
 .mini > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .mini span { font-size: 11.5px; color: var(--mt, #6b7a90); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mini b { font-size: 14px; color: var(--hd); overflow-wrap: anywhere; white-space: nowrap; }
