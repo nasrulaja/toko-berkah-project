@@ -531,7 +531,9 @@
 /* Keterangan kecil di kartu statistik (mis. Untung/Rugi pada Selisih) */
 .st small { display: block; margin-top: 4px; font-size: 12.5px; font-weight: 700; color: #fff; opacity: 0.9; }
 
-/* --- Semua isi tabel rata tengah (penegas, dimuat terakhir) --- */
+/* --- Isi tabel rata tengah (penegas, dimuat terakhir) ---
+   Kolom teks panjang memakai .l agar rata kiri: nama produk lebih mudah
+   dibaca dari kiri, sedangkan angka tetap tengah supaya mudah dibandingkan. */
 table th,
 table td,
 table th.r,
@@ -539,4 +541,8 @@ table td.r,
 table td[data-label],
 table th[data-label] {
   text-align: center !important;
+}
+table th.l,
+table td.l {
+  text-align: left !important;
 }

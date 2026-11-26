@@ -42,6 +42,9 @@
 .scn-dot { width: 9px; height: 9px; border-radius: 50%; background: #f59e0b; animation: scn-kedip 1.2s ease-in-out infinite; }
 @keyframes scn-kedip { 50% { opacity: 0.3; } }
 .scn-mode { margin: 0 0 14px; font-size: 13px; color: var(--mt, #5b7188); }
+/* Penanda bahwa alat scanner fisik (USB/Bluetooth) sedang menerima ketikan. */
+.scn-usb { margin: 0 0 14px; padding: 8px 12px; border-radius: 10px; background: #E7F7F3; border: 1px solid #9FDCCF; font-size: 13px; color: #0B5E52; }
+.scn-usb b { color: #08483F; }
 .scn-m label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--hd); }
 .scn-r { display: flex; gap: 8px; }
 .scn-r input { flex: 1; min-width: 0; }

@@ -380,6 +380,27 @@ td.r,
 th.r {
   text-align: center;
 }
+/* Tombol unduh Excel: ikon + teks sejajar dalam satu baris pil.
+   Tanpa aturan ini, <svg> tanpa ukuran mewarisi 300x150 bawaan browser dan
+   teks "Excel" terdorong ke luar tombol. */
+.btn.xls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex: none;
+}
+.btn.xls svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+/* Rata kiri untuk kolom teks panjang (nama produk, kategori, catatan).
+   Angka dan kolom pendek tetap di tengah agar mudah dibandingkan sekilas. */
+td.l,
+th.l {
+  text-align: left;
+}
 .b {
   display: inline-block;
   padding: 2px 10px;
