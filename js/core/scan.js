@@ -17,6 +17,9 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
  *  memblokir audio — bunyi hanya tambahan, bukan syarat. */
 function bunyiTit() {
   try {
+    if (localStorage.getItem('berkah_bunyi') === '0') return; // dimatikan di Pengaturan
+  } catch (e) {}
+  try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     // Satu AudioContext dipakai ulang; membuat baru tiap scan lama-lama dibatasi browser.

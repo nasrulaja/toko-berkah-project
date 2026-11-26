@@ -21,10 +21,10 @@
               ulang seluruh kerangka (mis. setelah login atau simpan data)
    ========================================================================== */
 
-import { db, me, save, mut, KS, setMe, terkunci, sah, setStatusTransaksi, dbGalat } from './core/db.js?v=20261119a';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261126m';
+import { db, me, save, mut, KS, setMe, terkunci, sah, setStatusTransaksi, dbGalat, load, setDB } from './core/db.js?v=20261119a';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261126n';
 import { barChart, donut, spark, short } from './charts.js?v=20261117m';
-import { unduhXls } from './core/excel.js?v=20261126m';
+import { unduhXls } from './core/excel.js?v=20261126n';
 
 let S = {};
 
@@ -1305,12 +1305,105 @@ export function transaksi() {
 
 /** Render ulang target halaman ini. | param: - | return: string HTML */
 export function pengaturan() {
+  const versi = new URL(import.meta.url).searchParams.get('v') || '-';
+  const bunyiAktif = (() => {
+    try {
+      return localStorage.getItem('berkah_bunyi') !== '0';
+    } catch (e) {
+      return true;
+    }
+  })();
+  const kat = (id) => db.kategori.find((k) => k.id == id)?.nama || '-';
+  // Berkas cadangan: tiap tombol mengunduh satu tabel dari data yang sedang dimuat.
+  const cadangan = {
+    produk: () => [
+      [{ label: 'Nama' }, { label: 'Barcode' }, { label: 'Kategori' }, { label: 'Harga Jual', tipe: 'Number' }, { label: 'Harga Beli', tipe: 'Number' }, { label: 'Stok', tipe: 'Number' }, { label: 'Stok Minimum', tipe: 'Number' }],
+      db.produk.map((x) => [x.nama, x.barcode || '', kat(x.kategori_id), x.harga ?? 0, x.harga_beli ?? 0, x.stok ?? 0, x.stok_minimum ?? 0])
+    ],
+    transaksi: () => [
+      [{ label: 'Kode' }, { label: 'Waktu' }, { label: 'Total', tipe: 'Number' }, { label: 'Uang Diterima', tipe: 'Number' }, { label: 'Kembalian', tipe: 'Number' }, { label: 'Status' }],
+      db.transaksi.map((t) => [t.kode, dt(t.waktu), t.total ?? 0, t.uang_diterima ?? 0, t.kembalian ?? 0, sah(t) ? 'Berhasil' : 'Gagal'])
+    ],
+    mutasi: () => [
+      [{ label: 'Waktu' }, { label: 'Produk' }, { label: 'Jenis' }, { label: 'Perubahan', tipe: 'Number' }, { label: 'Sebelum', tipe: 'Number' }, { label: 'Sesudah', tipe: 'Number' }, { label: 'Catatan' }],
+      db.mutasi.map((m) => [dt(m.waktu), db.produk.find((x) => x.id == m.produk_id)?.nama || '(produk dihapus)', m.jenis, m.jumlah ?? 0, m.stok_sebelum ?? 0, m.stok_sesudah ?? 0, m.catatan || ''])
+    ]
+  };
   setTimeout(() => {
     bindSwitch('nsw2');
+    const bs = $('#bunyi');
+    if (bs)
+      bs.onchange = () => {
+        try {
+          localStorage.setItem('berkah_bunyi', bs.checked ? '1' : '0');
+        } catch (e) {}
+        toast(bs.checked ? 'Bunyi scan dinyalakan' : 'Bunyi scan dimatikan');
+      };
+    // Uji alat scanner: ukur kecepatan ketikan. Scanner asli mengetik < 45 ms per karakter lalu Enter.
+    const uji = $('#ujiscan');
+    if (uji) {
+      let t0 = 0,
+        tl = 0,
+        n = 0;
+      uji.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const kode = uji.value.trim();
+          const hasil = $('#ujihasil');
+          if (!kode) return;
+          const rata = n > 1 ? Math.round((tl - t0) / (n - 1)) : 0;
+          const cepat = n >= 4 && rata <= 45;
+          const pr = db.produk.find((x) => String(x.barcode) === kode);
+          hasil.innerHTML = `<b>${esc(kode)}</b> · ${kode.length} karakter · ${cepat ? `<span class="b g">Terbaca seperti alat scanner (${rata} ms/karakter)</span>` : '<span class="b o">Seperti diketik manual</span>'}<br>${pr ? 'Produk: <b>' + esc(pr.nama) + '</b>' : 'Barcode belum terdaftar di produk'}`;
+          uji.value = '';
+          t0 = tl = n = 0;
+          return;
+        }
+        if (e.key.length !== 1) return;
+        const kini = performance.now();
+        if (!n || kini - tl > 400) {
+          t0 = kini;
+          n = 0;
+        }
+        tl = kini;
+        n++;
+      };
+    }
+    document.querySelectorAll('[data-cad]').forEach((b) => {
+      b.onclick = () => {
+        const [kolom, baris] = cadangan[b.dataset.cad]();
+        if (!baris.length) return toast('Belum ada data untuk diunduh');
+        const ok = unduhXls(b.dataset.nama, kolom, baris);
+        toast(ok ? `${baris.length} baris diunduh sebagai Excel` : 'Gagal membuat berkas Excel');
+      };
+    });
+    const mu = $('#muat');
+    if (mu)
+      mu.onclick = async () => {
+        mu.disabled = true;
+        try {
+          setDB(await load());
+          toast('Data dimuat ulang dari server');
+        } catch (e) {
+          toast('Gagal memuat data: ' + (e.message || e));
+        }
+        shellRef();
+      };
   }, 0);
-  return `<div class="card"><div class="ch"><h4>Profil Toko</h4></div><div class="cb"><p>Pengguna Aktif: <b>${esc(me.nama)}</b> (${esc(me.email)})</p></div></div>
-  <div class="card"><div class="ch"><h4>Basis Data</h4></div><div class="cb"><p style="margin:0 0 10px">Terhubung ke database Supabase. Semua perubahan langsung tersimpan ke server, jadi data sama di setiap perangkat. Aplikasi tidak menyimpan data toko di browser.</p><p class="note" style="margin:0">Status: <b>${dbGalat ? 'Ada masalah' : 'Terhubung'}</b>${dbGalat ? ` — ${esc(dbGalat)}` : ''}</p></div></div>
-  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Sakelar notifikasi hanya ada di halaman ini. Bila aktif, aktivitas toko (penjualan, stok, tutup buku) tampil di halaman Notifikasi dan angka muncul pada lencana lonceng.</p>${notifSwitch('nsw2')}</div></div>`;
+  return `<div class="card"><div class="ch"><h4>Profil</h4></div><div class="cb"><div class="mini" style="margin:0"><div><span>Nama</span><b>${esc(me.nama)}</b></div><div><span>Email</span><b style="white-space:normal">${esc(me.email)}</b></div><div><span>Hak akses</span><b>${me.bisa_kelola_barang === false ? 'Kasir' : 'Pemilik / Pengelola'}</b></div></div></div></div>
+  <div class="card"><div class="ch"><h4>Alat Scanner Barcode</h4></div><div class="cb">
+    <p style="margin:0 0 10px">Alat scanner USB / Bluetooth bekerja seperti keyboard dan bisa ditembak dari halaman mana pun. Coba alatnya di sini untuk memastikan terbaca dengan benar.</p>
+    <div class="fg"><label for="ujiscan">Uji alat scanner</label><input id="ujiscan" autocomplete="off" placeholder="Klik kolom ini, lalu tembak barcode…"></div>
+    <p class="note" id="ujihasil" style="margin:0 0 12px">Belum ada tembakan.</p>
+    <label class="sw-l" style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" id="bunyi" style="width:auto"${bunyiAktif ? ' checked' : ''}> Bunyi "tit" saat barcode berhasil terbaca</label>
+  </div></div>
+  <div class="card"><div class="ch"><h4>Data &amp; Cadangan</h4></div><div class="cb">
+    <p style="margin:0 0 10px">Terhubung ke database Supabase. Semua perubahan langsung tersimpan ke server, jadi data sama di setiap perangkat. Status: <b>${dbGalat ? 'Ada masalah' : 'Terhubung'}</b>${dbGalat ? ` — ${esc(dbGalat)}` : ''}</p>
+    <p class="note" style="margin:0 0 12px">Saat ini: ${db.produk.length} produk, ${db.kategori.length} kategori, ${db.transaksi.length} transaksi, ${db.mutasi.length} mutasi stok.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn sm" id="muat">Muat ulang data</button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="produk" data-nama="Cadangan Produk">${ico('down')}<span>Produk</span></button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="transaksi" data-nama="Cadangan Transaksi">${ico('down')}<span>Transaksi</span></button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="mutasi" data-nama="Cadangan Mutasi Stok">${ico('down')}<span>Mutasi stok</span></button></div>
+  </div></div>
+  <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Sakelar notifikasi hanya ada di halaman ini. Bila aktif, aktivitas toko (penjualan, stok, tutup buku) tampil di halaman Notifikasi dan angka muncul pada lencana lonceng.</p>${notifSwitch('nsw2')}</div></div>
+  <div class="card"><div class="ch"><h4>Tentang Aplikasi</h4></div><div class="cb"><div class="mini" style="margin:0"><div><span>Aplikasi</span><b>Toko Berkah Web</b></div><div><span>Versi</span><b>${esc(versi)}</b></div><div><span>Sumber data</span><b>Supabase</b></div></div></div></div>`;
 }
 
 /** Menyimpan perubahan ke Supabase, memberi tahu hasilnya, lalu menampilkan ulang halaman dari isi database. | param: ok (pesan bila berhasil) | return: Promise<boolean> */
