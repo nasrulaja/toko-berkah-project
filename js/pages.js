@@ -24,7 +24,7 @@
 import { db, me, save, mut, KS, setMe, terkunci, sah, setStatusTransaksi, dbGalat } from './core/db.js?v=20261119a';
 import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261117m';
 import { barChart, donut, spark, short } from './charts.js?v=20261117m';
-import { unduhXls } from './core/excel.js?v=20261126d';
+import { unduhXls } from './core/excel.js?v=20261126h';
 
 let S = {};
 
@@ -975,7 +975,7 @@ export function panduan() {
 /** Halaman stok menipis: hanya produk dengan stok <= stok minimum. | param: - | return: string HTML */
 export function stokMenipis() {
   const L = low().sort((a, b) => a.stok - b.stok);
-  return `<div class="card"><div class="ch"><h4>Produk perlu diisi ulang (${L.length})</h4><div class="flt">${L.length ? btnXls('Stok Menipis') : ''}</div></div><div class="tw">${
+  return `<div class="card"><div class="ch"><div class="ch-baris"><h4>Produk perlu diisi ulang (${L.length})</h4>${L.length ? btnXls('Stok Menipis') : ''}</div></div><div class="tw">${
     L.length
       ? `<table data-size="5"><tr><th>No</th><th>Produk</th><th>Kategori</th><th class="r">Stok</th><th class="r">Stok minimum</th><th>Status</th><th class="r">Aksi</th></tr>${L.map((p, i) => `<tr><td>${i + 1}</td><td><b>${esc(p.nama)}</b></td><td>${esc(kat(p.kategori_id)?.nama || '-')}</td><td class="r">${p.stok}</td><td class="r">${p.stok_minimum}</td><td><span class="b ${p.stok <= 0 ? 'r' : 'o'}">${p.stok <= 0 ? 'Habis' : 'Menipis'}</span></td><td class="r"><a class="btn sm bp" href="#barang-masuk?mpid=${p.id}">Isi ulang</a></td></tr>`).join('')}</table>`
       : empty('Semua stok aman', 'Tidak ada barang di bawah stok minimum.')
@@ -1078,7 +1078,7 @@ export function hasilTutupBuku() {
     selisihUntung = pendapatanAll - pengeluaranAll;
   return `<div class="card"><div class="cb"><b>Apa itu tutup buku?</b><p>Tutup buku adalah proses akhir periode untuk mengunci catatan transaksi dan membandingkan total penjualan sistem dengan uang di laci. Prosesnya dilakukan di aplikasi Desktop; halaman ini hanya menampilkan hasilnya.</p></div></div>
   <div class="stats"><div class="st" style="background:#092C4C"><span>Periode sudah ditutup</span><h3>${db.tutup.length}</h3></div><div class="st" style="background:#B54708"><span>Periode ada selisih</span><h3>${selisihHari}</h3></div><div class="st" style="background:#B42318"><span>Total uang kurang</span><h3>${rp(uangKurang)}</h3></div><div class="st" style="background:${selisihUntung >= 0 ? '#175CD3' : '#B42318'}"><span>Selisih</span><h3>${rp(selisihUntung)}</h3><small>Pemasukan − pengeluaran · ${selisihUntung > 0 ? 'Untung' : selisihUntung < 0 ? 'Rugi' : 'Impas'}</small></div></div>
-  <div class="card"><div class="ch"><h4>Riwayat tutup buku (${rec.length})</h4>${rec.length ? `<div class="flt">${btnXls('Tutup Buku')}</div>` : ''}</div><div class="tw">${
+  <div class="card"><div class="ch"><div class="ch-baris"><h4>Riwayat tutup buku (${rec.length})</h4>${rec.length ? btnXls('Tutup Buku') : ''}</div></div><div class="tw">${
     rec.length
       ? `<table data-size="5"><tr><th>No</th><th>Periode</th><th class="r">Penjualan sistem</th><th class="r">Uang di laci</th><th>Selisih</th><th>Status</th></tr>${rec.map((x, i) => `<tr><td>${i + 1}</td><td><b>${esc(x.periode || tglId(x.tanggal))}</b> <span class="b g">${esc(jn[x.jenis] || 'Harian')}</span></td><td class="r">${rp(x.pendapatan ?? x.total_sistem ?? 0)}</td><td class="r">${rp(x.uang_fisik ?? x.total_sistem ?? 0)}</td><td><span class="b ${sel(x.selisih)[0]}">${sel(x.selisih)[1]}</span></td><td><span class="b ${x.selisih === 0 ? 'g' : 'o'}">${x.selisih === 0 ? 'Sesuai' : 'Ada selisih'}</span></td></tr>`).join('')}</table>`
       : empty('Belum ada hasil tutup buku', 'Hasil akan muncul di sini setelah tutup buku dilakukan di aplikasi Desktop.')
@@ -1203,7 +1203,7 @@ export function laporan() {
   const infoHari = pakaiRentang && dari && sampai ? ` (${Math.round((rentangTanggal(dari, sampai).akhir - rentangTanggal(dari, sampai).awal) / 864e5)} hari)` : '';
   return `<div class="card"><div class="ch"><h4>Ringkasan ${esc(labelPeriode)}</h4>${fltBar}</div><div class="cb"><p class="note">Angka dan tabel di halaman ini mengikuti periode yang dipilih. Periode sekarang: <b>${esc(labelPeriode)}</b>${infoHari} — ${trx.length} dari ${db.transaksi.length} transaksi.${nGagal ? ` <span class="b r">${nGagal} transaksi gagal tidak dihitung</span>` : ''}</p></div></div>
   <div class="stats"><div class="st lt" style="background:#3DB5FF"><span>Total Omzet</span><h3>${rp(totJual)}</h3></div><div class="st" style="background:#0E9384"><span>Estimasi Laba Kotor</span><h3>${rp(laba)}</h3></div><div class="st" style="background:#092C4C"><span>Total Transaksi</span><h3>${trx.length}</h3></div></div>
-  <div class="card"><div class="ch"><h4>Transaksi terbanyak</h4>${ramai.length ? `<div class="flt">${btnXls('Laporan Transaksi Terbanyak')}</div>` : ''}</div><div class="tw">${
+  <div class="card"><div class="ch"><div class="ch-baris"><h4>Transaksi terbanyak</h4>${ramai.length ? btnXls('Laporan Transaksi Terbanyak') : ''}</div></div><div class="tw">${
     ramai.length
       ? `<table data-size="5"><tr><th>No</th><th>Tanggal</th><th class="r">Transaksi</th><th class="r">Omzet</th></tr>${ramai.map(([k, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(tglId(k))}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : kosongTrx(pakaiRentang && periodeMasaDepan(dari, sampai), 'Daftar muncul setelah ada transaksi.')
@@ -1211,12 +1211,12 @@ export function laporan() {
   <div class="card"><div class="ch"><h4>Transaksi terbanyak mingguan</h4>${hariTop && hariTop.c ? `<span class="b g">Tersibuk: ${hariTop.n} (${hariTop.c} transaksi)</span>` : ''}</div><div class="cb hr">${urutHari
     .map((h) => `<div class="hr-r"><span class="hr-n">${h.n}</span><span class="hr-b"><i style="width:${Math.round((h.c / maxHari) * 100)}%"></i></span><span class="hr-v">${h.c} <small>transaksi</small></span></div>`)
     .join('')}</div></div>
-  <div class="card"><div class="ch"><h4>Produk terlaris</h4>${best.length ? `<div class="flt">${btnXls('Laporan Produk Terlaris')}</div>` : ''}</div><div class="tw">${
+  <div class="card"><div class="ch"><div class="ch-baris"><h4>Produk terlaris</h4>${best.length ? btnXls('Laporan Produk Terlaris') : ''}</div></div><div class="tw">${
     best.length
       ? `<table data-size="5"><tr><th>No</th><th>Produk</th><th class="r">Terjual</th><th class="r">Omzet</th></tr>${best.map(([n, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(n)}</b></td><td class="r">${x.q}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : kosongTrx(pakaiRentang && periodeMasaDepan(dari, sampai), 'Produk terlaris muncul setelah ada transaksi.')
   }</div></div>
-  <div class="card"><div class="ch"><h4>Belanja terbesar per pembeli</h4>${buyers.length ? `<div class="flt">${btnXls('Laporan Pembeli')}</div>` : ''}</div><div class="tw">${
+  <div class="card"><div class="ch"><div class="ch-baris"><h4>Belanja terbesar per pembeli</h4>${buyers.length ? btnXls('Laporan Pembeli') : ''}</div></div><div class="tw">${
     buyers.length
       ? `<table data-size="5"><tr><th>No</th><th>Pembeli</th><th class="r">Transaksi</th><th class="r">Total belanja</th></tr>${buyers.map(([nm, x], i) => `<tr><td>${i + 1}</td><td><b>${esc(nm)}</b></td><td class="r">${x.c}</td><td class="r">${rp(x.v)}</td></tr>`).join('')}</table>`
       : (() => {
@@ -1294,12 +1294,12 @@ export function transaksi() {
     },
     shellRef
   );
-  return `<div class="card"><div class="ch"><h4>Riwayat Transaksi (${tp === 'semua' ? rec.length : rec.length + ' dari ' + semua.length})</h4><div class="flt"><select id="ftp" aria-label="Filter periode transaksi"><optgroup label="Periode cepat">${opsiTetap.map(opsiHtml).join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}<option value="rentang"${pakaiRentang ? ' selected' : ''}>Pilih tanggal (dari–sampai)</option></select>${kotakTanggal(
+  return `<div class="card"><div class="ch"><div class="ch-baris"><h4>Riwayat Transaksi (${tp === 'semua' ? rec.length : rec.length + ' dari ' + semua.length})</h4>${rec.length ? btnXls('Riwayat Transaksi') : ''}</div><div class="flt"><select id="ftp" aria-label="Filter periode transaksi"><optgroup label="Periode cepat">${opsiTetap.map(opsiHtml).join('')}</optgroup>${opsiBulan.length ? `<optgroup label="Pilih bulan">${opsiBulan.map(opsiHtml).join('')}</optgroup>` : ''}<option value="rentang"${pakaiRentang ? ' selected' : ''}>Pilih tanggal (dari–sampai)</option></select>${kotakTanggal(
     'td',
     dari,
     sampai,
     pakaiRentang
-  )}<select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select><select id="fts" aria-label="Filter status transaksi"><option value=""${ts === '' ? ' selected' : ''}>Semua status</option><option value="berhasil"${ts === 'berhasil' ? ' selected' : ''}>Berhasil</option><option value="gagal"${ts === 'gagal' ? ' selected' : ''}>Gagal</option></select>${rec.length ? btnXls('Riwayat Transaksi') : ''}</div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>${ts ? `, status <b>${ts}</b>` : ''}. Transaksi <b>gagal</b> tidak dihitung sebagai penjualan.${nGagal ? ` <span class="b r">${nGagal} gagal</span>` : ''}${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th>Periode</th><th class="r">Aksi</th></tr>
+  )}<select id="ftu" aria-label="Urutan transaksi"><option value="baru"${tu === 'baru' ? ' selected' : ''}>Terbaru</option><option value="total"${tu === 'total' ? ' selected' : ''}>Total terbesar</option></select><select id="fts" aria-label="Filter status transaksi"><option value=""${ts === '' ? ' selected' : ''}>Semua status</option><option value="berhasil"${ts === 'berhasil' ? ' selected' : ''}>Berhasil</option><option value="gagal"${ts === 'gagal' ? ' selected' : ''}>Gagal</option></select></div></div><div class="cb"><p class="note" style="margin:0">Menampilkan transaksi: <b>${esc(label)}</b>, urut <b>${tu === 'total' ? 'total terbesar' : 'terbaru'}</b>${ts ? `, status <b>${ts}</b>` : ''}. Transaksi <b>gagal</b> tidak dihitung sebagai penjualan.${nGagal ? ` <span class="b r">${nGagal} gagal</span>` : ''}${nKunci ? ` <span class="b r">${nKunci} terkunci tutup buku</span>` : ''}</p></div><div class="tw"><table data-size="5"><tr><th>No</th><th>Kode</th><th>Waktu</th><th class="r">Total</th><th>Status</th><th>Periode</th><th class="r">Aksi</th></tr>
   ${rec.map((t, i) => `<tr><td>${i + 1}</td><td><b>${t.kode}</b></td><td>${dt(t.waktu)}</td><td class="r">${rp(t.total)}</td><td>${stBadge(t)}</td><td>${terkunci(t) ? `<span class="b r">Terkunci</span>` : `<span class="b g">Terbuka</span>`}</td><td class="r"><button class="btn sm" data-act="det" data-id="${t.id}">Detail</button>${sah(t) ? `<button class="btn sm" data-act="stgagal" data-id="${t.id}" title="Tandai transaksi ini gagal/batal sehingga tidak dihitung sebagai penjualan">Batalkan</button>` : `<button class="btn sm" data-act="stberhasil" data-id="${t.id}" title="Kembalikan transaksi ini sebagai berhasil">Pulihkan</button>`}</td></tr>`).join('') || `<tr><td colspan="7">${pakaiRentang && periodeMasaDepan(dari, sampai) ? 'Belum ada transaksi' : 'Tidak ada transaksi'} pada periode ini.</td></tr>`}</table></div></div>`;
 }
 

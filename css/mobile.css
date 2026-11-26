@@ -553,3 +553,10 @@
     padding-left: 4px;
   }
 }
+
+/* Lencana (mis. "Harian") tidak boleh terpotong jadi dua baris di kartu tabel HP */
+@media (max-width: 991px) {
+  .b {
+    white-space: nowrap;
+  }
+}
