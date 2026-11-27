@@ -1,13 +1,92 @@
-# Toko Berkah — Sistem Manajemen Barang & Stok
+<div align="center">
 
-Repositori ini berisi **tiga aplikasi Toko Berkah** yang memakai **satu database
-Supabase** (satu sumber kebenaran, jadi stok dan harga sama di semua perangkat):
+<img src="assets/logo.png" alt="Toko Berkah" width="230">
 
-- **Web** — manajemen produk, stok, laporan, dan hasil tutup buku untuk pemilik.
-- **Desktop (Windows)** — kasir untuk transaksi, dengan tutup kasir.
-- **Android** — aplikasi pemilik untuk cek harga, ubah harga, dan barang masuk.
+# Toko Berkah
 
-Ada juga **backend** REST (Node.js) opsional dan berkas SQL untuk membuat ulang database.
+**Sistem manajemen barang & stok untuk toko kelontong** — Web, Desktop, dan Android,
+satu database, satu sumber kebenaran.
+
+[![Demo Web](https://img.shields.io/badge/Demo-Web-2d9cdb?style=for-the-badge&logo=githubpages&logoColor=white)](https://nasrulaja.github.io/toko-berkah-project/)
+[![Supabase](https://img.shields.io/badge/Database-Supabase-3ecf8e?style=for-the-badge&logo=supabase&logoColor=white)](#-backend--database)
+[![Desktop](https://img.shields.io/badge/Desktop-.NET%208-512bd4?style=for-the-badge&logo=dotnet&logoColor=white)](Toko-Berkah-Dekstop/README.md)
+[![Android](https://img.shields.io/badge/Android-Kotlin-3ddc84?style=for-the-badge&logo=android&logoColor=white)](#-versi-android)
+
+[Coba Web](https://nasrulaja.github.io/toko-berkah-project/) ·
+[Unduh Desktop](Kasir-Demo.zip) ·
+[APK Android](demo/android/) ·
+[Backend](backend/README.md) ·
+[Dokumentasi](#-peta-dokumentasi)
+
+</div>
+
+---
+
+## ✨ Sekilas
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### 🌐 Web
+Untuk **pemilik toko**: produk & kategori, stok, laporan penjualan, riwayat transaksi, dan hasil tutup buku. Tampilan *liquid glass*, responsif di HP, **scan barcode dengan alat scanner**, dan unduh Excel.
+
+</td>
+<td width="33%" valign="top">
+
+### 🖥️ Desktop
+Untuk **kasir**: input barcode, keranjang, kembalian otomatis, struk, dan **tutup kasir**. Tetap jalan saat internet mati, lalu **sinkron otomatis** ke Supabase.
+
+</td>
+<td width="33%" valign="top">
+
+### 📱 Android
+Untuk **pemilik**: cek harga, ubah harga + riwayat, cek stok, dan barang masuk — dengan **pemindai barcode kamera**.
+
+</td>
+</tr>
+</table>
+
+Semua tersambung ke **satu database Supabase**, jadi penjualan di kasir langsung muncul di
+web, dan stok yang diubah di web langsung terlihat di aplikasi lain.
+
+```
+Desktop kasir ──┐
+Web ────────────┼──▶  Supabase (PostgreSQL)  ◀── backend REST (opsional)
+Android ────────┘
+```
+
+## 📸 Tampilan Web
+
+<p align="center">
+  <img src="docs/screenshots/web-01-beranda.webp" alt="Beranda" width="49%">
+  <img src="docs/screenshots/web-02-produk.webp" alt="Produk & Kategori" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/web-03-stok.webp" alt="Manajemen Stok" width="49%">
+  <img src="docs/screenshots/web-04-laporan.webp" alt="Laporan Penjualan" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/web-05-transaksi.webp" alt="Riwayat Transaksi" width="49%">
+  <img src="docs/screenshots/web-06-tutup-buku.webp" alt="Tutup Buku" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/web-07-panduan.webp" alt="Panduan" width="49%">
+  <img src="docs/screenshots/web-08-beranda-hp.webp" alt="Beranda di HP" width="21%">
+  <img src="docs/screenshots/web-09-stok-menipis-hp.webp" alt="Stok Menipis di HP" width="21%">
+</p>
+
+<sub>Data pada tangkapan layar adalah data contoh. Tangkapan layar aplikasi Android ada di [`docs/DEMO-ANDROID.md`](docs/DEMO-ANDROID.md).</sub>
+
+## 🚀 Mulai Cepat
+
+| Saya ingin… | Lakukan ini |
+|---|---|
+| **Mencoba web** | Buka [demo web](https://nasrulaja.github.io/toko-berkah-project/), login `berkah@gmail.com` / `berkah123` |
+| **Mencoba kasir Desktop** | Unduh [`Kasir-Demo.zip`](Kasir-Demo.zip), **ekstrak**, jalankan `Kasir.exe` (login `kasir@gmail.com` / `kasir123`) |
+| **Mencoba Android** | Pasang APK dari [`demo/android/`](demo/android/) |
+| **Menjalankan web di komputer sendiri** | `python3 -m http.server 8000` di folder repo, buka `http://localhost:8000` |
+| **Membuat ulang database** | Jalankan [`database_toko_berkah_lengkap.sql`](database_toko_berkah_lengkap.sql) di Supabase → SQL Editor |
 
 ## 📦 Daftar Platform
 
@@ -197,14 +276,6 @@ APK di folder ini dibuat sebelum perubahan terbaru pada kode sumber, jadi bisa b
 
 - **[`backend/`](backend/README.md)** — server REST (Node.js + Express) di atas Supabase: login (JWT), produk, kategori, stok, transaksi, tutup buku. Opsional; web, desktop, dan Android sudah bisa langsung ke Supabase. Siap dideploy ke Render lewat `render.yaml` (isi `SUPABASE_SERVICE_ROLE_KEY` di dashboard, **jangan** disimpan di repo atau aplikasi klien).
 - **[`database_toko_berkah_lengkap.sql`](database_toko_berkah_lengkap.sql)** — membuat ulang database: skema 10 tabel (`roles`, `users`, `kategori`, `produk`, `rekap_penjualan`, `transaksi`, `struk`, `detail_transaksi`, `stok_mutasi`, `tutup_buku`), RLS, 15 kategori, 300 produk, akun demo, dan data transaksi contoh. Jalankan di Supabase → SQL Editor.
-
-### Alur data
-
-```
-Desktop kasir (SQLite → sinkron) ──┐
-Web (js/) ─────────────────────────┼──> Supabase (PostgreSQL)   <── backend (opsional)
-Android (pemilik) ─────────────────┘
-```
 
 ---
 
