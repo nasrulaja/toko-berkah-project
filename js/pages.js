@@ -22,9 +22,9 @@
    ========================================================================== */
 
 import { db, me, save, mut, KS, setMe, terkunci, sah, setStatusTransaksi, dbGalat, load, setDB } from './core/db.js?v=20261119a';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261126n';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261126p';
 import { barChart, donut, spark, short } from './charts.js?v=20261117m';
-import { unduhXls } from './core/excel.js?v=20261126n';
+import { unduhXls } from './core/excel.js?v=20261126p';
 
 let S = {};
 
@@ -99,7 +99,7 @@ document.addEventListener('click', (e) => {
 
 /** Markup tombol unduh Excel. | param: nama (nama berkas) | return: string HTML */
 const btnXls = (nama) =>
-  `<button type="button" class="btn sm xls" data-xls="${esc(nama)}" title="Unduh data ini sebagai berkas Excel">${ico('down')}<span>Excel</span></button>`;
+  `<button type="button" class="btn sm xls" data-xls="${esc(nama)}" title="Unduh data ini sebagai berkas Excel">${ico('unduh')}<span>Excel</span></button>`;
 
 /** Mengisi filter halaman dari tautan (mis. #laporan?lp=hari) sebelum halaman digambar. | param: o (objek kunci-nilai) | return: void */
 export const terapkanFilter = (o) => {
@@ -1400,7 +1400,7 @@ export function pengaturan() {
   <div class="card"><div class="ch"><h4>Data &amp; Cadangan</h4></div><div class="cb">
     <p style="margin:0 0 10px">Terhubung ke database Supabase. Semua perubahan langsung tersimpan ke server, jadi data sama di setiap perangkat. Status: <b>${dbGalat ? 'Ada masalah' : 'Terhubung'}</b>${dbGalat ? ` — ${esc(dbGalat)}` : ''}</p>
     <p class="note" style="margin:0 0 12px">Saat ini: ${db.produk.length} produk, ${db.kategori.length} kategori, ${db.transaksi.length} transaksi, ${db.mutasi.length} mutasi stok.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn sm" id="muat">Muat ulang data</button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="produk" data-nama="Cadangan Produk">${ico('down')}<span>Produk</span></button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="transaksi" data-nama="Cadangan Transaksi">${ico('down')}<span>Transaksi</span></button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="mutasi" data-nama="Cadangan Mutasi Stok">${ico('down')}<span>Mutasi stok</span></button></div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px"><button type="button" class="btn sm" id="muat">Muat ulang data</button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="produk" data-nama="Cadangan Produk">${ico('unduh')}<span>Produk</span></button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="transaksi" data-nama="Cadangan Transaksi">${ico('unduh')}<span>Transaksi</span></button><button type="button" class="btn sm xls" style="margin-left:0" data-cad="mutasi" data-nama="Cadangan Mutasi Stok">${ico('unduh')}<span>Mutasi stok</span></button></div>
   </div></div>
   <div class="card"><div class="ch"><h4>Notifikasi</h4></div><div class="cb"><p style="margin:0 0 10px">Sakelar notifikasi hanya ada di halaman ini. Bila aktif, aktivitas toko (penjualan, stok, tutup buku) tampil di halaman Notifikasi dan angka muncul pada lencana lonceng.</p>${notifSwitch('nsw2')}</div></div>
   <div class="card"><div class="ch"><h4>Tentang Aplikasi</h4></div><div class="cb"><div class="mini" style="margin:0"><div><span>Aplikasi</span><b>Toko Berkah Web</b></div><div><span>Versi</span><b>${esc(versi)}</b></div><div><span>Sumber data</span><b>Supabase</b></div></div></div></div>`;
@@ -1499,10 +1499,10 @@ export function kform(k) {
 
 export function login(routeFn) {
   $('#app').innerHTML =
-    `<div class="lg"><div class="lg-c"><div class="lg-brand"><img class="lg-img" src="assets/logo.png" alt="Toko Berkah"><span>Sistem manajemen toko</span></div><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Silakan masuk untuk melanjutkan</p><div class="lg-al" id="al" role="alert" hidden></div>
+    `<div class="lg"><div class="lg-c"><div class="lg-brand"><img class="lg-img" src="assets/logo.png" alt="Toko Berkah"><span>Sistem manajemen barang</span></div><form class="lg-card" id="af" novalidate><h2 class="lg-t">Masuk</h2><p class="lg-s">Silakan masuk untuk melanjutkan</p><div class="lg-al" id="al" role="alert" hidden></div>
   <div class="lg-f"><label class="lg-l" for="em">${ico('mail')}Surel</label><div class="lg-w" id="w1"><span class="lg-i">${ico('mail')}</span><input id="em" name="email" type="email" autocomplete="username" placeholder="surel@contoh.com" value="berkah@gmail.com"></div></div>
   <div class="lg-f"><label class="lg-l" for="pw">${ico('lock')}Kata sandi</label><div class="lg-w" id="w2"><span class="lg-i">${ico('lock')}</span><input id="pw" name="pw" type="password" autocomplete="current-password" placeholder="Masukkan kata sandi" value="berkah123"><button type="button" class="lg-eye" id="eye" aria-label="Tampilkan kata sandi">${ico('eye')}</button></div></div>
-  <button class="lg-b">Masuk</button></form><ul class="lg-chips"><li>${ico('box')}Stok</li><li>${ico('cart')}Penjualan</li><li>${ico('chart')}Laporan</li><li>${ico('book')}Tutup Buku</li></ul></div></div>`;
+  <button class="lg-b">Masuk</button></form><ul class="lg-chips"><li>${ico('box')}Produk</li><li>${ico('layers')}Stok</li><li>${ico('scan')}Barcode</li><li>${ico('chart')}Laporan</li></ul></div></div>`;
   $('#eye').onclick = () => {
     const i = $('#pw');
     i.type = i.type === 'password' ? 'text' : 'password';
