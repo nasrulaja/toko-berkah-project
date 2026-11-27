@@ -1,0 +1,44 @@
+/* ==========================================================================
+   TOKO BERKAH — panduan.css
+   Halaman Panduan: kotak cari, kartu langkah, istilah dua kolom, tanya jawab.
+   ========================================================================== */
+.pd-hero .cb { padding: 22px; }
+.pd-jd { margin: 0 0 4px; font-size: 22px; color: var(--hd); }
+.pd-sb { margin: 0 0 16px; color: var(--mt, #5b7188); }
+.pd-cari { position: relative; }
+.pd-cari > span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); display: grid; color: var(--mt, #5b7188); pointer-events: none; }
+.pd-cari svg { width: 18px; height: 18px; }
+.pd-cari input { width: 100%; padding-left: 42px; height: 46px; border-radius: 999px; }
+.pd-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.pd-nav button { border: 1px solid var(--bd); background: rgba(255, 255, 255, 0.7); color: var(--hd); font: inherit; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 999px; cursor: pointer; transition: background 0.15s, transform 0.15s; }
+.pd-nav button:hover { background: var(--soft); transform: translateY(-1px); }
+.pd-bagian { scroll-margin-top: 90px; }
+.pd-bagian[hidden], [data-t][hidden], #pdkosong[hidden] { display: none !important; }
+
+/* Langkah: kartu bernomor */
+.gd-i { transition: transform 0.18s, box-shadow 0.18s, background 0.18s; background: rgba(255, 255, 255, 0.55); padding-right: 38px; }
+.gd-i:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(31, 94, 150, 0.12); }
+.gd-n { display: grid; place-items: center; width: 24px; height: 24px; top: 10px; right: 10px; border-radius: 50%; background: var(--soft); color: var(--p); }
+
+/* Istilah: dua kolom kartu kecil */
+.pd-ist { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.pd-t { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--bd); border-left: 3px solid var(--p); border-radius: 12px; background: rgba(255, 255, 255, 0.55); }
+.pd-t b { color: var(--hd); }
+.pd-t span { color: var(--tx); font-size: 13.5px; line-height: 1.5; }
+
+/* Tanya jawab: tiap pertanyaan jadi baris dengan panah */
+.fq { border: 1px solid var(--bd); border-radius: 12px; padding: 0; margin-bottom: 8px; background: rgba(255, 255, 255, 0.55); overflow: hidden; }
+.fq:first-child { border-top: 1px solid var(--bd); }
+.fq summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; }
+.fq summary::-webkit-details-marker { display: none; }
+.fq summary::after { content: ''; flex: none; width: 8px; height: 8px; border-right: 2px solid var(--p); border-bottom: 2px solid var(--p); transform: rotate(45deg); transition: transform 0.2s; margin-top: -3px; }
+.fq[open] summary::after { transform: rotate(-135deg); margin-top: 3px; }
+.fq[open] { background: rgba(255, 255, 255, 0.8); }
+.fq p { margin: 0; padding: 0 16px 14px; line-height: 1.6; }
+.tips li { line-height: 1.55; }
+
+@media (max-width: 640px) {
+  .pd-hero .cb { padding: 16px; }
+  .pd-jd { font-size: 19px; }
+  .pd-ist { grid-template-columns: 1fr; }
+}
