@@ -1,22 +1,25 @@
-# Toko Berkah — Sistem Stok & Transaksi
+# Toko Berkah — Sistem Manajemen Barang & Stok
 
-Repositori ini berisi **dua versi aplikasi Toko Berkah** dalam satu tempat:
-versi **Web** (prototipe stok & transaksi) dan versi **Desktop** (aplikasi kasir
-native Windows).
+Repositori ini berisi **tiga aplikasi Toko Berkah** yang memakai **satu database
+Supabase** (satu sumber kebenaran, jadi stok dan harga sama di semua perangkat):
 
-Untuk versi **Mobile/Android**, **kode sumbernya sudah tidak ada di repositori ini**.
-Yang tersisa hanyalah **APK siap pasang** di [`demo/android/`](demo/android/) — lihat
-[bagian Mobile](#-versi-mobile-android-apk).
+- **Web** — manajemen produk, stok, laporan, dan hasil tutup buku untuk pemilik.
+- **Desktop (Windows)** — kasir untuk transaksi, dengan tutup kasir.
+- **Android** — aplikasi pemilik untuk cek harga, ubah harga, dan barang masuk.
+
+Ada juga **backend** REST (Node.js) opsional dan berkas SQL untuk membuat ulang database.
 
 ## 📦 Daftar Platform
 
 | Platform | Status | Teknologi | Lokasi |
 |---|---|---|---|
-| **Web** | ✅ Tersedia | HTML + CSS + JS (ES Module, `localStorage`) | root repo (`index.html`, `js/`, `css/`) |
-| **Desktop** | ✅ Tersedia | C# WinForms (.NET 8) + SQLite | folder `Toko-Berkah-Dekstop/` |
-| **Mobile (Android)** | ⚠️ APK saja — kode sumber dihapus | Kotlin + Jetpack Compose + Supabase *(kode tidak lagi di repo)* | APK di `demo/android/` |
+| **Web** | ✅ Tersedia | HTML + CSS + JS (ES Module, tanpa build), data dari Supabase | root repo (`index.html`, `js/`, `css/`) |
+| **Desktop** | ✅ Tersedia | C# WinForms (.NET 8) + SQLite, sinkron ke Supabase | `Toko-Berkah-Dekstop/` |
+| **Android** | ✅ Kode sumber + APK | Kotlin (2 modul Gradle: `app`, `pages`), CameraX + ML Kit, Supabase REST | kode: `TokoBerkah-Android-App/`, APK: `demo/android/` |
+| **Backend** | ⚙️ Opsional | Node.js + Express → Supabase | `backend/` (+ `render.yaml` untuk Render) |
+| **Database** | 🗄️ Skema + data contoh | PostgreSQL / Supabase | `database_toko_berkah_lengkap.sql` |
 
-**Semua paket siap pakai ada di satu tempat: [`demo/`](demo/) — APK Android, aplikasi Desktop (zip & folder), lengkap dengan petunjuk pasang.**
+**Paket siap pakai (APK Android, aplikasi Desktop) ada di [`demo/`](demo/), dan zip Desktop juga ada di root: [`Kasir-Demo.zip`](Kasir-Demo.zip).**
 
 ---
 
@@ -26,13 +29,13 @@ Aplikasi kasir native. **Full bahasa Indonesia** (Surel / Kata Sandi). Detail
 lengkap ada di [`Toko-Berkah-Dekstop/README.md`](Toko-Berkah-Dekstop/README.md).
 
 - **Teknologi:** C# WinForms (.NET 8) + SQLite (`Microsoft.Data.Sqlite`), ekspor laporan via ClosedXML
-- **Fitur:** input barcode, keranjang, kembalian otomatis, struk, stok berkurang otomatis, kelola produk (hanya-baca untuk kasir), tutup kasir, laporan harian/bulanan + ekspor Excel
+- **Fitur:** input barcode, keranjang, kembalian otomatis, struk, stok berkurang otomatis, kelola produk (hanya-baca untuk kasir), tutup kasir, laporan harian/bulanan + ekspor Excel, dan **sinkron otomatis ke Supabase** (data muncul di web)
 
 ### Cara tercepat mencoba (tanpa build)
 
 | Untuk | Ambil ini | Cara pakai |
 |---|---|---|
-| **Paling mudah** | [`Kasir-Demo.zip`](https://github.com/nasrulaja/toko-berkah-project/raw/main/demo/desktop/Kasir-Demo.zip) | Unduh, ekstrak, jalankan `Kasir.exe` |
+| **Paling mudah** | [`Kasir-Demo.zip`](https://github.com/nasrulaja/toko-berkah-project/raw/main/Kasir-Demo.zip) | Unduh, ekstrak, jalankan `Kasir.exe` |
 | **Tanpa zip** | folder [`demo/desktop/Kasir/`](demo/desktop/Kasir/) | Unduh seluruh isi folder, lalu jalankan `Kasir.exe` |
 
 > Wajib **diekstrak dulu**. Jangan jalankan `Kasir.exe` dari dalam ZIP: aplikasi tidak akan menemukan file pendampingnya dan langsung error.
@@ -67,32 +70,59 @@ dotnet publish -c Release -r win-x64 --self-contained true ^
 
 ## 🌐 Versi Web
 
-Prototipe web sesuai PRD (bagian Web 4.1). Fitur kasir/POS tidak disertakan karena
-tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
+Aplikasi web untuk **pemilik / pengelola toko**: mengelola produk dan stok, melihat
+laporan penjualan, riwayat transaksi, dan hasil tutup buku. Kasir/POS **tidak ada di
+web**; transaksi dicatat lewat aplikasi Desktop lalu otomatis muncul di web.
 
 **Demo hosting:** https://nasrulaja.github.io/toko-berkah-project/
-*(Perlu internet untuk Google Fonts dan animasi spring physics)*
+*(Perlu internet: data diambil langsung dari Supabase dan font dari Google Fonts.)*
 
 ### Menjalankan lokal
 1. Clone atau download repo ini
 2. Jalankan server statis di folder proyek, mis. `python3 -m http.server 8000` (atau `npx serve`)
 3. Buka `http://localhost:8000` di browser (Chrome/Firefox/Edge terbaru)
-4. Login dengan: `berkah@gmail.com` / `berkah123`
+4. Login dengan akun demo di bawah
 
 > Jangan membuka `index.html` langsung lewat `file://`: aplikasi memakai ES module (`type="module"`)
 > yang diblokir browser untuk file lokal, sehingga halaman tampil kosong.
 
-### Fitur web (v2.0)
-- ✅ **Navigasi responsif** — Rail kaca mengambang di kiri laptop/desktop, bar menu liquid glass di bawah HP
-- ✅ **Liquid Glass v2** — Full-app clear glassmorphism (`backdrop-filter blur 12-24px`)
-- ✅ **Spring Physics** — Drag vertikal + lateral rubber banding
-- ✅ **Polling Sync** — Indikator aktif kebal re-render `#app`
-- ✅ **Mobile Responsive** — Bar menu bawah ramah sentuh dengan safe area dan state aktif
-- ✅ **Hasil Tutup Buku** — Web menampilkan laporan hasil proses tutup buku desktop dalam mode hanya-baca; data saat ini masih contoh/dummy
-
 ### Login demo web
 - Surel: `berkah@gmail.com`
 - Kata sandi: `berkah123`
+
+### Halaman & fitur
+
+| Menu | Isi |
+|---|---|
+| **Beranda** | Ringkasan hari ini (pendapatan, penjualan, laba, stok menipis), grafik, produk terlaris, jam/hari tersibuk. Tiap kartu punya tombol *Selengkapnya* yang membuka halaman sesuai filter kartunya |
+| **Notifikasi** | Aktivitas toko (penjualan, stok, tutup buku) dengan filter, pencarian, dan status dibaca |
+| **Produk & Kategori** | Tambah/ubah/hapus produk dan kategori, harga jual & beli, stok, isi per pack. Nama dan barcode dikunci saat ubah |
+| **Manajemen Stok** | Barang masuk, barang keluar, dan penyesuaian stok + riwayat mutasi (pencarian produk lewat nama atau barcode) |
+| **Stok Menipis** | Produk yang stoknya ≤ stok minimum, dengan tombol *Isi ulang* |
+| **Laporan Penjualan** | Omzet, laba, produk terlaris, belanja terbesar per periode (hari ini, 7/30 hari, bulan tertentu, tahun ini, semua) |
+| **Tutup Buku** | Hanya **menampilkan** hasil tutup buku (prosesnya di Desktop): periode, selisih uang laci, riwayat |
+| **Riwayat Transaksi** | Semua transaksi dengan detail barang dan status (berhasil / gagal / terkunci) |
+| **Panduan** | Langkah memakai aplikasi, arti istilah, dan tanya jawab, dengan kolom cari |
+| **Pengaturan** | Profil, uji alat scanner & bunyi scan, status database + muat ulang data + cadangan Excel, sakelar notifikasi, versi aplikasi |
+
+Fitur lintas halaman:
+- **Scan barcode dengan alat scanner fisik (USB/Bluetooth)** — scanner bekerja seperti keyboard; tembak dari halaman mana pun, kode mengisi kolom barcode/cari yang tampil. Tombol *Scan* ada di form Tambah Produk dan kolom pencarian. Tanpa kamera.
+- **Unduh Excel** (`.xls`, angka tersimpan sebagai angka) di Riwayat Transaksi, Laporan, Stok Menipis, dan Tutup Buku; cadangan Produk/Transaksi/Mutasi di Pengaturan.
+- **Liquid glass** — tampilan kaca bening dengan latar aurora; rail kaca di desktop, menu bawah di HP.
+- **Responsif** — tabel berubah menjadi kartu di HP.
+- **Animasi** — layar sambutan 3D, transisi login → beranda dan antar halaman.
+- **Bahasa Indonesia penuh.**
+
+### Sumber data
+Semua data dibaca dan ditulis langsung ke **Supabase** (REST/PostgREST). Tidak ada data
+toko di `localStorage` dan tidak ada data contoh di kode. Bila database tidak terjangkau,
+web menampilkan layar galat, bukan data palsu. Penyimpanan terjadi per perubahan dan hasilnya
+(berhasil/gagal) langsung ditampilkan.
+
+Catatan perilaku:
+- Harga beli dibaca dari `produk.harga_beli` (dengan cadangan dari `stok_mutasi.harga_kulak`).
+- Kolom `isi_pack` belum ada di database, jadi isi per pack selalu 1.
+- Transaksi berstatus `gagal` tampil di riwayat tetapi tidak dihitung pada omzet, laba, grafik, maupun notifikasi.
 
 ### Struktur kode web
 
@@ -100,56 +130,49 @@ tidak ada di PRD; riwayat transaksi tetap ditampilkan sebagai data historis.
 > `BAGIAN n — NAMA`. Cukup cari teks `BAGIAN` di editor untuk melompat
 > antar bagian tanpa perlu membaca seluruh berkas.
 
-- **`index.html`** — Kerangka halaman; hanya wadah kosong (`#app`, `#ov`), pemuatan font/CSS, dan pemanggilan skrip. Seluruh isi dirender oleh `js/app.js`.
-- **`css/style.css`** — Gaya utama (variabel warna, sidebar, topbar, kartu, form, tabel, dashboard, modal, login) dalam 9 `BAGIAN`.
-- **`css/glass.css`** — Gaya terpusat efek glassmorphism, GX Rail desktop, mode performa mobile & fallback.
-- **`css/mobile.css`** — Penataan khusus HP (< 992px): bar menu bawah, tabel jadi kartu, modal & form ramah sentuh.
-- **`css/light.css`** — Penyempurnaan tema terang (latar aurora + kaca), dimuat paling akhir; tema gelap tidak disentuh.
-- **`css/loader.css`** — Overlay kaca saat pindah halaman (ring + progress halus), diatur `loader()` di `js/app.js`.
-- **`css/pages/dashboard.css`** — Gaya khusus halaman Dashboard.
-- **`css/pages/penjualan.css`** — Gaya khusus halaman Penjualan/Transaksi.
-- **`js/core/db.js`** — Interaksi `localStorage`, simpan/muat basis data, seeding data awal, pencatatan mutasi/transaksi.
-- **`js/core/api.js`** — Penghubung ke database Supabase (REST/PostgREST); menyimpan alamat & kunci project, memuat seluruh data tabel lalu menyusunnya. Dipakai oleh `core/db.js`. Ikut membaca kolom `transaksi.status` (`berhasil`/`gagal`) dan menyediakan `ubahStatusTransaksi()`.
-- **`js/ui.js`** — Utilitas DOM, format Rupiah & tanggal, toast, modal, escape HTML, generator ikon SVG.
-- **`js/pages.js`** — Render seluruh halaman (Dashboard, Produk, Stok, Laporan, Hasil Tutup Buku, Transaksi, Pengaturan, Login). Transaksi berstatus `gagal` tetap tampil di riwayat (dengan lencana merah) tetapi tidak dihitung pada omzet, laba, jumlah penjualan, grafik, maupun notifikasi penjualan.
-- **`js/app.js`** — Titik masuk (*bootstrap*): routing hash URL dan event binding utama.
-- **`js/charts.js`** — Pembuatan grafik untuk dashboard/laporan.
-- **`index.html`** — Kerangka halaman; splash screen kini statis di sini (CSS di `<head>`, HTML setelah `<body>`, skrip penutup sebelum `</body>`) beserta gambar potongan logo di `assets/splash/`.
-- **`js/glass-rail.js`** — GX Rail vertikal di desktop dengan fisika *spring* (*rubber banding*, tetesan air).
+- **`index.html`** — Kerangka halaman (`#app`, `#ov`), pemuatan font/CSS, layar sambutan 3D (inline, gambar di `assets/splash/`), dan pemanggilan skrip.
+- **`js/app.js`** — Titik masuk: daftar halaman & menu, routing hash URL, animasi pindah halaman, event binding utama, panggilan scanner global.
+- **`js/pages.js`** — Render seluruh halaman (Beranda, Produk, Stok, Stok Menipis, Laporan, Tutup Buku, Transaksi, Notifikasi, Panduan, Pengaturan, Login).
+- **`js/ui.js`** — Utilitas DOM, format Rupiah & tanggal, toast, modal, escape HTML, ikon SVG.
+- **`js/charts.js`** — Grafik dashboard/laporan.
+- **`js/glass-rail.js`** — Rail vertikal desktop dengan fisika *spring*.
+- **`js/core/api.js`** — Klien Supabase (REST): memuat semua tabel dan menyimpan perubahan (kategori → produk → mutasi stok), alamat & kunci publik project.
+- **`js/core/db.js`** — Keadaan data di memori (`load`, `save`, `mut`) dan status sambungan.
+- **`js/core/excel.js`** — Pembuat berkas Excel `.xls` (SpreadsheetML) tanpa pustaka luar.
+- **`js/core/scan.js`** — Pendengar alat scanner fisik dan jendela Scan.
+- **`css/style.css`** · **`glass.css`** · **`light.css`** · **`mobile.css`** · **`login.css`** · **`transisi.css`** · **`loader.css`** · **`scan.css`** · **`panduan.css`** · **`pages/dashboard.css`** — gaya dasar, kaca, tema terang (dimuat paling akhir), HP, login, animasi, dan tiap halaman.
 
 ### Catatan teknis web
-- Data disimpan di `localStorage` browser (belum ada backend/database)
-- Reset data: hapus data situs lewat pengaturan browser
-- Kata sandi di-encode Base64 (sederhana); hash yang benar dibuat di backend
-- Tidak ada build process — cukup jalankan server statis
+- Tidak ada build process — cukup server statis.
+- Nomor versi di `?v=…` pada tautan CSS/JS adalah pemecah cache; **naikkan saat merilis** dan pastikan semua impor modul yang sama memakai nomor yang sama.
+- Kunci Supabase yang dipakai adalah *publishable key* yang dibatasi Row Level Security.
 
 ---
-## 📱 Versi Mobile (Android) — APK
 
-> ⚠️ **Kode sumber aplikasi Android (`TokoBerkah-Android-Owner/`) sudah dihapus dari
-> repositori ini.** Yang tersisa hanya berkas APK jadi di [`demo/android/`](demo/android/),
-> sehingga APK tetap bisa dipasang dan dicoba, tetapi **tidak bisa lagi di-build** dari repo ini.
+## 📱 Versi Android
 
-Aplikasi Android **native untuk pemilik toko** — mengelola harga, stok, dan barang masuk
-langsung dari HP, terhubung ke **backend Supabase**. Fitur yang tertanam di APK:
+Aplikasi Android **native untuk pemilik toko**: cek harga, ubah harga, cek stok, dan
+barang masuk dari HP, terhubung langsung ke **Supabase** (REST, tanpa server perantara).
+Kode sumber ada di [`TokoBerkah-Android-App/`](TokoBerkah-Android-App/).
 
-- **Login Pemilik** — validasi email & sandi, loading, pesan galat, sesi terenkripsi
-- **Cek Harga** — pindai barcode + daftar produk (gambar, EAN, harga, stok, kategori, rak)
-- **Detail Produk & Ubah Harga** — harga jual kasir, indikator naik/turun otomatis, alasan wajib, konfirmasi
-- **Riwayat Harga** — tanggal • jam, harga sebelum ➜ baru, selisih, pemilik yang mengubah
-- **Cek Stok** — status hijau/oranye/merah, sisa stok total, rak depan & gudang, jumlah perlu restok
-- **Barang Masuk** — jumlah (-, +, +5/+10/+20/+50), harga beli, total nilai, estimasi stok
-- **Barcode Scanner** — CameraX + ML Kit (EAN-13/8, UPC-A/E, Code128, Code39, QR), senter, input manual
-- **Floating Warning** — notifikasi merah/oranye/hijau yang bisa ditutup
+Halaman yang ada di kode:
+- **Login** dan **Cek Stok**
+- **Cek Harga** — daftar produk (dengan kategori) dan detail produk
+- **Ubah Harga** dan **Riwayat Harga**
+- **Barang Masuk**
+- **Terakhir Dilihat**
+- **Pemindai barcode** — CameraX + ML Kit
 
-Teknologi yang dipakai saat APK ini dibuat: Kotlin · Jetpack Compose (Material 3) · MVVM ·
-Navigation Compose · Coroutines & Flow · Retrofit + OkHttp · Room · DataStore +
-EncryptedSharedPreferences · CameraX + ML Kit · Coil · Gradle Kotlin DSL · minSdk 24 / targetSdk 34.
+Teknologi: Kotlin · dua modul Gradle (`:app`, `:pages`) · AndroidX · CameraX + ML Kit Barcode ·
+Supabase PostgREST · minSdk 24.
+
+### Membuka & membangun
+Buka folder `TokoBerkah-Android-App/` di Android Studio, tunggu sinkronisasi Gradle, lalu jalankan
+modul `app`. (Pemindaian dengan kamera hanya ada di aplikasi Android; versi web memakai alat scanner fisik.)
 
 ### Login mobile
 - Surel: `kasir@gmail.com`
 - Kata sandi: `kasir123`
-- Form sudah terisi otomatis; cukup tekan **Masuk ke Toko**.
 
 ### APK siap pasang
 
@@ -163,15 +186,25 @@ Semua APK ada di **[`demo/android/`](demo/android/)**.
 | kecil, perlu ditandatangani | armeabi-v7a | [`…-armeabi-v7a-release-unsigned.apk`](demo/android/TokoBerkah-Owner-armeabi-v7a-release-unsigned.apk) | **6.5 MB** |
 
 APK **debug** sudah bertanda tangan jadi bisa langsung dipasang. APK **release**
-jauh lebih kecil (R8 aktif) tetapi masih *unsigned* — tanda tangani dulu sebelum dipasang.
+jauh lebih kecil tetapi masih *unsigned* — tanda tangani dulu sebelum dipasang.
+APK di folder ini dibuat sebelum perubahan terbaru pada kode sumber, jadi bisa berbeda dari kode terkini.
 
-### Build
-Kode sumber Android sudah tidak ada di repo, jadi `gradlew assembleDebug` **tidak bisa
-dijalankan lagi** dari sini. Untuk membangun ulang APK, siapkan project Android terpisah
-(Kotlin + Compose) dan gunakan APK di atas sebagai acuan perilaku.
+> Tangkapan layar & alur demo Android: [`docs/DEMO-ANDROID.md`](docs/DEMO-ANDROID.md).
 
-> Tangkapan layar & alur demo Android tetap tersedia di
-> [`docs/DEMO-ANDROID.md`](docs/DEMO-ANDROID.md).
+---
+
+## 🖧 Backend & Database
+
+- **[`backend/`](backend/README.md)** — server REST (Node.js + Express) di atas Supabase: login (JWT), produk, kategori, stok, transaksi, tutup buku. Opsional; web, desktop, dan Android sudah bisa langsung ke Supabase. Siap dideploy ke Render lewat `render.yaml` (isi `SUPABASE_SERVICE_ROLE_KEY` di dashboard, **jangan** disimpan di repo atau aplikasi klien).
+- **[`database_toko_berkah_lengkap.sql`](database_toko_berkah_lengkap.sql)** — membuat ulang database: skema 10 tabel (`roles`, `users`, `kategori`, `produk`, `rekap_penjualan`, `transaksi`, `struk`, `detail_transaksi`, `stok_mutasi`, `tutup_buku`), RLS, 15 kategori, 300 produk, akun demo, dan data transaksi contoh. Jalankan di Supabase → SQL Editor.
+
+### Alur data
+
+```
+Desktop kasir (SQLite → sinkron) ──┐
+Web (js/) ─────────────────────────┼──> Supabase (PostgreSQL)   <── backend (opsional)
+Android (pemilik) ─────────────────┘
+```
 
 ---
 
@@ -190,5 +223,6 @@ perbaikan. Untuk perubahan besar, diskusikan dulu lewat Issue.
 | [`docs/DEMO-ANDROID.md`](docs/DEMO-ANDROID.md) | Tangkapan layar & alur demo aplikasi Android |
 | [`docs/PRD-LENGKAP.md`](docs/PRD-LENGKAP.md) | Product Requirements Document lengkap |
 | [`docs/PETA-MODUL.md`](docs/PETA-MODUL.md) | Peta modul & struktur kode web |
+| [`backend/README.md`](backend/README.md) | Endpoint dan cara menjalankan backend |
 | [`Toko-Berkah-Dekstop/README.md`](Toko-Berkah-Dekstop/README.md) | Dokumentasi aplikasi Desktop |
 
