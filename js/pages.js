@@ -22,9 +22,9 @@
    ========================================================================== */
 
 import { db, me, save, mut, KS, setMe, terkunci, sah, setStatusTransaksi, dbGalat, load, setDB } from './core/db.js?v=20261119a';
-import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261126p';
+import { $, $$, esc, rp, dk, dt, ico, toast, modal, ask, opts, popt, empty, today, tip } from './ui.js?v=20261127a';
 import { barChart, donut, spark, short } from './charts.js?v=20261117m';
-import { unduhXls } from './core/excel.js?v=20261126p';
+import { unduhXls } from './core/excel.js?v=20261127a';
 
 let S = {};
 
@@ -915,12 +915,14 @@ export function panduan() {
   const langkah = [
     ['grid', 'Lihat Beranda', 'Ringkasan toko hari ini: penjualan, laba, stok yang hampir habis, dan barang terlaris. Buka tiap hari untuk melihat kondisi toko.', '#dashboard'],
     ['box', 'Isi data Produk', 'Daftarkan barang di Produk & Kategori: nama, harga jual, harga beli, stok, dan isi per pack bila dijual per dus/pack.', '#produk'],
+    ['scan', 'Scan Barcode', 'Sambungkan alat scanner USB / Bluetooth lalu tembak barcode dari halaman mana pun. Kode otomatis mengisi kolom barcode atau kolom Cari yang sedang tampil, atau menampilkan nama produk dan stoknya. Tombol Scan di samping kolom juga tersedia. Uji alatnya di Pengaturan.', '#pengaturan'],
     ['layers', 'Catat Stok', 'Di Manajemen Stok catat barang masuk, barang keluar, atau penyesuaian bila jumlah di rak berbeda dari catatan.', '#stok'],
     ['alert', 'Pantau Stok Menipis', 'Barang yang hampir habis dikumpulkan di satu halaman supaya tahu apa yang harus dibeli lagi.', '#stok-menipis'],
     ['recv', 'Lihat Riwayat Transaksi', 'Daftar semua penjualan beserta kode, waktu, dan total. Tekan tombol Detail untuk melihat barang yang dibeli. Status Terkunci berarti periodenya sudah ditutup buku.', '#transaksi'],
     ['chart', 'Baca Laporan', 'Pilih periode di bagian atas (hari ini, 7 hari, 30 hari, bulan ini, bulan kemarin, tahun ini, atau semua data). Untuk bulan tertentu, buka daftar "Pilih bulan" lalu pilih bulannya, misalnya Okt 2026. Angka dan tabel di bawahnya ikut berubah: omzet dan laba kotor, hari dan tanggal tersibuk, produk terlaris, dan belanja terbesar.', '#laporan'],
     ['book', 'Tutup Buku', 'Halaman ini hanya menampilkan hasil tutup buku: jumlah periode yang sudah ditutup, periode yang ada selisih, total uang kurang, dan riwayat per periode (penjualan sistem, uang di laci, selisih). Proses tutup buku dilakukan di aplikasi Desktop. Kotak Selisih menunjukkan pemasukan dikurangi pengeluaran.', '#tutup-buku'],
-    ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas. Gunakan filter (Semua, Belum dibaca, Penjualan, Stok, Tutup buku) atau kotak Cari untuk memilih notifikasi. Klik satu notifikasi untuk membukanya; statusnya langsung jadi dibaca dan angka di lonceng berkurang. Sakelar aktif/nonaktif ada di Pengaturan.', '#notifikasi']
+    ['bell', 'Cek Notifikasi', 'Semua aktivitas toko (penjualan, stok, tutup buku) ada di lonceng di kanan atas. Gunakan filter (Semua, Belum dibaca, Penjualan, Stok, Tutup buku) atau kotak Cari untuk memilih notifikasi. Klik satu notifikasi untuk membukanya; statusnya langsung jadi dibaca dan angka di lonceng berkurang. Sakelar aktif/nonaktif ada di Pengaturan.', '#notifikasi'],
+    ['gear', 'Atur & Cadangkan', 'Di Pengaturan ada uji alat scanner, bunyi scan, tombol Muat ulang data, dan unduh cadangan Excel untuk Produk, Transaksi, dan Mutasi stok.', '#pengaturan']
   ];
   const istilah = [
     ['Omzet', 'Total uang dari penjualan, sebelum dikurangi apa pun.'],
@@ -947,8 +949,10 @@ export function panduan() {
     ['Jumlah stok di sistem berbeda dengan di rak. Bagaimana memperbaikinya?', 'Buka Manajemen Stok, pilih jenis Penyesuaian, isi stok sebenarnya di rak, dan tulis alasannya.'],
     ['Bagaimana menambah stok setelah belanja barang?', 'Di Manajemen Stok pilih jenis Barang masuk, isi jumlah dan harga beli. Stok bertambah otomatis.'],
     ['Kenapa angka laba terlihat lebih besar dari untung sebenarnya?', 'Laba kotor belum dikurangi biaya operasional toko seperti listrik dan sewa.'],
-    ['Bagaimana mencari satu produk dengan cepat?', 'Di Produk & Kategori ketik nama atau barcode di kotak Cari, atau pilih kategori dari filter.'],
-    ['Kenapa penjualan ditolak?', 'Biasanya karena periode hari itu sudah ditutup buku, atau stok barang tidak cukup. Periode yang sudah ditutup tidak bisa diisi penjualan baru.'],
+    ['Bagaimana mencari satu produk dengan cepat?', 'Di Produk & Kategori ketik nama atau barcode di kotak Cari, tembak barcodenya dengan alat scanner, atau pilih kategori dari filter.'],
+    ['Bagaimana memakai alat scanner barcode?', 'Colok alat scanner USB atau pasangkan lewat Bluetooth, lalu tembak barcode barang. Cukup arahkan ke barcode; tidak perlu klik kolom apa pun. Hasil tembakan mengisi kolom barcode atau Cari yang sedang tampil. Untuk mengetes alatnya buka Pengaturan, bagian Alat Scanner Barcode.'],
+    ['Bagaimana mengunduh data ke Excel?', 'Tombol hijau Excel ada di Riwayat Transaksi, Laporan, Stok Menipis, dan Tutup Buku. Cadangan semua Produk, Transaksi, dan Mutasi stok ada di Pengaturan, kartu Data & Cadangan.'],
+    ['Kenapa nama dan barcode produk tidak bisa diubah?', 'Barcode adalah identitas barang yang juga tertempel di kemasan dan dipakai riwayat transaksi, jadi dikunci saat ubah produk. Harga, kategori, dan stok minimum tetap bisa diubah.'],
     ['Bagaimana cara tutup buku?', 'Tutup buku dilakukan di aplikasi Desktop: isi uang di laci, sistem membandingkannya dengan total penjualan, lalu menyimpan hasilnya. Di web, buka menu Tutup Buku untuk melihat hasilnya.'],
     ['Uang di laci kurang dari catatan sistem, apa yang terjadi?', 'Saat tutup buku di Desktop, sistem mencatat selisihnya. Di web, selisih tampil sebagai "Kurang" di Riwayat tutup buku dan dijumlahkan di kotak Total uang kurang, sehingga pemilik toko bisa menelusurinya.'],
     ['Kenapa transaksi tidak bisa diubah?', 'Transaksi dari periode yang sudah ditutup dikunci. Ini disengaja agar angka pembukuan tidak berubah setelah dilaporkan.'],
@@ -960,16 +964,58 @@ export function panduan() {
     ['Kenapa kotak Selisih dan Laba angkanya sama?', 'Laba dihitung dari pendapatan dikurangi pengeluaran (modal), sama dengan rumus Selisih. Kotak Selisih menambahkan keterangan Untung, Rugi, atau Impas.'],
     ['Notifikasi saya terlalu banyak.', 'Di halaman Notifikasi pilih filter (Belum dibaca, Penjualan, Stok, atau Tutup buku) atau ketik kata kunci di kotak Cari. Bila masih terlalu banyak, tekan Tandai semua dibaca atau Hapus semua. Data transaksi dan stok tidak ikut terhapus.'],
     ['Apakah data saya aman bila browser ditutup?', 'Data tersimpan di database Supabase, jadi tetap ada walau browser ditutup dan bisa dibuka dari perangkat lain. Aplikasi tidak menyimpan data toko di browser, jadi butuh koneksi internet untuk dibuka.'],
-    ['Dari mana aplikasi mengambil data?', 'Data diambil langsung dari database Supabase. Status koneksi bisa dilihat di halaman Pengaturan pada kartu Basis Data: Terhubung berarti data terkirim ke server, sedangkan Ada masalah berarti penyimpanan terakhir gagal dan pesannya tampil di kartu itu.'],
+    ['Dari mana aplikasi mengambil data?', 'Data diambil langsung dari database Supabase. Status koneksi bisa dilihat di halaman Pengaturan pada kartu Data & Cadangan: Terhubung berarti data terkirim ke server, sedangkan Ada masalah berarti penyimpanan terakhir gagal dan pesannya tampil di kartu itu.'],
   ];
-  return `<div class="card"><div class="ch"><h4>Mulai dari mana?</h4></div><div class="cb gd">${langkah
-    .map(([ic, t, d, h], i) => `<a class="gd-i" href="${h}"><span class="gd-n">${i + 1}</span><span class="nic">${ico(ic)}</span><span><b>${t}</b><small>${d}</small></span></a>`)
+  const tips = [
+    'Tanda <span class="inf" style="position:static">?</span> kecil di samping judul angka berisi penjelasan singkat. Arahkan atau sentuh untuk membacanya.',
+    'Angka hijau dengan panah naik berarti lebih baik dari periode sebelumnya, merah berarti turun.',
+    'Di HP gunakan menu bawah. Menu lain ada di tombol <b>Lainnya</b>.',
+    'Alat scanner bisa ditembak dari halaman mana pun, tanpa membuka jendela apa pun.'
+  ];
+  const kecil = (x) => esc(x.join(' ')).toLowerCase();
+  setTimeout(() => {
+    const kotak = $('#pdcari');
+    if (!kotak) return;
+    const saring = () => {
+      const q = kotak.value.trim().toLowerCase();
+      let ada = 0;
+      document.querySelectorAll('.pd-bagian').forEach((b) => {
+        let n = 0;
+        b.querySelectorAll('[data-t]').forEach((it) => {
+          const cocok = !q || it.dataset.t.includes(q);
+          it.hidden = !cocok;
+          if (it.tagName === 'DETAILS') it.open = !!q && cocok;
+          if (cocok) n++;
+        });
+        b.hidden = !n;
+        ada += n;
+      });
+      $('#pdkosong').hidden = !!ada;
+    };
+    kotak.oninput = saring;
+    document.querySelectorAll('[data-pd]').forEach((a) => {
+      a.onclick = () => {
+        kotak.value = '';
+        saring();
+        document.getElementById(a.dataset.pd)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+    });
+  }, 0);
+  return `<div class="card pd-hero"><div class="cb">
+    <h3 class="pd-jd">Panduan Toko Berkah</h3>
+    <p class="pd-sb">Cara memakai aplikasi, arti istilah, dan jawaban pertanyaan yang sering muncul.</p>
+    <div class="pd-cari"><span aria-hidden="true">${ico('cari')}</span><input id="pdcari" type="search" placeholder="Cari panduan, istilah, atau pertanyaan…" aria-label="Cari panduan" autocomplete="off"></div>
+    <div class="pd-nav"><button type="button" data-pd="pd-mulai">${langkah.length} langkah</button><button type="button" data-pd="pd-istilah">${istilah.length} istilah</button><button type="button" data-pd="pd-tanya">${tanya.length} pertanyaan</button><button type="button" data-pd="pd-tips">Tips</button></div>
+  </div></div>
+  <div class="card pd-bagian" id="pd-mulai"><div class="ch"><h4>Mulai dari mana?</h4></div><div class="cb gd">${langkah
+    .map(([ic, tt, d, h], i) => `<a class="gd-i" href="${h}" data-t="${kecil([tt, d])}"><span class="gd-n">${i + 1}</span><span class="nic">${ico(ic)}</span><span><b>${tt}</b><small>${d}</small></span></a>`)
     .join('')}</div></div>
-  <div class="card"><div class="ch"><h4>Arti istilah</h4></div><div class="cb"><dl class="gl">${istilah.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join('')}</dl></div></div>
-  <div class="card"><div class="ch"><h4>Pertanyaan umum</h4></div><div class="cb">${tanya
-    .map(([q, a]) => `<details class="fq"><summary>${q}</summary><p>${a}</p></details>`)
+  <div class="card pd-bagian" id="pd-istilah"><div class="ch"><h4>Arti istilah</h4></div><div class="cb pd-ist">${istilah.map(([tt, d]) => `<div class="pd-t" data-t="${kecil([tt, d])}"><b>${tt}</b><span>${d}</span></div>`).join('')}</div></div>
+  <div class="card pd-bagian" id="pd-tanya"><div class="ch"><h4>Pertanyaan umum</h4></div><div class="cb">${tanya
+    .map(([q, a]) => `<details class="fq" data-t="${kecil([q, a])}"><summary>${q}</summary><p>${a}</p></details>`)
     .join('')}</div></div>
-  <div class="card"><div class="ch"><h4>Tips cepat</h4></div><div class="cb"><ul class="tips"><li>Tanda <span class="inf" style="position:static">?</span> kecil di samping judul angka berisi penjelasan singkat. Arahkan atau sentuh untuk membacanya.</li><li>Angka hijau dengan panah naik berarti lebih baik dari periode sebelumnya, merah berarti turun.</li><li>Di HP gunakan menu bawah. Menu lain ada di tombol <b>Lainnya</b>.</li></ul></div></div>`;
+  <div class="card pd-bagian" id="pd-tips"><div class="ch"><h4>Tips cepat</h4></div><div class="cb"><ul class="tips">${tips.map((x) => `<li data-t="${kecil([x.replace(/<[^>]*>/g, '')])}">${x}</li>`).join('')}</ul></div></div>
+  <div class="card" id="pdkosong" hidden><div class="cb">${empty('Tidak ditemukan', 'Coba kata kunci lain, misalnya "stok", "scanner", atau "laba".')}</div></div>`;
 }
 
 /** Halaman stok menipis: hanya produk dengan stok <= stok minimum. | param: - | return: string HTML */
